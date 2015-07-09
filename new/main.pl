@@ -1,5 +1,8 @@
 #!/bin/env perl
-
+###############
+# NOTE: Use of local deprecated for variables? 
+# Need to change this in the parse_config() routine if we want to use strict
+##############
 #use strict;
 use warnings;
 use Env qw(HOME);
@@ -40,11 +43,12 @@ my %Config = ();
 #call parse_config()
 &parse_config($cfg_file, \%Config);
 
+#print a list of keys and their values from the Config hash
 foreach $Config_key (keys %Config) {
 	print "$Config_key = $Config{$Config_key}\n"
 }
 
-
+exit(0);
 
 
 
