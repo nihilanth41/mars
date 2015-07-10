@@ -31,7 +31,7 @@ my $report_dir = $Config{REPORT_DIR};
 #foreach my $Config_key (keys %Config) {
 #	print "$Config_key = $Config{$Config_key}\n"
 #}
-
+&unzip($zip_file, $report_dir);
 &sanitize_filenames($report_dir);
 &sort_reports($report_dir);
 
@@ -58,6 +58,17 @@ while($row = <$fp>)					#For each line in file
 	}
 }
 close($fp);						#close file
+}
+
+#unzip(src_file, dest_dir)
+#src_file is *FULL PATH* to .zip file to extract
+#dest_dir is the directory to extract the .zip file into 
+sub unzip { 
+my ($src_file, $dest_dir); 
+($src_file, $dest_dir) = @_;
+if(!(-f $src_file)) { die "File '$src_file' doesn't exist! Check ZIP_FILE entry in mars.cfg:$!"; } #Check that .zip file exists
+if(!(-d $dest_dir)) { print `mkdir -v $dest_dir`; }						   #Check if dest_dir exists, if not => create it. 
+print `unzip -d $dest_dir $src_file`;
 }
 
 #sanitize_filenames($directory_with_files) 
@@ -88,7 +99,6 @@ next if ($file =~ m/^\./); 	#ignore hidden files
 closedir(DIR); 
 }
 	
-
 sub sort_reports {
 my $path_to_files = $_[0];		#directory containing reports is passed as argument
 opendir(DIR, $path_to_files) || die ("Couldn't open $path_to_files: $!"); 
@@ -99,7 +109,7 @@ my $mesh_path = "$path_to_files/Mesh";
 my $misc_path = "$path_to_files/Misc";
 #Create directories only if they don't already exist (Should be a clean directory every time, but will suppress errors while testing) 
 if(!(-d $genre_path)) { print `mkdir -v $genre_path`; }	#For files containing "genre" 
-if(!(-d $mesh_path))  { print `mkdir -v $mesh_path`; }  	#For files containing "MeSH" 
+if(!(-d $mesh_path))  { print `mkdir -v $mesh_path`; } 	#For files containing "MeSH" 
 if(!(-d $misc_path))  { print `mkdir -v $misc_path`; } 	#For files containing "Other" or none 
 
 #look at each file in the folder
