@@ -32,7 +32,8 @@ my $report_dir = $Config{REPORT_DIR};
 #	print "$Config_key = $Config{$Config_key}\n"
 #}
 
-&sanitize_filenames("$report_dir");
+&sanitize_filenames($report_dir);
+&sort_reports($report_dir);
 
 exit(0);
 
@@ -63,7 +64,7 @@ close($fp);						#close file
 #Takes directory as argument, renames all files in the directory according to the following rules
 sub sanitize_filenames {
 my $path_to_files = $_[0]; 	#directory w/ files is passed as argument 
-printf("Path to files: %s\n", $path_to_files);
+#printf("Path to files: %s\n", $path_to_files);
 opendir(DIR, $path_to_files) || die ("Couldn't open $path_to_files: $!"); 
 
 #look at each file in the folder 
@@ -87,5 +88,41 @@ next if ($file =~ m/^\./); 	#ignore hidden files
 closedir(DIR); 
 }
 	
+
+sub sort_reports {
+my $path_to_files = $_[0];		#directory containing reports is passed as argument
+opendir(DIR, $path_to_files) || die ("Couldn't open $path_to_files: $!"); 
+#deal with reports that don't get split first. Put them in proper directories.
+#if path is valid => make directories 
+my $genre_path = "$path_to_files/Genre";
+my $mesh_path = "$path_to_files/Mesh";
+my $misc_path = "$path_to_files/Misc";
+print `mkdir -v $genre_path`;	#For files containing "genre" 
+print `mkdir -v $mesh_path`;   #For files containing "MeSH" 
+print `mkdir -v $misc_path`;   #For files containing "Other" or none 
+
+#look at each file in the folder
+while(my $file = readdir(DIR)) {
+next if ($file =~ m/^\./);			#ignore hidden files
+	my $full_path = "$path_to_files/$file"; 
+	if($file =~ m/mesh/i)			#if file contains "mesh" (case insensitive)
+	{					#move into Mesh folder
+		print `mv -v "$full_path" "$mesh_path/\."`;
+	}
+	elsif($file =~ m/genre/i)
+	{
+		print `mv -v "$full_path" "$genre_path/\."`;
+	}
+	elsif($file =~ m/other/i) 
+	{
+		print `mv -v "$full_path" "$misc_path/\."`;
+	}
+}
+closedir(DIR);
+}
+
+
+
+
 
 
