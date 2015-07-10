@@ -17,12 +17,12 @@ my $config_file = "mars.cfg";
 #hash containing config keys/values
 my %Config = ();
 #call parse_config()
-&parse_config($config_file, \%Config);
-
+#&parse_config($config_file, \%Config);
 #print a list of keys and their values from the Config hash
-foreach my $Config_key (keys %Config) {
-	print "$Config_key = $Config{$Config_key}\n"
-}
+#foreach my $Config_key (keys %Config) {
+#	print "$Config_key = $Config{$Config_key}\n"
+#}
+&sanitize_filenames("/home/zrrm74/src/reports/2014-04/");
 
 exit(0);
 
@@ -54,12 +54,14 @@ close($fp);						#close file
 #sanitize_filenames($directory_with_files) 
 #
 sub sanitize_filenames {
-my $path_to_files = @_; 	#directory w/ files is passed as argument 
+my $path_to_files = $_[0]; 	#directory w/ files is passed as argument 
+printf("Path to files: %s\n", $path_to_files);
 opendir(DIR, $path_to_files) || die ("Couldn't open $path_to_files: $!"); 
 
 #look at each file in the folder 
 while(my $file = readdir(DIR)) { 
 next if ($file =~ m/^\./); 	#ignore hidden files 
+	my $old_file = $file;	#copy filename for rename at the end
 	$file =~ s/new-//g; 	#delete any instance of 'new-' in filename
 	$file =~ s/ /-/g;	#replace spaces with dashes 
 	$file =~ s/\[/-/g; 	#replace open bracket w/ dash
@@ -68,7 +70,11 @@ next if ($file =~ m/^\./); 	#ignore hidden files
 	$file =~ s/\)/-/g; 	#replace close paren. w/ dash 
 	$file =~ s/\$/-/g;	#replace $ w/ dash
 	$file =~ s/-\./\./g;	#remove any dashes immediately before the .ext(ension) 
-	$file =~ s/--/-/g;	#replace any double-dash with single-dash. 
+	$file =~ s/--/-/g;	#replace any double-dash with single-dash.
+	my ($old_path, $new_path);
+	$old_path = "$path_to_files$old_file";
+	$new_path = "$path_to_files$file";
+	rename("$old_path","$new_path") || die ("Couldn't rename $old_file:$!");
 }
 closedir(DIR); 
 }
