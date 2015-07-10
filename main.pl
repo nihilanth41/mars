@@ -97,16 +97,18 @@ opendir(DIR, $path_to_files) || die ("Couldn't open $path_to_files: $!");
 my $genre_path = "$path_to_files/Genre";
 my $mesh_path = "$path_to_files/Mesh";
 my $misc_path = "$path_to_files/Misc";
-print `mkdir -v $genre_path`;	#For files containing "genre" 
-print `mkdir -v $mesh_path`;   #For files containing "MeSH" 
-print `mkdir -v $misc_path`;   #For files containing "Other" or none 
+#Create directories only if they don't already exist (Should be a clean directory every time, but will suppress errors while testing) 
+if(!(-d $genre_path)) { print `mkdir -v $genre_path`; }	#For files containing "genre" 
+if(!(-d $mesh_path))  { print `mkdir -v $mesh_path`; }  	#For files containing "MeSH" 
+if(!(-d $misc_path))  { print `mkdir -v $misc_path`; } 	#For files containing "Other" or none 
 
 #look at each file in the folder
 while(my $file = readdir(DIR)) {
 next if ($file =~ m/^\./);			#ignore hidden files
-	my $full_path = "$path_to_files/$file"; 
-	if($file =~ m/mesh/i)			#if file contains "mesh" (case insensitive)
-	{					#move into Mesh folder
+next if !($file =~ /\./); 			#ignore files that don't have a . somewhere (used to ignore directories in this case) 	
+my $full_path = "$path_to_files/$file"; 
+	if($file =~ m/mesh/i)			
+	{				
 		print `mv -v "$full_path" "$mesh_path/\."`;
 	}
 	elsif($file =~ m/genre/i)
@@ -117,6 +119,7 @@ next if ($file =~ m/^\./);			#ignore hidden files
 	{
 		print `mv -v "$full_path" "$misc_path/\."`;
 	}
+	#"none" files also go into misc folder. How to determine "none"? -- Or just wait until after all other files have been split/sorted
 }
 closedir(DIR);
 }
