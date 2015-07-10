@@ -1,6 +1,9 @@
 #!/bin/env perl
 ###############
-# 
+#
+#
+#
+####################################################
 use strict;
 use warnings;
 use Env qw(HOME);
@@ -8,21 +11,28 @@ use Env qw(HOME);
 
 
 #Check for proper number of command line args (at least 1)
-if($#ARGV < 0)
-{
-	print "Error: not enough arguments\n";
-	printf("Usage is: %s <filename>.zip [config_file]\n", $0);
-}
+#if($#ARGV < 0)
+#{
+#	print "Error: not enough arguments\n";
+#	printf("Usage is: %s <filename>.zip [config_file]\n", $0);
+#}
+
+#get current date/time for timestamps 
+my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
+my $datestamp = sprintf("%4d%02d%02d", $year+1900, $mon+1, $mday);
+
+
 my $config_file = "mars.cfg";
-#hash containing config keys/values
+#hash to store key/value pairs from config file 
 my %Config = ();
-#call parse_config()
-#&parse_config($config_file, \%Config);
-#print a list of keys and their values from the Config hash
+&parse_config($config_file, \%Config);
+my $zip_file = $Config{ZIP_FILE}; 
+my $report_dir = $Config{REPORT_DIR};
 #foreach my $Config_key (keys %Config) {
 #	print "$Config_key = $Config{$Config_key}\n"
 #}
-&sanitize_filenames("/home/zrrm74/src/reports/2014-04/");
+
+&sanitize_filenames("$report_dir");
 
 exit(0);
 
@@ -49,10 +59,8 @@ while($row = <$fp>)					#For each line in file
 close($fp);						#close file
 }
 
-
-
 #sanitize_filenames($directory_with_files) 
-#
+#Takes directory as argument, renames all files in the directory according to the following rules
 sub sanitize_filenames {
 my $path_to_files = $_[0]; 	#directory w/ files is passed as argument 
 printf("Path to files: %s\n", $path_to_files);
@@ -72,26 +80,12 @@ next if ($file =~ m/^\./); 	#ignore hidden files
 	$file =~ s/-\./\./g;	#remove any dashes immediately before the .ext(ension) 
 	$file =~ s/--/-/g;	#replace any double-dash with single-dash.
 	my ($old_path, $new_path);
-	$old_path = "$path_to_files$old_file";
-	$new_path = "$path_to_files$file";
-	rename("$old_path","$new_path") || die ("Couldn't rename $old_file:$!");
+	$old_path = "$path_to_files/$old_file";
+	$new_path = "$path_to_files/$file";
+	rename("$old_path","$new_path") || die ("Couldn't rename $old_path:$!");
 }
 closedir(DIR); 
 }
-	#rename file
 	
-#if file has some kind of .htm extension => rename it  
-#if($file =~ m/(.*)\.htm/i) {    #. - any character except newline 
-			         #* - match 0 or more times
-				 #/i - case insensitive matching
-
-#unzip($src_file, $dest_dir) 
-#$src_file - full path to .zip file to unzip 
-#$dest_dir - directory which the contents of the zip file will be placed 
-#sub unzip { 
-	#local variables
-	#my ($src_file, $dest_dir); 
-
-
 
 
