@@ -1,22 +1,7 @@
 #!/bin/env perl
-###############
-#
-#
-#
-####################################################
+
 use strict;
 use warnings;
-use Env qw(HOME);
-
-#use IO::Uncompress::Unzip qw(unzip $UnzipError);
-
-
-#Check for proper number of command line args (at least 1)
-#if($#ARGV < 0)
-#{
-#	print "Error: not enough arguments\n";
-#	printf("Usage is: %s <filename>.zip [config_file]\n", $0);
-#}
 
 #get current date/time for timestamps 
 my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
@@ -34,15 +19,11 @@ my $report_dir = $Config{REPORT_DIR};
 
 #Make datestamp folder inside report_dir and make subdirectories inside datestamp
 my @main_folders = ( "Archive", "Log" );						#located in $report_dir
-my @sub_folders = ( "Genre", "Misc", "New", "School", "XLS", "Ignore" );	#located in $report_dir/$datestamp 
+my @sub_folders = ( "Genre", "Misc", "New", "School", "XLS", "Ignore" );		#located in $report_dir/$datestamp 
 my @school_folders = ( "MST", "MU", "MU_HSL", "MU_LAW", "UMKC", "UMKC_LAW", "UMSL" );	#located in $report_dir/$datestamp/School
 &mkDirs($report_dir, @main_folders);
 &mkDirs("$report_dir/$datestamp", @sub_folders);
 &mkDirs("$report_dir/$datestamp/School", @school_folders);
-
-#&sort_reports($report_dir, $subdir);
-
-
 
 exit(0);
 
@@ -110,7 +91,6 @@ closedir(DIR);
 }
 
 #sort_nosplit($path_to_files, %filename_hash) 
-sub sort_reports {
 #opendir(DIR, $path_to_files) || die ("Couldn't open $path_to_files: $!"); 
 #deal with reports that don't get split first. Put them in proper directories.
 #next if ($file =~ m/^\./);			#ignore hidden files
@@ -121,7 +101,7 @@ sub sort_reports {
 
 #mkDirs($path, @folders)
 #takes a path and a list of directories to create 
-#checks if directories already exist -> creates if not 
+#checks if directories already exist in path -> creates if not 
 sub mkDirs
 {
 	my ($path, @folders) = @_;	#assign input args
