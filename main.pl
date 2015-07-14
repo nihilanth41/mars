@@ -25,6 +25,8 @@ my @school_folders = ( "MST", "MU", "MU_HSL", "MU_LAW", "UMKC", "UMKC_LAW", "UMS
 &mkDirs("$report_dir/$datestamp", @sub_folders);
 &mkDirs("$report_dir/$datestamp/School", @school_folders);
 
+&sort_nosplit($report_dir);
+
 exit(0);
 
 
@@ -65,7 +67,6 @@ print `unzip -d $dest_dir $src_file`;
 #Takes directory as argument, renames all files in the directory according to the following rules
 sub sanitize_filenames {
 my $path_to_files = $_[0]; 	#directory w/ files is passed as argument 
-#printf("Path to files: %s\n", $path_to_files);
 opendir(DIR, $path_to_files) || die ("Couldn't open $path_to_files: $!"); 
 
 #look at each file in the folder 
@@ -92,17 +93,38 @@ closedir(DIR);
 
 #sort_nosplit($path_to_files, %filename_hash) 
 sub sort_nosplit {
+#my $xls_re = /(.+)[.]xls$/;
+my $path_to_files = $_[0]; 
+if(-d $path_to_files) { print `mv -v $path_to_files/*.xls $path_to_files/$datestamp/XLS/`; }	#Move excel files to their own folder (Can/should we use a regex as hash key for this?) 
 my %filename_hash = ( 
-	MESH => "School/MU_HSL",					#Any filename containing m/mesh/i goes in MU_HSL folder 
-	GENRE => "Genre",    	 					#Any filename containing m/genre/i goes in Genre folder 
+	MESH => "$datestamp/School/MU_HSL",					#Any filename containing m/mesh/i goes in MU_HSL folder 
+	GENRE => "$datestamp/Genre",   	 					#Any filename containing m/genre/i goes in Genre folder 
+);
+
+opendir(my $dh, $path_to_files) || die ("Couldn't open $path_to_files: $!"); 
+#look at each file in the folder 
+while(my $file = readdir($dh)) { 
+next if ($file =~ m/^\./); 	#ignore hidden files 
+next if !($file =~ /\./); 	#ignore files that don't have a . somewhere (used to ignore directories in this case) 
+#look at each key in hash 
+for my $key ( keys %filename_hash )
+{
+	if( $file =~ m/$key/i )
+	{
+		print `mv -v $path_to_files/$file $path_to_files/$filename_hash{$key}`; 
+	}
+}
+}
+closedir $dh
+}
 	
 
 #opendir(DIR, $path_to_files) || die ("Couldn't open $path_to_files: $!"); 
 #deal with reports that don't get split first. Put them in proper directories.
 #next if ($file =~ m/^\./);			#ignore hidden files
-#next if !($file =~ /\./); 			#ignore files that don't have a . somewhere (used to ignore directories in this case) 	
+	
 #if($file =~ m/(.+)[.]xls$/)		#look for .xls files first => move them all to XLS directory for now
-}
+
 
 
 #mkDirs($path, @folders)
