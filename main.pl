@@ -32,16 +32,15 @@ my $report_dir = $Config{REPORT_DIR};
 &unzip($zip_file, $report_dir);
 &sanitize_filenames($report_dir);
 
-#Make datestamp folder inside report_dir and make subdirectories inside datestamp 
-my @folders = ( "Archive", "Genre", "Mesh", "Misc", "New", "School", "XLS", "Ignore" );
-my $subdir = "$report_dir/$datestamp";
-&mkDirs($subdir, @folders);
+#Make datestamp folder inside report_dir and make subdirectories inside datestamp
+my @main_folders = ( "Archive", "Log" );						#located in $report_dir
+my @sub_folders = ( "Genre", "Misc", "New", "School", "XLS", "Ignore" );	#located in $report_dir/$datestamp 
+my @school_folders = ( "MST", "MU", "MU_HSL", "MU_LAW", "UMKC", "UMKC_LAW", "UMSL" );	#located in $report_dir/$datestamp/School
+&mkDirs($report_dir, @main_folders);
+&mkDirs("$report_dir/$datestamp", @sub_folders);
+&mkDirs("$report_dir/$datestamp/School", @school_folders);
 
-my $schooldir = "$subdir/School";
-my @subfolders = ( "MST", "MU", "MU_HSL", "MU_LAW", "UMKC", "UMKC_LAW", "UMSL" );
-&mkDirs($schooldir, @subfolders);
-
-&sort_reports($report_dir, $subdir);
+#&sort_reports($report_dir, $subdir);
 
 
 
@@ -110,42 +109,15 @@ next if ($file =~ m/^\./); 	#ignore hidden files
 closedir(DIR); 
 }
 
-#sort_reports($path_to_files, $path_to_folders) 
+#sort_nosplit($path_to_files, %filename_hash) 
 sub sort_reports {
-my ($path_to_files, $path_to_folders) = @_;
-opendir(DIR, $path_to_files) || die ("Couldn't open $path_to_files: $!"); 
-
-my $mesh_path = "$path_to_folders/Mesh";
-my $genre_path = "$path_to_folders/Genre";
-my $misc_path = "$path_to_folders/Misc";
-my $xls_path = "$path_to_folders/XLS";
-
+#opendir(DIR, $path_to_files) || die ("Couldn't open $path_to_files: $!"); 
 #deal with reports that don't get split first. Put them in proper directories.
-while(my $file = readdir(DIR)) {		#look at each file in the folder
-next if ($file =~ m/^\./);			#ignore hidden files
-next if !($file =~ /\./); 			#ignore files that don't have a . somewhere (used to ignore directories in this case) 	
-my $full_path = "$path_to_files/$file"; 
-	if($file =~ m/(.+)[.]xls$/)		#look for .xls files first => move them all to XLS directory for now
-	{
-		print `mv -v "$full_path" "$xls_path/"`;
-	}
-	elsif($file =~ m/mesh/i)		#move files containing "mesh" to Mesh folder
-	{				
-		print `mv -v "$full_path" "$mesh_path/"`;
-	}
-	elsif($file =~ m/genre/i)		#move files containing "genre" to Genre folder 
-	{	
-		print `mv -v "$full_path" "$genre_path/"`;
-	}
+#next if ($file =~ m/^\./);			#ignore hidden files
+#next if !($file =~ /\./); 			#ignore files that don't have a . somewhere (used to ignore directories in this case) 	
+#if($file =~ m/(.+)[.]xls$/)		#look for .xls files first => move them all to XLS directory for now
+}
 
-	#elsif($file =~ m/other/i) 
-	#{
-	#print `mv -v "$full_path" "$misc_path/\."`;
-	#}
-	#"none" files also go into misc folder. How to determine "none"? -- Or just wait until after all other files have been split/sorted
-}
-closedir(DIR);
-}
 
 #mkDirs($path, @folders)
 #takes a path and a list of directories to create 
