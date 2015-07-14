@@ -16,7 +16,6 @@ my $report_dir = $Config{REPORT_DIR};
 
 &unzip($zip_file, $report_dir);
 &sanitize_filenames($report_dir);
-
 #Make datestamp folder inside report_dir and make subdirectories inside datestamp
 my @main_folders = ( "Archive", "Log" );						#located in $report_dir
 my @sub_folders = ( "Genre", "Misc", "New", "School", "XLS", "Ignore" );		#located in $report_dir/$datestamp 
@@ -24,9 +23,7 @@ my @school_folders = ( "MST", "MU", "MU_HSL", "MU_LAW", "UMKC", "UMKC_LAW", "UMS
 &mkDirs($report_dir, @main_folders);
 &mkDirs("$report_dir/$datestamp", @sub_folders);
 &mkDirs("$report_dir/$datestamp/School", @school_folders);
-
 &sort_nosplit($report_dir);
-
 exit(0);
 
 
@@ -68,7 +65,6 @@ print `unzip -d $dest_dir $src_file`;
 sub sanitize_filenames {
 my $path_to_files = $_[0]; 	#directory w/ files is passed as argument 
 opendir(DIR, $path_to_files) || die ("Couldn't open $path_to_files: $!"); 
-
 #look at each file in the folder 
 while(my $file = readdir(DIR)) { 
 next if ($file =~ m/^\./); 	#ignore hidden files 
@@ -91,6 +87,7 @@ next if ($file =~ m/^\./); 	#ignore hidden files
 closedir(DIR); 
 }
 
+
 #sort_nosplit($path_to_files, %filename_hash) 
 sub sort_nosplit {
 #my $xls_re = /(.+)[.]xls$/;
@@ -100,7 +97,6 @@ my %filename_hash = (
 	MESH => "$datestamp/School/MU_HSL",					#Any filename containing m/mesh/i goes in MU_HSL folder 
 	GENRE => "$datestamp/Genre",   	 					#Any filename containing m/genre/i goes in Genre folder 
 );
-
 opendir(my $dh, $path_to_files) || die ("Couldn't open $path_to_files: $!"); 
 #look at each file in the folder 
 while(my $file = readdir($dh)) { 
@@ -117,14 +113,6 @@ for my $key ( keys %filename_hash )
 }
 closedir $dh
 }
-	
-
-#opendir(DIR, $path_to_files) || die ("Couldn't open $path_to_files: $!"); 
-#deal with reports that don't get split first. Put them in proper directories.
-#next if ($file =~ m/^\./);			#ignore hidden files
-	
-#if($file =~ m/(.+)[.]xls$/)		#look for .xls files first => move them all to XLS directory for now
-
 
 
 #mkDirs($path, @folders)
