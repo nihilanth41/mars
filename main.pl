@@ -94,6 +94,7 @@ next if ($file =~ m/^\./); 	#ignore hidden files
 	my ($old_path, $new_path);
 	$old_path = "$path_to_files/$old_file";
 	$new_path = "$path_to_files/$file";
+	printf("Renaming %s to %s\n", $old_path, $new_path); 
 	rename("$old_path","$new_path") || die ("Couldn't rename $old_path:$!");
 }
 closedir(DIR); 
