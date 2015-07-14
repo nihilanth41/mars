@@ -22,19 +22,15 @@ use Env qw(HOME);
 my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
 my $datestamp = sprintf("%4d_%02d_%02d", $year+1900, $mon+1, $mday);
 
-
 my $config_file = "mars.cfg";
 #hash to store key/value pairs from config file 
 my %Config = ();
 &parse_config($config_file, \%Config);
 my $zip_file = $Config{ZIP_FILE}; 
 my $report_dir = $Config{REPORT_DIR};
-#foreach my $Config_key (keys %Config) {
-#	print "$Config_key = $Config{$Config_key}\n"
-#}
-#&unzip($zip_file, $report_dir);
-#&sanitize_filenames($report_dir);
-#&sort_reports($report_dir);
+
+&unzip($zip_file, $report_dir);
+&sanitize_filenames($report_dir);
 
 #Make datestamp folder inside report_dir and make subdirectories inside datestamp 
 my @folders = ( "Archive", "Genre", "Mesh", "Misc", "New", "School", "XLS", "Ignore" );
@@ -44,6 +40,9 @@ my $subdir = "$report_dir/$datestamp";
 my $schooldir = "$subdir/School";
 my @subfolders = ( "MST", "MU", "MU_HSL", "MU_LAW", "UMKC", "UMKC_LAW", "UMSL" );
 &mkDirs($schooldir, @subfolders);
+
+&sort_reports($report_dir, $subdir);
+
 
 
 exit(0);
@@ -110,28 +109,33 @@ next if ($file =~ m/^\./); 	#ignore hidden files
 }
 closedir(DIR); 
 }
-	
-sub sort_reports {
-my $path_to_files = $_[0];		#directory containing reports is passed as argument
-opendir(DIR, $path_to_files) || die ("Couldn't open $path_to_files: $!"); 
-#deal with reports that don't get split first. Put them in proper directories.
-#if path is valid => make directories 
-my $genre_path = "$path_to_files/Genre";
-my $mesh_path = "$path_to_files/Mesh";
-my $misc_path = "$path_to_files/Misc";
 
-#look at each file in the folder
-while(my $file = readdir(DIR)) {
+#sort_reports($path_to_files, $path_to_folders) 
+sub sort_reports {
+my ($path_to_files, $path_to_folders) = @_;
+opendir(DIR, $path_to_files) || die ("Couldn't open $path_to_files: $!"); 
+
+my $mesh_path = "$path_to_folders/Mesh";
+my $genre_path = "$path_to_folders/Genre";
+my $misc_path = "$path_to_folders/Misc";
+my $xls_path = "$path_to_folders/XLS";
+
+#deal with reports that don't get split first. Put them in proper directories.
+while(my $file = readdir(DIR)) {		#look at each file in the folder
 next if ($file =~ m/^\./);			#ignore hidden files
 next if !($file =~ /\./); 			#ignore files that don't have a . somewhere (used to ignore directories in this case) 	
 my $full_path = "$path_to_files/$file"; 
-	if($file =~ m/mesh/i)			
-	{				
-		print `mv -v "$full_path" "$mesh_path/\."`;
-	}
-	elsif($file =~ m/genre/i)
+	if($file =~ m/(.+)[.]xls$/)		#look for .xls files first => move them all to XLS directory for now
 	{
-		print `mv -v "$full_path" "$genre_path/\."`;
+		print `mv -v "$full_path" "$xls_path/"`;
+	}
+	elsif($file =~ m/mesh/i)		#move files containing "mesh" to Mesh folder
+	{				
+		print `mv -v "$full_path" "$mesh_path/"`;
+	}
+	elsif($file =~ m/genre/i)		#move files containing "genre" to Genre folder 
+	{	
+		print `mv -v "$full_path" "$genre_path/"`;
 	}
 
 	#elsif($file =~ m/other/i) 
