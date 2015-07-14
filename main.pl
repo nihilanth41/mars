@@ -94,8 +94,15 @@ sub sort_nosplit {
 my $path_to_files = $_[0]; 
 if(-d $path_to_files) { print `mv -v $path_to_files/*.xls $path_to_files/$datestamp/XLS/`; }	#Move excel files to their own folder (Can/should we use a regex as hash key for this?) 
 my %filename_hash = ( 
-	MESH => "$datestamp/School/MU_HSL",					#Any filename containing m/mesh/i goes in MU_HSL folder 
-	GENRE => "$datestamp/Genre",   	 					#Any filename containing m/genre/i goes in Genre folder 
+	MESH => "$datestamp/School/MU_HSL",		#Any filename containing m/mesh/i goes in MU_HSL folder 
+	GENRE => "$datestamp/Genre",   	 		#Any filename containing m/genre/i goes in Genre folder 
+	#'SUBJ.' => "$datestamp/School",			#SUBJ.CHG0/SUBJ.DEL0
+	#'NAME.' => "$datestamp/School",			#NAME.CHG0/NAME.DEL0
+	#'SERIES.' => "$datestamp/School",  		#SERIES.CHG0/SERIES.DEL0
+	#'TITLE.' => "$datestamp/School", 		#TITLE.CHG0/TITLE.DEL0
+	#R03/04/06/07/31 include all the school reports but also some of the misc reports
+	#Can either use the report# as identifier and add rules for MISC files after the fact
+	#or use a more unique identifier in the first place such as SUBJ.CHG0
 );
 opendir(my $dh, $path_to_files) || die ("Couldn't open $path_to_files: $!"); 
 #look at each file in the folder 
@@ -103,6 +110,8 @@ while(my $file = readdir($dh)) {
 next if ($file =~ m/^\./); 	#ignore hidden files 
 next if !($file =~ /\./); 	#ignore files that don't have a . somewhere (used to ignore directories in this case) 
 #look at each key in hash 
+############# CALLING keys() iterates in a random order (but the same order every time as long as the entries haven't changed). ########################
+#Instead we should use a list to store the keys in the proper order (the order we want to check them in) and then use the hash as a lookup table 
 for my $key ( keys %filename_hash )
 {
 	if( $file =~ m/$key/i )
