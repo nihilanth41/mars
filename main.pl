@@ -7,6 +7,7 @@
 use strict;
 use warnings;
 use Env qw(HOME);
+
 #use IO::Uncompress::Unzip qw(unzip $UnzipError);
 
 
@@ -19,7 +20,7 @@ use Env qw(HOME);
 
 #get current date/time for timestamps 
 my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
-my $datestamp = sprintf("%4d%02d%02d", $year+1900, $mon+1, $mday);
+my $datestamp = sprintf("%4d_%02d_%02d", $year+1900, $mon+1, $mday);
 
 
 my $config_file = "mars.cfg";
@@ -31,9 +32,19 @@ my $report_dir = $Config{REPORT_DIR};
 #foreach my $Config_key (keys %Config) {
 #	print "$Config_key = $Config{$Config_key}\n"
 #}
-&unzip($zip_file, $report_dir);
-&sanitize_filenames($report_dir);
-&sort_reports($report_dir);
+#&unzip($zip_file, $report_dir);
+#&sanitize_filenames($report_dir);
+#&sort_reports($report_dir);
+
+#Make datestamp folder inside report_dir and make subdirectories inside datestamp 
+my @folders = ( "Archive", "Genre", "Mesh", "Misc", "New", "School", "XLS", "Ignore" );
+my $subdir = "$report_dir/$datestamp";
+&mkDirs($subdir, @folders);
+
+my $schooldir = "$subdir/School";
+my @subfolders = ( "MST", "MU", "MU_HSL", "MU_LAW", "UMKC", "UMKC_LAW", "UMSL" );
+&mkDirs($schooldir, @subfolders);
+
 
 exit(0);
 
@@ -108,10 +119,6 @@ opendir(DIR, $path_to_files) || die ("Couldn't open $path_to_files: $!");
 my $genre_path = "$path_to_files/Genre";
 my $mesh_path = "$path_to_files/Mesh";
 my $misc_path = "$path_to_files/Misc";
-#Create directories only if they don't already exist (Should be a clean directory every time, but will suppress errors while testing) 
-if(!(-d $genre_path)) { print `mkdir -v $genre_path`; }	#For files containing "genre" 
-if(!(-d $mesh_path))  { print `mkdir -v $mesh_path`; } 	#For files containing "MeSH" 
-if(!(-d $misc_path))  { print `mkdir -v $misc_path`; } 	#For files containing "Other" or none 
 
 #look at each file in the folder
 while(my $file = readdir(DIR)) {
@@ -126,14 +133,34 @@ my $full_path = "$path_to_files/$file";
 	{
 		print `mv -v "$full_path" "$genre_path/\."`;
 	}
-	elsif($file =~ m/other/i) 
-	{
-		print `mv -v "$full_path" "$misc_path/\."`;
-	}
+
+	#elsif($file =~ m/other/i) 
+	#{
+	#print `mv -v "$full_path" "$misc_path/\."`;
+	#}
 	#"none" files also go into misc folder. How to determine "none"? -- Or just wait until after all other files have been split/sorted
 }
 closedir(DIR);
 }
+
+#mkDirs($path, @folders)
+#takes a path and a list of directories to create 
+#checks if directories already exist -> creates if not 
+sub mkDirs
+{
+	my ($path, @folders) = @_;	#assign input args
+	for my $folder (@folders) 
+	{
+		chomp $folder; 		#remove trailing \n
+		my $newdir = "$path/$folder"; 
+		if(!(-d "$path/$folder")) #if directory doesn't exist
+		{
+			print `mkdir -pv $path/$folder`; 
+		}
+	}
+}
+
+
 
 
 
