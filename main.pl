@@ -91,6 +91,12 @@ closedir(DIR);
 }
 
 #sort_nosplit($path_to_files, %filename_hash) 
+sub sort_nosplit {
+my %filename_hash = ( 
+	MESH => "School/MU_HSL",					#Any filename containing m/mesh/i goes in MU_HSL folder 
+	GENRE => "Genre",    	 					#Any filename containing m/genre/i goes in Genre folder 
+	
+
 #opendir(DIR, $path_to_files) || die ("Couldn't open $path_to_files: $!"); 
 #deal with reports that don't get split first. Put them in proper directories.
 #next if ($file =~ m/^\./);			#ignore hidden files
