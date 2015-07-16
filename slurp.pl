@@ -1,6 +1,6 @@
 #!/bin/env perl
 #Attempt to pull entries from a side-by-side record
-#use strict;
+use strict;
 use warnings;
 use File::Slurp;
 
@@ -28,13 +28,13 @@ use File::Slurp;
 	#use File::Slurp to load entire file into $utf8_txt
 	my $txt = read_file( $filename ); 
 	my @records = split ( /$search_string/, $txt );
-	#printf("Size of array %d\n", $#records);
 	my $header = shift @records; #assign the first element of the array to $header, remove it from the array and shift all entries down
-	my $first_delimiter  = '<td class=\'rec-label\'>(1) Old version of Record:</td>';
-	my $numbered_rec = join( '', $header,$first_delimiter,$records[0]); 
+	my $first_delimiter  = '<td class=\'rec-label\'>(1) Old version of Record:</td>'; #manually create first numbered entry 
+	my $numbered_rec = join( '', $header,$first_delimiter,$records[0]); #add our header, first numbered entry, and first record to the string  
 	#for each index in array (each record) 
 	for(my $i=1; $i<=$#records; $i++)
 	{
+		#joins the current string with each new numbered delimiter and each record
 		#assign record number
 		my $n = $i+1; 
 		my $new_delimiter = "<td class=\'rec-label\'>($n) Old version of Record:</td>"; 
