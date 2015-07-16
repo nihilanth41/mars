@@ -18,12 +18,12 @@ my $report_dir = $Config{REPORT_DIR};
 &sanitize_filenames($report_dir);
 #Make datestamp folder inside report_dir and make subdirectories inside datestamp
 my @main_folders = ( "Archive", "Log" );						#located in $report_dir
-my @sub_folders = ( "Genre", "Misc", "New", "School", "XLS", "Ignore" );		#located in $report_dir/$datestamp 
+my @sub_folders = ( "Genre", "Misc", "School", "XLS" );		#located in $report_dir/$datestamp 
 my @school_folders = ( "MST", "MU", "MU_HSL", "MU_LAW", "UMKC", "UMKC_LAW", "UMSL" );	#located in $report_dir/$datestamp/School
 &mkDirs($report_dir, @main_folders);
 &mkDirs("$report_dir/$datestamp", @sub_folders);
 &mkDirs("$report_dir/$datestamp/School", @school_folders);
-&sort_nosplit($report_dir);
+&sort_reports($report_dir);
 exit(0);
 
 
@@ -89,7 +89,7 @@ closedir(DIR);
 
 
 #sort_nosplit($path_to_files, %filename_hash) 
-sub sort_nosplit {
+sub sort_reports {
 my $path_to_files = $_[0]; 
 
 #Move excel files to their own folder to get them out of the way 
