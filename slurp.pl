@@ -25,22 +25,23 @@ use File::Slurp;
 	my $delimiter = '<td class=\'rec-label\'>Old version of Record:</td>';
 	#quotemeta adds all the necessary escape characters to the string, so we can use it in a regexp. 
 	my $search_string = quotemeta $delimiter;
-	#printf("Delimiter: %s\n", $delimiter);
-	#printf("Search string: %s\n", $search_string);
 	#use File::Slurp to load entire file into $utf8_txt
-	my $utf8_txt = read_file( $filename ); 
-	my @records = split ( /$search_string/, $utf8_txt );
+	my $txt = read_file( $filename ); 
+	my @records = split ( /$search_string/, $txt );
 	#printf("Size of array %d\n", $#records);
-	my $header = shift @records; #assign the first element of the array to $header, remove it from the array and shift all entries down 
+	my $header = shift @records; #assign the first element of the array to $header, remove it from the array and shift all entries down
+	my $first_delimiter  = '<td class=\'rec-label\'>(1) Old version of Record:</td>';
+	my $numbered_rec = join( '', $header,$first_delimiter,$records[0]); 
 	#for each index in array (each record) 
-	#for(my $i; $i<=$#records; $i++)
-	#{
+	for(my $i=1; $i<=$#records; $i++)
+	{
 		#assign record number
-		my $new_delimiter = "<td class=\'rec-label\'>(1) Old version of Record:</td>"; 
-		my $numbered_rec = join( '', $header,$new_delimiter,$records[0]; 
-		print $numbered_rec; 
-	#}
-	
-exit;
+		my $n = $i+1; 
+		my $new_delimiter = "<td class=\'rec-label\'>($n) Old version of Record:</td>"; 
+		$numbered_rec = join('', $numbered_rec, $new_delimiter, $records[$i]);
+	}
+	print $numbered_rec;
+
+	exit;
 
 
