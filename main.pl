@@ -2,6 +2,7 @@
 
 use strict;
 use warnings;
+use File::Slurp;
 
 #get current date/time for timestamps 
 my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
@@ -25,6 +26,7 @@ my @school_folders = ( "LCSH", "NTAR", "MST", "MU", "MU_HSL", "MU_LAW", "UMKC", 
 &mkDirs("$report_dir/$datestamp/School", @school_folders);
 
 &sort_reports($report_dir);
+&split_reports("$report_dir/$datestamp/School/NTAR");
 exit(0);
 
 
@@ -158,30 +160,62 @@ sub mkDirs
 }
 
 sub split_reports {
+	my %LCSH = (
+		MU => "42.4",
+		MU_LAW => "2.4",
+		UMKC => "26.4",
+		UMKC_LAW => "3.1",
+		MST => "7",
+		UMSL => "18.7"
+	);
+	my %NTAR = (
+		MU => "41.4",
+		MU_HSL => "2.4",
+		MU_LAW => "2.4",
+		UMKC => "25.7",
+		UMKC_LAW => "3",
+		MST => "6.9",
+		UMSL => "18.2"
+	);
 	my $path_to_files = $_[0];
 	#get a list of files in the directory 
 	my @files = read_dir($path_to_files);
 	my $delimiter = '<td class=\'rec-label\'>Old version of Record:</td>';
 	my $search_string = quotemeta $delimiter; 	#quotemeta adds all the necessary escape characters to the string,
 	#use File::Slurp to load entire file into $utf8_txt
-	my $txt = read_file( $filename ); 
-	my @records = split ( /$search_string/, $txt );
-	my $header = shift @records; #assign the first element of the array to $header, remove it from the array and shift all entries down
-	my $num_records = $#records; #gives the last index of the array, since we removed the header it should be equal to the number of records also
-	my $first_delimiter  = '<td class=\'rec-label\'>(1) Old version of Record:</td>'; #manually create first numbered entry 
-	my $numbered_rec = join( '', $header,$first_delimiter,$records[0]); #add our header, first numbered entry, and first record to the string  
-	#for each index in array (each record) 
-	for(my $i=1; $i<=$#records; $i++)
-	{
-		#joins the current string with each new numbered delimiter and each record
-		#assign record number
-		my $n = $i+1; 
-		my $new_delimiter = "<td class=\'rec-label\'>($n) Old version of Record:</td>"; 
-		$numbered_rec = join('', $numbered_rec, $new_delimiter, $records[$i]);
-	}
-	print $numbered_rec;
-}
+	for my $file (@files)
+	{	
+		my $path = "$path_to_files/$file";
+		printf("Opening file: %s\n", $path); 
+		my $txt = read_file( "$path_to_files/$file" ); 
+		my @records = split ( /$search_string/, $txt );
+		my $header = shift @records; #assign the first element of the array to $header, remove it from the array and shift all entries down
+		my $num_records = $#records; #gives the last index of the array, since we removed the header it should be equal to the number of records also
+		next if($num_records < 0);   #line-format; ignore for now
+		printf("Num records: %d\n", $num_records);
 
+		#my $first_delimiter  = '<td class=\'rec-label\'>(1) Old version of Record:</td>'; #manually create first numbered entry 
+		#my $numbered_rec = join( '', $header,$first_delimiter,$records[0]); #add our header, first numbered entry, and first record to the string 
+		my $rec_count = 0; 
+		for my $key (keys %NTAR)	#for each key in the NTAR hash
+		{	
+			my $num_records_tkey = ($num_records+1)*($NTAR{$key}/100);
+			printf("Number of records required for $key is %.2f\n", $num_records_tkey);
+			$rec_count += $num_records_tkey;
+			#for(my $i=1; $i<=$#records; $i++)
+#			{
+			#joins the current string with each new numbered delimiter and each record
+			#assign record number
+			#my $n = $i+1; 
+			#my $new_delimiter = "<td class=\'rec-label\'>($n) Old version of Record:</td>"; 
+			#$numbered_rec = join('', $numbered_rec, $new_delimiter, $records[$i]);
+#		}
+#	print $numbered_rec;
+		}
+		printf("Total number of individual records decimal: %d, float: %.2f\n", $rec_count, $rec_count);
+
+	}
+}
 
 
 
