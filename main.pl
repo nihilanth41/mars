@@ -16,37 +16,38 @@ my $report_dir = $Config{REPORT_DIR};
 
 &unzip($zip_file, $report_dir);
 &sanitize_filenames($report_dir);
-#Make datestamp folder inside report_dir and make subdirectories inside datestamp
+
 my @main_folders = ( "Archive", "Log" );								#located in $report_dir
 my @sub_folders = ( "Genre", "Misc", "School", "XLS" );							#located in $report_dir/$datestamp 
 my @school_folders = ( "LCSH", "NTAR", "MST", "MU", "MU_HSL", "MU_LAW", "UMKC", "UMKC_LAW", "UMSL" );	#located in $report_dir/$datestamp/School
 &mkDirs($report_dir, @main_folders);
 &mkDirs("$report_dir/$datestamp", @sub_folders);
 &mkDirs("$report_dir/$datestamp/School", @school_folders);
+
 &sort_reports($report_dir);
 exit(0);
 
 
-#parse_config($config_file, %config_hash) 
-#$config_file - full path to config file 
-#%config_hash - an empty hash to fill with key/value pairs from the config file 
-#Fills the hash and returns 
+#parse_config(config_file, config_hash) 
+#param config_file: full path to config file 
+#param config_hash: an empty hash to fill with key/value pairs from the config file 
+#Fills the hash w/ key/value pairs from config file and returns
 sub parse_config {
-my ($row, $fp, $File, $Option, $Value, $Config);
-($File, $Config) = @_;
-open($fp, $File) or die "Could not open file '$File': $!";
-while($row = <$fp>)					#For each line in file
-{
-	chomp $row;					#Remove trailing newline 
-	$row =~ s/^\s*//;				#Remove spaces at the start of the line
-	$row =~ s/\s*$//;				#Remove space(s) at the end of the line
-	if(($row !~ /^#/) && ($row ne "")) 		#Ignore blank lines and comments
+	my ($row, $fp, $File, $Option, $Value, $Config);
+	($File, $Config) = @_;
+	open($fp, $File) or die "Could not open file '$File': $!";
+	while($row = <$fp>)					#For each line in file
 	{
-		($Option, $Value) = split (/=/, $row);	#split each line into name/value pairs
-		$$Config{$Option} = $Value;		#create hash of name/value pairs
+		chomp $row;					#Remove trailing newline 
+		$row =~ s/^\s*//;				#Remove spaces at the start of the line
+		$row =~ s/\s*$//;				#Remove space(s) at the end of the line
+		if(($row !~ /^#/) && ($row ne "")) 		#Ignore blank lines and comments
+		{
+			($Option, $Value) = split (/=/, $row);	#split each line into name/value pairs
+			$$Config{$Option} = $Value;		#create hash of name/value pairs
+		}
 	}
-}
-close($fp);						#close file
+	close($fp);						#close file
 }
 
 #unzip(src_file, dest_dir)
@@ -63,30 +64,31 @@ sub unzip {
 
 #sanitize_filenames(path_to_files) 
 #param path_to_files is the full path to the directory containing the reports (probably the same directory passed to unzip) 
-#
+#Removes problematic characters from filenames so that we don't have to escape them on *nix systems
 sub sanitize_filenames {
-my $path_to_files = $_[0]; 	#directory w/ files is passed as argument 
-opendir(DIR, $path_to_files) || die ("Couldn't open $path_to_files: $!"); 
-#look at each file in the folder 
-while(my $file = readdir(DIR)) { 
-next if ($file =~ m/^\./); 	#ignore hidden files 
-	my $old_file = $file;	#copy filename for rename at the end
-	$file =~ s/new-//g; 	#delete any instance of 'new-' in filename
-	$file =~ s/ /-/g;	#replace spaces with dashes 
-	$file =~ s/\[/-/g; 	#replace open bracket w/ dash
-	$file =~ s/\]/-/g;	#replace close bracket w/ dash
-	$file =~ s/\(/-/g;	#replace open paren. w/ dash
-	$file =~ s/\)/-/g; 	#replace close paren. w/ dash 
-	$file =~ s/\$/-/g;	#replace $ w/ dash
-	$file =~ s/-\./\./g;	#remove any dashes immediately before the .ext(ension) 
-	$file =~ s/--/-/g;	#replace any double-dash with single-dash.
-	my ($old_path, $new_path);
-	$old_path = "$path_to_files/$old_file";
-	$new_path = "$path_to_files/$file";
-	printf("Renaming %s to %s\n", $old_path, $new_path); 
-	rename("$old_path","$new_path") || die ("Couldn't rename $old_path:$!");
-}
-closedir(DIR); 
+	my $path_to_files = $_[0]; 	#directory w/ files is passed as argument 
+	opendir(DIR, $path_to_files) || die ("Couldn't open $path_to_files: $!"); 
+	#look at each file in the folder 
+	while(my $file = readdir(DIR)) 
+	{ 
+		next if ($file =~ m/^\./); 	#ignore hidden files 
+		my $old_file = $file;	#copy filename for rename at the end
+		$file =~ s/new-//g; 	#delete any instance of 'new-' in filename
+		$file =~ s/ /-/g;	#replace spaces with dashes 
+		$file =~ s/\[/-/g; 	#replace open bracket w/ dash
+		$file =~ s/\]/-/g;	#replace close bracket w/ dash
+		$file =~ s/\(/-/g;	#replace open paren. w/ dash
+		$file =~ s/\)/-/g; 	#replace close paren. w/ dash 
+		$file =~ s/\$/-/g;	#replace $ w/ dash
+		$file =~ s/-\./\./g;	#remove any dashes immediately before the .ext(ension) 
+		$file =~ s/--/-/g;	#replace any double-dash with single-dash.
+		my ($old_path, $new_path);
+		$old_path = "$path_to_files/$old_file";
+		$new_path = "$path_to_files/$file";
+		printf("Renaming %s to %s\n", $old_path, $new_path); 
+		rename("$old_path","$new_path") || die ("Couldn't rename $old_path:$!");
+	}
+	closedir(DIR); 
 }
 
 
@@ -104,7 +106,7 @@ sub sort_reports {
 		GENRE => "$datestamp/Genre",   	 		#Any filename containing m/genre/i goes in Genre folder 
 		CHILDRENS => "$datestamp/Misc", 		#Any filename containing m/childrens/i goes in Misc 
 		LOCAL => "$datestamp/Misc", 			#Any filename containing m/local/i goes in Misc
-		"LC-Subjects" => "$datestamp/School/LCSH"	#Any filename containing LC-Subjects goes into School/LCSH  
+		"LC-Subjects" => "$datestamp/School/LCSH",	#Any filename containing LC-Subjects goes into School/LCSH  
 		R03 => "$datestamp/School/NTAR",		#Any other school reports go into School/NTAR 		
 		R04 => "$datestamp/School/NTAR",
 		R06 => "$datestamp/School/NTAR",
