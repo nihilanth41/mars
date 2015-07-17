@@ -157,6 +157,32 @@ sub mkDirs
 	}
 }
 
+sub split_reports {
+	my $path_to_files = $_[0];
+	#get a list of files in the directory 
+	my @files = read_dir($path_to_files);
+	my $delimiter = '<td class=\'rec-label\'>Old version of Record:</td>';
+	my $search_string = quotemeta $delimiter; 	#quotemeta adds all the necessary escape characters to the string,
+	#use File::Slurp to load entire file into $utf8_txt
+	my $txt = read_file( $filename ); 
+	my @records = split ( /$search_string/, $txt );
+	my $header = shift @records; #assign the first element of the array to $header, remove it from the array and shift all entries down
+	my $num_records = $#records; #gives the last index of the array, since we removed the header it should be equal to the number of records also
+	my $first_delimiter  = '<td class=\'rec-label\'>(1) Old version of Record:</td>'; #manually create first numbered entry 
+	my $numbered_rec = join( '', $header,$first_delimiter,$records[0]); #add our header, first numbered entry, and first record to the string  
+	#for each index in array (each record) 
+	for(my $i=1; $i<=$#records; $i++)
+	{
+		#joins the current string with each new numbered delimiter and each record
+		#assign record number
+		my $n = $i+1; 
+		my $new_delimiter = "<td class=\'rec-label\'>($n) Old version of Record:</td>"; 
+		$numbered_rec = join('', $numbered_rec, $new_delimiter, $records[$i]);
+	}
+	print $numbered_rec;
+}
+
+
 
 
 
