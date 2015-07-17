@@ -27,7 +27,6 @@ my @school_folders = ( "LCSH", "NTAR", "MST", "MU", "MU_HSL", "MU_LAW", "UMKC", 
 
 &sort_reports($report_dir);
 &split_reports("$report_dir/$datestamp/School/NTAR");
-&split_delete_reports("$report_dir/$datestamp/School/NTAR");
 exit(0);
 
 
@@ -203,7 +202,7 @@ sub split_reports {
 			printf("Writing header to file: %s\n", $new_file_path); 
 			write_file($new_file_path, $header); 
 			my $num_records_this_key = ($num_records)*($NTAR{$key}/100);	#number of records that should go to the current library (key)
-			printf("Number of records required for $key is %d\n", $num_records_this_key);
+			printf("Number of records required for $key is %.2f\n", $num_records_this_key);
 			$rec_count += $num_records_this_key;				#add to total processed for this file
 			for(my $i=0; $i<$num_records_this_key; $i++)			#starting at the beginning, process records until we reach the limit for this key
 			{
