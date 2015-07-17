@@ -17,9 +17,9 @@ my $report_dir = $Config{REPORT_DIR};
 &unzip($zip_file, $report_dir);
 &sanitize_filenames($report_dir);
 #Make datestamp folder inside report_dir and make subdirectories inside datestamp
-my @main_folders = ( "Archive", "Log" );						#located in $report_dir
-my @sub_folders = ( "Genre", "Misc", "School", "XLS" );					#located in $report_dir/$datestamp 
-my @school_folders = ( "MST", "MU", "MU_HSL", "MU_LAW", "UMKC", "UMKC_LAW", "UMSL" );	#located in $report_dir/$datestamp/School
+my @main_folders = ( "Archive", "Log" );								#located in $report_dir
+my @sub_folders = ( "Genre", "Misc", "School", "XLS" );							#located in $report_dir/$datestamp 
+my @school_folders = ( "LCSH", "NTAR", "MST", "MU", "MU_HSL", "MU_LAW", "UMKC", "UMKC_LAW", "UMSL" );	#located in $report_dir/$datestamp/School
 &mkDirs($report_dir, @main_folders);
 &mkDirs("$report_dir/$datestamp", @sub_folders);
 &mkDirs("$report_dir/$datestamp/School", @school_folders);
@@ -104,18 +104,20 @@ sub sort_reports {
 		GENRE => "$datestamp/Genre",   	 		#Any filename containing m/genre/i goes in Genre folder 
 		CHILDRENS => "$datestamp/Misc", 		#Any filename containing m/childrens/i goes in Misc 
 		LOCAL => "$datestamp/Misc", 			#Any filename containing m/local/i goes in Misc
-		R03 => "$datestamp/School",				
-		R04 => "$datestamp/School",
-		R06 => "$datestamp/School",
-		R07 => "$datestamp/School", 
-		R31 => "$datestamp/School",
+		"LC-Subjects" => "$datestamp/School/LCSH"	#Any filename containing LC-Subjects goes into School/LCSH  
+		R03 => "$datestamp/School/NTAR",		#Any other school reports go into School/NTAR 		
+		R04 => "$datestamp/School/NTAR",
+		R06 => "$datestamp/School/NTAR",
+		R07 => "$datestamp/School/NTAR", 
+		R31 => "$datestamp/School/NTAR",
 	);
 		
 	#@ordered_keys is an ordered list of key strings to match filenames with. 
 	#Mesh and Genre are done first because any file with that name goes into a specific folder. 
 	#Childrens and local are the two filetypes that do not go with the rest of the reports with the same number (R07, R06) so we deal with those next
-	#Then we can move anything with R06/R07 into School, and anything left in the root folder goes in MISC 
-	my @ordered_keys = ( "MESH", "GENRE", "CHILDRENS", "LOCAL", "R03", "R04", "R06", "R07", "R31" ); 	
+	#Then we can move anything with LC-Subjects into LCSH, and anything R03,04,06,07,31 into NTAR
+	#Anything left in the root folder goes in MISC 
+	my @ordered_keys = ( "MESH", "GENRE", "CHILDRENS", "LOCAL", "LC-Subjects", "R03", "R04", "R06", "R07", "R31" ); 	
 	opendir(my $dh, $path_to_files) || die ("Couldn't open $path_to_files: $!"); 
 	while(my $file = readdir($dh))         	#look at each file in the folder 
 	{ 
