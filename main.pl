@@ -18,7 +18,7 @@ my $report_dir = $Config{REPORT_DIR};
 &sanitize_filenames($report_dir);
 #Make datestamp folder inside report_dir and make subdirectories inside datestamp
 my @main_folders = ( "Archive", "Log" );						#located in $report_dir
-my @sub_folders = ( "Genre", "Misc", "School", "XLS" );		#located in $report_dir/$datestamp 
+my @sub_folders = ( "Genre", "Misc", "School", "XLS" );					#located in $report_dir/$datestamp 
 my @school_folders = ( "MST", "MU", "MU_HSL", "MU_LAW", "UMKC", "UMKC_LAW", "UMSL" );	#located in $report_dir/$datestamp/School
 &mkDirs($report_dir, @main_folders);
 &mkDirs("$report_dir/$datestamp", @sub_folders);
@@ -50,18 +50,20 @@ close($fp);						#close file
 }
 
 #unzip(src_file, dest_dir)
-#src_file is *FULL PATH* to .zip file to extract
-#dest_dir is the directory to extract the .zip file into 
+#param src_file: full path of the zip file to extract
+#param dest_dir: full path of the directory to extract the zip file into 
+#return: success/fail
+#Takes src_file and dest_dir, unzips src_file into dest_dir 
 sub unzip { 
-my ($src_file, $dest_dir); 
-($src_file, $dest_dir) = @_;
-if(!(-f $src_file)) { die "File '$src_file' doesn't exist! Check ZIP_FILE entry in mars.cfg:$!"; } #Check that .zip file exists
-if(!(-d $dest_dir)) { print `mkdir -v $dest_dir`; }						   #Check if dest_dir exists, if not => create it. 
-print `unzip -d $dest_dir $src_file`;
+	my ($src_file, $dest_dir) = @_;
+	if(!(-f $src_file)) { die "File '$src_file' doesn't exist! Check ZIP_FILE entry in mars.cfg:$!"; } #Check that .zip file exists
+	if(!(-d $dest_dir)) { print `mkdir -v $dest_dir`; }						   #Check if dest_dir exists, if not => create it. 
+	print `unzip -d $dest_dir $src_file`;
 }
 
-#sanitize_filenames($directory_with_files) 
-#Takes directory as argument, renames all files in the directory according to the following rules
+#sanitize_filenames(path_to_files) 
+#param path_to_files is the full path to the directory containing the reports (probably the same directory passed to unzip) 
+#
 sub sanitize_filenames {
 my $path_to_files = $_[0]; 	#directory w/ files is passed as argument 
 opendir(DIR, $path_to_files) || die ("Couldn't open $path_to_files: $!"); 
@@ -88,50 +90,49 @@ closedir(DIR);
 }
 
 
-#sort_nosplit($path_to_files, %filename_hash) 
+#sort_reports(path_to_files)
+#param path_to_files: full path to the diretory containing report files 
 sub sort_reports {
-my $path_to_files = $_[0]; 
+	my $path_to_files = $_[0]; 
 
-#Move excel files to their own folder to get them out of the way 
-if(-d $path_to_files) { print `mv -v $path_to_files/*.xls $path_to_files/$datestamp/XLS/`; }	#my $xls_re = /(.+)[.]xls$/;
+	#Move excel files to their own folder to get them out of the way 
+	if(-d $path_to_files) { print `mv -v $path_to_files/*.xls $path_to_files/$datestamp/XLS/`; }	#my $xls_re = /(.+)[.]xls$/;
 
-#%filename_hash is used to look up the destination folder for a given file, using the same string that we matched the file with. 
-my %filename_hash = ( 
-	MESH => "$datestamp/School/MU_HSL",		#Any filename containing m/mesh/i goes in MU_HSL folder 
-	GENRE => "$datestamp/Genre",   	 		#Any filename containing m/genre/i goes in Genre folder 
-	CHILDRENS => "$datestamp/Misc", 		#Any filename containing m/childrens/i goes in Misc 
-	LOCAL => "$datestamp/Misc", 			#Any filename containing m/local/i goes in Misc 
-	R03 => "$datestamp/School",
-	R04 => "$datestamp/School",
-	R06 => "$datestamp/School",
-	R07 => "$datestamp/School", 
-	R31 => "$datestamp/School",
-);
-	
-#@ordered_keys is an ordered list of key strings to match filenames with. 
-#Mesh and Genre are done first because any file with that name goes into a specific folder. 
-#Childrens and local are the two filetypes that do not go with the rest of the reports with the same number (R07, R06) so we deal with those next
-#Then we can move anything with R06/R07 into School, and anything left in the root folder goes in MISC 
-my @ordered_keys = ( "MESH", "GENRE", "CHILDRENS", "LOCAL", "R03", "R04", "R06", "R07", "R31" ); 	
-											
-opendir(my $dh, $path_to_files) || die ("Couldn't open $path_to_files: $!"); 
-#look at each file in the folder 
-while(my $file = readdir($dh)) { 
-next if ($file =~ m/^\./); 	#ignore hidden files 
-next if !($file =~ /\./); 	#ignore files that don't have a . somewhere (used to ignore directories in this case) 
-
-foreach my $key (@ordered_keys)
-{
-	if( $file =~ m/$key/i )
-	{
-		print `mv -v $path_to_files/$file $path_to_files/$filename_hash{$key}`;
-		last; 		#break inner loop when we find the first matching key 
+	#%filename_hash is used to look up the destination folder for a given file, using the same string that we matched the file with. 
+	my %filename_hash = ( 
+		MESH => "$datestamp/School/MU_HSL",		#Any filename containing m/mesh/i goes in MU_HSL folder 
+		GENRE => "$datestamp/Genre",   	 		#Any filename containing m/genre/i goes in Genre folder 
+		CHILDRENS => "$datestamp/Misc", 		#Any filename containing m/childrens/i goes in Misc 
+		LOCAL => "$datestamp/Misc", 			#Any filename containing m/local/i goes in Misc
+		R03 => "$datestamp/School",				
+		R04 => "$datestamp/School",
+		R06 => "$datestamp/School",
+		R07 => "$datestamp/School", 
+		R31 => "$datestamp/School",
+	);
+		
+	#@ordered_keys is an ordered list of key strings to match filenames with. 
+	#Mesh and Genre are done first because any file with that name goes into a specific folder. 
+	#Childrens and local are the two filetypes that do not go with the rest of the reports with the same number (R07, R06) so we deal with those next
+	#Then we can move anything with R06/R07 into School, and anything left in the root folder goes in MISC 
+	my @ordered_keys = ( "MESH", "GENRE", "CHILDRENS", "LOCAL", "R03", "R04", "R06", "R07", "R31" ); 	
+	opendir(my $dh, $path_to_files) || die ("Couldn't open $path_to_files: $!"); 
+	while(my $file = readdir($dh))         	#look at each file in the folder 
+	{ 
+		next if ($file =~ m/^\./); 	#ignore hidden files 
+		next if !($file =~ /\./); 	#ignore files that don't have a . somewhere (used to ignore directories in this case) 
+		foreach my $key (@ordered_keys)
+		{
+			if( $file =~ m/$key/i )
+			{
+				print `mv -v $path_to_files/$file $path_to_files/$filename_hash{$key}`;
+				last; 		#break inner loop when we find the first matching key 
+			}
+		} 
 	}
-} 
-}
-closedir $dh;
-#When we get to this point, everything that is left in $path_to_files should go in MISC 
-if(-d $path_to_files) { print `mv -v $path_to_files/*.htm $path_to_files/$datestamp/Misc/`; }
+	closedir $dh;
+	#When we get to this point, everything that is left in $path_to_files should go in MISC 
+	if(-d $path_to_files) { print `mv -v $path_to_files/*.htm $path_to_files/$datestamp/Misc/`; }
 }
 
 
@@ -151,6 +152,7 @@ sub mkDirs
 		}
 	}
 }
+
 
 
 
