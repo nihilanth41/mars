@@ -219,7 +219,10 @@ sub split_reports {
 					last;
 				}
 			}
-			
+			if($j >= $num_records)
+			{
+				last;
+			}
 		}
 		#printf("Records written/Records in file: %d/%d\n", $rec_count, $num_records);
 		print `rm -v $file_path`; 						#delete the original file (so we can verify all the side-by-side have been processed)
