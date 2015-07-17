@@ -52,10 +52,9 @@ sub parse_config {
 	close($fp);						#close file
 }
 
-#unzip(src_file, dest_dir)
-#param src_file: full path of the zip file to extract
-#param dest_dir: full path of the directory to extract the zip file into 
-#return: success/fail
+#unzip($src_file, $dest_dir)
+#param $src_file: full path of the zip file to extract
+#param $dest_dir: full path of the directory to extract the zip file into 
 #Takes src_file and dest_dir, unzips src_file into dest_dir 
 sub unzip { 
 	my ($src_file, $dest_dir) = @_;
@@ -64,8 +63,8 @@ sub unzip {
 	print `unzip -d $dest_dir $src_file`;
 }
 
-#sanitize_filenames(path_to_files) 
-#param path_to_files is the full path to the directory containing the reports (probably the same directory passed to unzip) 
+#sanitize_filenames($path_to_files) 
+#param $path_to_files: the full path to the directory containing the reports (probably the same directory passed to unzip) 
 #Removes problematic characters from filenames so that we don't have to escape them on *nix systems
 sub sanitize_filenames {
 	my $path_to_files = $_[0]; 	#directory w/ files is passed as argument 
@@ -94,8 +93,8 @@ sub sanitize_filenames {
 }
 
 
-#sort_reports(path_to_files)
-#param path_to_files: full path to the diretory containing report files 
+#sort_reports($path_to_files)
+#param $path_to_files: full path to the diretory containing report files 
 sub sort_reports {
 	my $path_to_files = $_[0]; 
 
@@ -143,22 +142,26 @@ sub sort_reports {
 
 
 #mkDirs($path, @folders)
-#takes a path and a list of directories to create 
+#param $path: full path to directory that we will create directories in 
+#param @folders: list of directories to create   
 #checks if directories already exist in path -> creates if not 
 sub mkDirs
 {
-	my ($path, @folders) = @_;	#assign input args
+	my ($path, @folders) = @_;		#assign input args
 	for my $folder (@folders) 
 	{
-		chomp $folder; 		#remove trailing \n
+		chomp $folder; 			#remove trailing \n
 		my $newdir = "$path/$folder"; 
-		if(!(-d "$path/$folder")) #if directory doesn't exist
+		if(!(-d "$path/$folder")) 	#if directory doesn't exist
 		{
 			print `mkdir -pv $path/$folder`; 
 		}
 	}
 }
 
+#split_reports($path_to_files)
+#param $path_to_files: full path to directory containing the reports that need split (E.g., NTAR,LCSH)
+#
 sub split_reports {
 	#Putting these hashes here until I can figure out a good way to read them from a config file
 	my %LCSH = (
@@ -178,23 +181,22 @@ sub split_reports {
 		MST => "6.9",
 		UMSL => "18.2"
 	);
-	my $path_to_files = $_[0];			#assign input args
-	my @files = read_dir($path_to_files); 		#get a list of files in the directory 
+	my $path_to_files = $_[0];							#assign input args
+	my @files = read_dir($path_to_files); 						#get a list of files in the directory 
 	my $delimiter = '<td class=\'rec-label\'>Old version of Record:</td>';
-	my $search_string = quotemeta $delimiter; 	#quotemeta adds all the necessary escape characters to the string,
-	for my $file (@files)				#for each file in the directory
+	my $search_string = quotemeta $delimiter; 					#quotemeta adds all the necessary escape characters to the string,
+	for my $file (@files)								#for each file in the directory
 	{	
-		my $file_path = "$path_to_files/$file";	#full path to file
+		my $file_path = "$path_to_files/$file";					#full path to file
 		printf("Opening file: %s\n", $file_path); 
-		my $txt = read_file( $file_path ); 		#load whole file into 1 string w/ file::slurp	
+		my $txt = read_file( $file_path ); 					#load whole file into 1 string w/ file::slurp	
 		my @records = split ( /$search_string/, $txt );
-		my $header = shift @records; 		#assign the first element of the array to $header, remove it from the array and shift all entries down
-		my $num_records = $#records+1; 		#gives the last index of the array, since we removed the header it should be equal to the number of records also
-		next if($num_records <= 0);   		#line-format; ignore for now
-		#my $numbered_rec = join( '', $header,$first_delimiter,$records[0]); #add our header, first numbered entry, and first record to the string 
-		my $rec_count = 0; 		#This variable is to store the total count of the records going to each library. We want to make sure it adds up to the total at the end 
-		my $j = 0;		        #variable to keep track of position in @records	
-		for my $key (keys %NTAR)	#for each key in the NTAR hash
+		my $header = shift @records; 						#assign the first element of the array to $header, remove it from the array and shift all entries down
+		my $num_records = $#records+1; 						#number of records in @records	
+		next if($num_records <= 0);   						#line-format; ignore for now
+		my $rec_count = 0; 							#This variable is to keep track of the # records going to each school (per file) 
+		my $j = 0;		        					#variable to keep track of position in @records	
+		for my $key (keys %NTAR)						#for each key in the NTAR hash
 		{	
 			my $new_file_path = "$path_to_files/../$key/$key.$file";	#prepend key to each filename
 			printf("Writing header to file: %s\n", $new_file_path); 
@@ -214,7 +216,7 @@ sub split_reports {
 			}	
 		}
 		#printf("Records written/Records in file: %d/%d\n", $rec_count, $num_records);
-		print `rm -v $file_path`; #delete the original file (so we can verify all the side-by-side have been processed)
+		print `rm -v $file_path`; 						#delete the original file (so we can verify all the side-by-side have been processed)
 
 	}
 }
