@@ -160,6 +160,7 @@ sub mkDirs
 }
 
 sub split_reports {
+	#Putting these hashes here until I can figure out a good way to read them from a config file
 	my %LCSH = (
 		MU => "42.4",
 		MU_LAW => "2.4",
@@ -177,46 +178,45 @@ sub split_reports {
 		MST => "6.9",
 		UMSL => "18.2"
 	);
-	my $path_to_files = $_[0];
-	#get a list of files in the directory 
-	my @files = read_dir($path_to_files);
+	my $path_to_files = $_[0];			#assign input args
+	my @files = read_dir($path_to_files); 		#get a list of files in the directory 
 	my $delimiter = '<td class=\'rec-label\'>Old version of Record:</td>';
 	my $search_string = quotemeta $delimiter; 	#quotemeta adds all the necessary escape characters to the string,
-	#use File::Slurp to load entire file into $utf8_txt
-	for my $file (@files)
+	for my $file (@files)				#for each file in the directory
 	{	
-		my $path = "$path_to_files/$file";
-		printf("Opening file: %s\n", $path); 
-		my $txt = read_file( "$path_to_files/$file" ); 
+		my $file_path = "$path_to_files/$file";	#full path to file
+		printf("Opening file: %s\n", $file_path); 
+		my $txt = read_file( $file_path ); 		#load whole file into 1 string w/ file::slurp	
 		my @records = split ( /$search_string/, $txt );
-		my $header = shift @records; #assign the first element of the array to $header, remove it from the array and shift all entries down
-		my $num_records = $#records; #gives the last index of the array, since we removed the header it should be equal to the number of records also
-		next if($num_records < 0);   #line-format; ignore for now
-		printf("Num records: %d\n", $num_records);
-
-		#my $first_delimiter  = '<td class=\'rec-label\'>(1) Old version of Record:</td>'; #manually create first numbered entry 
+		my $header = shift @records; 		#assign the first element of the array to $header, remove it from the array and shift all entries down
+		my $num_records = $#records+1; 		#gives the last index of the array, since we removed the header it should be equal to the number of records also
+		next if($num_records <= 0);   		#line-format; ignore for now
 		#my $numbered_rec = join( '', $header,$first_delimiter,$records[0]); #add our header, first numbered entry, and first record to the string 
-		my $rec_count = 0; 
+		my $rec_count = 0; 		#This variable is to store the total count of the records going to each library. We want to make sure it adds up to the total at the end 
+		my $j = 0;		        #variable to keep track of position in @records	
 		for my $key (keys %NTAR)	#for each key in the NTAR hash
 		{	
-			my $num_records_tkey = ($num_records+1)*($NTAR{$key}/100);
-			printf("Number of records required for $key is %.2f\n", $num_records_tkey);
-			$rec_count += $num_records_tkey;
-			#for(my $i=1; $i<=$#records; $i++)
-#			{
-			#joins the current string with each new numbered delimiter and each record
-			#assign record number
-			#my $n = $i+1; 
-			#my $new_delimiter = "<td class=\'rec-label\'>($n) Old version of Record:</td>"; 
+			my $new_file_path = "$path_to_files/../$key/$key.$file";	#prepend key to each filename
+			printf("Writing header to file: %s\n", $new_file_path); 
+			write_file($new_file_path, $header); 
+			my $num_records_this_key = ($num_records)*($NTAR{$key}/100);	#number of records that should go to the current library (key)
+			printf("Number of records required for $key is %d\n", $num_records_this_key);
+			$rec_count += $num_records_this_key;				#add to total processed for this file
+			for(my $i=0; $i<$num_records_this_key; $i++)			#starting at the beginning, process records until we reach the limit for this key
+			{
+				my $n = $i+1; #record number
+				my $new_delimiter = "<td class=\'rec-label\'>($n) Old version of Record:</td>"; 
+				#printf("New delim: %s\n", $new_delimiter);
+#				printf("Records[j]: %s\n", $records[$j]); 
+				$records[$j] = join('', $new_delimiter,$records[$j]);  #Add delimiter (w/ record number) to record array
+				write_file($new_file_path, {append => 1}, $records[$j]);
+				$j++;
+							}	
 			#$numbered_rec = join('', $numbered_rec, $new_delimiter, $records[$i]);
-#		}
-#	print $numbered_rec;
 		}
-		printf("Total number of individual records decimal: %d, float: %.2f\n", $rec_count, $rec_count);
+		printf("Total number of individual records decimal: %d\n", $rec_count);
 
-	}
-}
-
+	}}
 
 
 
