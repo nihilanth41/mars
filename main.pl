@@ -207,16 +207,17 @@ sub split_reports {
 				my $n = $i+1; #record number
 				my $new_delimiter = "<td class=\'rec-label\'>($n) Old version of Record:</td>"; 
 				#printf("New delim: %s\n", $new_delimiter);
-#				printf("Records[j]: %s\n", $records[$j]); 
+				#printf("Records[j]: %s\n", $records[$j]); 
 				$records[$j] = join('', $new_delimiter,$records[$j]);  #Add delimiter (w/ record number) to record array
 				write_file($new_file_path, {append => 1}, $records[$j]);
 				$j++;
-							}	
-			#$numbered_rec = join('', $numbered_rec, $new_delimiter, $records[$i]);
+			}	
 		}
-		printf("Total number of individual records decimal: %d\n", $rec_count);
+		#printf("Records written/Records in file: %d/%d\n", $rec_count, $num_records);
+		print `rm -v $file_path`; #delete the original file (so we can verify all the side-by-side have been processed)
 
-	}}
+	}
+}
 
 
 
