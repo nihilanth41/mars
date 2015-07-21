@@ -30,7 +30,7 @@ unless ($ret)
 	&mkDirs("$report_dir/$datestamp", @sub_folders);
 	&mkDirs("$report_dir/$datestamp/School", @school_folders);
 	&sort_reports($report_dir);
-	&split_reports("$report_dir/$datestamp/School/NTAR", "$report_dir/$datestamp/School/LCSH");
+#	&split_reports("$report_dir/$datestamp/School/NTAR", "$report_dir/$datestamp/School/LCSH");
 }
 exit(0);
 
@@ -93,24 +93,24 @@ sub sort_reports {
 
 	#%filename_hash is used to look up the destination folder for a given file, using the same string that we matched the file with. 
 	my %filename_hash = ( 
-		MESH => "$datestamp/School/MU_HSL",		#Any filename containing m/mesh/i goes in MU_HSL folder 
-		GENRE => "$datestamp/Genre",   	 		#Any filename containing m/genre/i goes in Genre folder 
-		CHILDRENS => "$datestamp/Misc", 		#Any filename containing m/childrens/i goes in Misc 
-		LOCAL => "$datestamp/Misc", 			#Any filename containing m/local/i goes in Misc
-		"LC-Subjects" => "$datestamp/School/LCSH",	#Any filename containing LC-Subjects goes into School/LCSH  
-		R03 => "$datestamp/School/NTAR",		#Any other school reports go into School/NTAR 		
-		R04 => "$datestamp/School/NTAR",
-		R06 => "$datestamp/School/NTAR",
-		R07 => "$datestamp/School/NTAR", 
-		R31 => "$datestamp/School/NTAR",
+		MESH => $cfg->param('FOLDER.MESH'),			#Any filename containing m/mesh/i goes in MU_HSL folder 
+		GENRE => $cfg->param('FOLDER.GENRE'),   		#Any filename containing m/genre/i goes in Genre folder 
+		CHILDRENS => $cfg->param('FOLDER.CHILDRENS'), 		#Any filename containing m/childrens/i goes in Misc 
+		LOCAL => $cfg->param('FOLDER.LOCAL'),			#Any filename containing m/local/i goes in Misc
+		"LC-Subjects" => $cfg->param('FOLDER.LC-SUBJECTS'),	#Any filename containing LC-Subjects goes into School/LCSH  
+		R03 => $cfg->param('FOLDER.R03'),			#Any other school reports go into School/NTAR 		
+		R04 => $cfg->param('FOLDER.R04'), 
+		R06 => $cfg->param('FOLDER.R06'),
+		R07 => $cfg->param('FOLDER.R07'),
+		R31 => $cfg->param('FOLDER.R31')
 	);
-		
+
 	#@ordered_keys is an ordered list of key strings to match filenames with. 
 	#Mesh and Genre are done first because any file with that name goes into a specific folder. 
 	#Childrens and local are the two filetypes that do not go with the rest of the reports with the same number (R07, R06) so we deal with those next
 	#Then we can move anything with LC-Subjects into LCSH, and anything R03,04,06,07,31 into NTAR
 	#Anything left in the root folder goes in MISC 
-	my @ordered_keys = ( "MESH", "GENRE", "CHILDRENS", "LOCAL", "LC-Subjects", "R03", "R04", "R06", "R07", "R31" ); 	
+	my @ordered_keys = $cfg->param('FOLDER.ORDERED_KEYS');
 	opendir(my $dh, $path_to_files) || die ("Couldn't open $path_to_files: $!"); 
 	while(my $file = readdir($dh))         	#look at each file in the folder 
 	{ 
@@ -120,7 +120,7 @@ sub sort_reports {
 		{
 			if( $file =~ m/$key/i )
 			{
-				print `mv -v $path_to_files/$file $path_to_files/$filename_hash{$key}`;
+				print `mv -v $path_to_files/$file "$path_to_files/$filename_hash{$key}"`;
 				last; 		#break inner loop when we find the first matching key 
 			}
 		} 
