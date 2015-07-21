@@ -30,7 +30,7 @@ unless ($ret)
 	&mkDirs("$report_dir/$datestamp", @sub_folders);
 	&mkDirs("$report_dir/$datestamp/School", @school_folders);
 	&sort_reports($report_dir);
-	&split_reports("$report_dir/$datestamp/School/NTAR");
+	&split_reports("$report_dir/$datestamp/School/NTAR", "$report_dir/$datestamp/School/LCSH");
 }
 exit(0);
 
@@ -149,11 +149,11 @@ sub mkDirs
 	}
 }
 
-#split_reports($path_to_files)
-#param $path_to_files: full path to directory containing the reports that need split (E.g., NTAR,LCSH)
-#
+#split_reports($NTAR_DIR, $LCSH_DIR)
+#param $NTAR_DIR: full path to directory containing NTAR reports
+#param $LCSH_DIR: full path to directory containing LCSH reports
 sub split_reports {
-	#Putting these hashes here until I can figure out a good way to read them from a config file
+	#Get percentages from config file interface and add them to local hash
 	my %LCSH = (
 		MU => $cfg->param('LCSH.MU'),
 		MU_LAW => $cfg->param('LCSH.MU_LAW'),
@@ -171,48 +171,55 @@ sub split_reports {
 		MST => $cfg->param('NTAR.MST'),
 		UMSL => $cfg->param('NTAR.UMSL')
 	);
-	my $path_to_files = $_[0];							#assign input args
+
+	my ($NTAR_DIR, $LCSH_DIR) = @_; 
+	my $path_to_files = $NTAR_DIR;							#assign input args
 	my @files = read_dir($path_to_files); 						#get a list of files in the directory 
 	my $delimiter = $cfg->param('HTML.CHG_DELIM');
 	my $search_string = quotemeta $delimiter; 					#quotemeta adds all the necessary escape characters to the string
 	for my $file (@files)								#for each file in the directory
-	{	
+	{
+		my %FILES = ();								#hash to store number of files going into each place
 		my $file_path = "$path_to_files/$file";					#full path to file
 		printf("Opening file: %s\n", $file_path); 
 		my $txt = read_file( $file_path ); 					#load whole file into 1 string w/ file::slurp	
 		my @records = split ( /$search_string/, $txt );
 		my $header = shift @records; 						#assign the first element of the array to $header, remove it from the array and shift all entries down
-		my $num_records = $#records+1; 						#number of records in @records	
-		next if($num_records <= 0);   						#line-format; ignore for now
-		printf("Number of records in %s: %d\n", $file_path, $num_records);
-		my $rec_count = 0; 							#This variable is to keep track of the # records going to each school (per file) 
-		my $j = 0;		        					#variable to keep track of position in @records	
+		my $num_records_file = $#records+1; 					#number of records in @records	
+		next if($num_records_file <= 0);   					#line-format; ignore for now
+		printf("Number of records in file %s: %d\n", $file_path, $num_records_file);
+		my $records_written = 0; 						#This variable is to keep track of the # records going to each school (per file) 
+		my $records_pos = 0;		        				#variable to keep track of position in @records	
 		for my $key (keys %NTAR)						#for each key in the NTAR hash
 		{	
 			my $new_file_path = "$path_to_files/../$key/$key.$file";	#prepend key to each filename
-			printf("Writing header to file: %s\n", $new_file_path); 
+			#printf("Writing header to file: %s\n", $new_file_path); 
 			write_file($new_file_path, $header); 
-			my $num_records_this_key = (($num_records)*($NTAR{$key}/100));	#number of records that should go to the current library (key)
+			my $num_records_this_key = int(($num_records_file)*($NTAR{$key}/100));	#number of records that should go to the current library (key)
+			if ($num_records_this_key < 1)
+			{
+				$num_records_this_key++;
+			}
 			printf("Number of records required for $key is (float)%f (int)%d\n", $num_records_this_key, $num_records_this_key);
-			$rec_count += $num_records_this_key;				#add to total processed for this file
 			for(my $i=0; $i<$num_records_this_key; $i++)			#starting at the beginning, process records until we reach the limit for this key
 			{
 				my $n = $i+1; #record number
 				my $new_delimiter = "<td class=\'rec-label\'>($n) Old version of Record:</td>"; 
-				$records[$j] = join('', $new_delimiter,$records[$j]);  #Add delimiter (w/ record number) to record array
-				write_file($new_file_path, {append => 1}, $records[$j]);
-				$j++;
-				if($j >= $num_records)
+				$records[$records_pos] = join('', $new_delimiter,$records[$records_pos]);  #Add delimiter (w/ record number) to record array
+				write_file($new_file_path, {append => 1}, $records[$records_pos]);
+				$records_written++;
+				$records_pos++;
+				if($records_pos >= $num_records_file)
 				{
 					last;
 				}
 			}
-			if($j >= $num_records)
+			if($records_pos >= $num_records_file)
 			{
 				last;
 			}
 		}
-		printf("Total Records written/Total Records in file: %d/%d\n", $rec_count, $num_records);
+		printf("Total Records written/Total Records in file: %d/%d\n", $records_written, $num_records_file);
 		print `rm -v $file_path`; 						#delete the original file (so we can verify all the side-by-side have been processed)
 
 	}
