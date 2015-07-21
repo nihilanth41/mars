@@ -30,7 +30,7 @@ unless ($ret)
 	&mkDirs("$report_dir/$datestamp", @sub_folders);
 	&mkDirs("$report_dir/$datestamp/School", @school_folders);
 	&sort_reports($report_dir);
-#	&split_reports("$report_dir/$datestamp/School/NTAR", "$report_dir/$datestamp/School/LCSH");
+	&split_reports("$report_dir/$datestamp/School/NTAR", "$report_dir/$datestamp/School/LCSH");
 }
 exit(0);
 
@@ -120,7 +120,7 @@ sub sort_reports {
 		{
 			if( $file =~ m/$key/i )
 			{
-				print `mv -v $path_to_files/$file "$path_to_files/$filename_hash{$key}"`;
+				print `mv -v $path_to_files/$file "$path_to_files/$datestamp/$filename_hash{$key}"`;
 				last; 		#break inner loop when we find the first matching key 
 			}
 		} 
