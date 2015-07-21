@@ -173,26 +173,27 @@ sub split_reports {
 	);
 	my $path_to_files = $_[0];							#assign input args
 	my @files = read_dir($path_to_files); 						#get a list of files in the directory 
-	my $delimiter = '<td class=\'rec-label\'>Old version of Record:</td>';
-	my $search_string = quotemeta $delimiter; 					#quotemeta adds all the necessary escape characters to the string,
+	my $delimiter = $cfg->param('HTML.CHG_DELIM');
+	my $search_string = quotemeta $delimiter; 					#quotemeta adds all the necessary escape characters to the string
 	for my $file (@files)								#for each file in the directory
 	{	
 		my $file_path = "$path_to_files/$file";					#full path to file
-		#printf("Opening file: %s\n", $file_path); 
+		printf("Opening file: %s\n", $file_path); 
 		my $txt = read_file( $file_path ); 					#load whole file into 1 string w/ file::slurp	
 		my @records = split ( /$search_string/, $txt );
 		my $header = shift @records; 						#assign the first element of the array to $header, remove it from the array and shift all entries down
 		my $num_records = $#records+1; 						#number of records in @records	
 		next if($num_records <= 0);   						#line-format; ignore for now
+		printf("Number of records in %s: %d\n", $file_path, $num_records);
 		my $rec_count = 0; 							#This variable is to keep track of the # records going to each school (per file) 
 		my $j = 0;		        					#variable to keep track of position in @records	
 		for my $key (keys %NTAR)						#for each key in the NTAR hash
 		{	
 			my $new_file_path = "$path_to_files/../$key/$key.$file";	#prepend key to each filename
-			#printf("Writing header to file: %s\n", $new_file_path); 
+			printf("Writing header to file: %s\n", $new_file_path); 
 			write_file($new_file_path, $header); 
 			my $num_records_this_key = (($num_records)*($NTAR{$key}/100));	#number of records that should go to the current library (key)
-			printf("Number of records required for $key is %f\n", $num_records_this_key);
+			printf("Number of records required for $key is (float)%f (int)%d\n", $num_records_this_key, $num_records_this_key);
 			$rec_count += $num_records_this_key;				#add to total processed for this file
 			for(my $i=0; $i<$num_records_this_key; $i++)			#starting at the beginning, process records until we reach the limit for this key
 			{
