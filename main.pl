@@ -10,22 +10,22 @@ my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
 my $datestamp = sprintf("%4d_%02d_%02d", $year+1900, $mon+1, $mday);
 
 #parse config file
-my $cfg_file = "mars.cfg";
+my $cfg_file = "/home/zrrm74/src/mars/mars.cfg";
 my $cfg = new Config::Simple();			#Config::Simple object 
 $cfg->read($cfg_file) or die $cfg->error();  	#Exception handling 
 
 
 my $zip_file = $cfg->param('ENV.ZIP_FILE'); 
 my $report_dir = $cfg->param('ENV.REPORT_DIR');
+my @main_folders = $cfg->param("ENV.MAINDIRS");
+my @sub_folders = $cfg->param("ENV.SUBDIRS");
+my @school_folders = $cfg->param("ENV.SCHOOLDIRS");
 
 #attempt to unzip -- mkDirs and handle reports only if dir doesn't already exist 
 my $ret = &unzip($zip_file, $report_dir);
 unless ($ret) 
 {
 	&sanitize_filenames($report_dir); 
-	my @main_folders = ( "Archive", "Log" );								#located in $report_dir
-	my @sub_folders = ( "Genre", "Misc", "School", "XLS" );							#located in $report_dir/$datestamp 
-	my @school_folders = ( "LCSH", "NTAR", "MST", "MU", "MU_HSL", "MU_LAW", "UMKC", "UMKC_LAW", "UMSL" );	#located in $report_dir/$datestamp/School
 	&mkDirs($report_dir, @main_folders);
 	&mkDirs("$report_dir/$datestamp", @sub_folders);
 	&mkDirs("$report_dir/$datestamp/School", @school_folders);
