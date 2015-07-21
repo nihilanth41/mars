@@ -3,54 +3,39 @@
 use strict;
 use warnings;
 use File::Slurp;
+use Config::Simple;
 
 #get current date/time for timestamps 
 my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
 my $datestamp = sprintf("%4d_%02d_%02d", $year+1900, $mon+1, $mday);
 
-my $config_file = "mars.cfg";
-#hash to store key/value pairs from config file 
-my %Config = ();
-&parse_config($config_file, \%Config);
-my $zip_file = $Config{ZIP_FILE}; 
-my $report_dir = $Config{REPORT_DIR};
+#parse config file
+my $cfg_file = "mars.cfg";
+my $cfg = new Config::Simple();			#Config::Simple object 
+$cfg->read($cfg_file) or die $cfg->error();  	#Exception handling 
 
-&unzip($zip_file, $report_dir);
-&sanitize_filenames($report_dir);
 
-my @main_folders = ( "Archive", "Log" );								#located in $report_dir
-my @sub_folders = ( "Genre", "Misc", "School", "XLS" );							#located in $report_dir/$datestamp 
-my @school_folders = ( "LCSH", "NTAR", "MST", "MU", "MU_HSL", "MU_LAW", "UMKC", "UMKC_LAW", "UMSL" );	#located in $report_dir/$datestamp/School
-&mkDirs($report_dir, @main_folders);
-&mkDirs("$report_dir/$datestamp", @sub_folders);
-&mkDirs("$report_dir/$datestamp/School", @school_folders);
+my $zip_file = $cfg->param('ENV.ZIP_FILE'); 
+my $report_dir = $cfg->param('ENV.REPORT_DIR');
 
-&sort_reports($report_dir);
-&split_reports("$report_dir/$datestamp/School/NTAR");
+#attempt to unzip -- mkDirs and handle reports only if dir doesn't already exist 
+my $ret = &unzip($zip_file, $report_dir);
+unless ($ret) 
+{
+	&sanitize_filenames($report_dir); 
+	my @main_folders = ( "Archive", "Log" );								#located in $report_dir
+	my @sub_folders = ( "Genre", "Misc", "School", "XLS" );							#located in $report_dir/$datestamp 
+	my @school_folders = ( "LCSH", "NTAR", "MST", "MU", "MU_HSL", "MU_LAW", "UMKC", "UMKC_LAW", "UMSL" );	#located in $report_dir/$datestamp/School
+	&mkDirs($report_dir, @main_folders);
+	&mkDirs("$report_dir/$datestamp", @sub_folders);
+	&mkDirs("$report_dir/$datestamp/School", @school_folders);
+	&sort_reports($report_dir);
+	&split_reports("$report_dir/$datestamp/School/NTAR");
+}
 exit(0);
 
 
-#parse_config(config_file, config_hash) 
-#param config_file: full path to config file 
-#param config_hash: an empty hash to fill with key/value pairs from the config file 
-#Fills the hash w/ key/value pairs from config file and returns
-sub parse_config {
-	my ($row, $fp, $File, $Option, $Value, $Config);
-	($File, $Config) = @_;
-	open($fp, $File) or die "Could not open file '$File': $!";
-	while($row = <$fp>)					#For each line in file
-	{
-		chomp $row;					#Remove trailing newline 
-		$row =~ s/^\s*//;				#Remove spaces at the start of the line
-		$row =~ s/\s*$//;				#Remove space(s) at the end of the line
-		if(($row !~ /^#/) && ($row ne "")) 		#Ignore blank lines and comments
-		{
-			($Option, $Value) = split (/=/, $row);	#split each line into name/value pairs
-			$$Config{$Option} = $Value;		#create hash of name/value pairs
-		}
-	}
-	close($fp);						#close file
-}
+
 
 #unzip($src_file, $dest_dir)
 #param $src_file: full path of the zip file to extract
@@ -59,8 +44,13 @@ sub parse_config {
 sub unzip { 
 	my ($src_file, $dest_dir) = @_;
 	if(!(-f $src_file)) { die "File '$src_file' doesn't exist! Check ZIP_FILE entry in mars.cfg:$!"; } #Check that .zip file exists
-	if(!(-d $dest_dir)) { print `mkdir -v $dest_dir`; }						   #Check if dest_dir exists, if not => create it. 
-	print `unzip -d $dest_dir $src_file`;
+	if(!(-d $dest_dir)) 
+	{ 
+		print `mkdir -v $dest_dir`; 	 	#create dir if doesn't exist 
+		print `unzip -d $dest_dir $src_file`;   #unzip into new directory
+		return 0; 				#EXIT_SUCCESS 
+	}
+	return 1; 					#Directory already exists -> skip unzipping
 }
 
 #sanitize_filenames($path_to_files) 
@@ -165,21 +155,21 @@ sub mkDirs
 sub split_reports {
 	#Putting these hashes here until I can figure out a good way to read them from a config file
 	my %LCSH = (
-		MU => "42.4",
-		MU_LAW => "2.4",
-		UMKC => "26.4",
-		UMKC_LAW => "3.1",
-		MST => "7",
-		UMSL => "18.7"
+		MU => $cfg->param('LCSH.MU'),
+		MU_LAW => $cfg->param('LCSH.MU_LAW'),
+		UMKC => $cfg->param('LCSH.UMKC'),
+		UMKC_LAW => $cfg->param('LCSH.UMKC_LAW'),
+		MST => $cfg->param('LCSH.MST'),
+		UMSL => $cfg->param('LCSH.UMSL')
 	);
 	my %NTAR = (
-		MU => "41.4",
-		MU_HSL => "2.4",
-		MU_LAW => "2.4",
-		UMKC => "25.7",
-		UMKC_LAW => "3",
-		MST => "6.9",
-		UMSL => "18.2"
+		MU => $cfg->param('NTAR.MU'), 
+		MU_HSL => $cfg->param('NTAR.MU_HSL'),
+		MU_LAW => $cfg->param('NTAR.MU_LAW'),
+		UMKC => $cfg->param('NTAR.UMKC'),
+		UMKC_LAW => $cfg->param('NTAR.UMKC_LAW'),
+		MST => $cfg->param('NTAR.MST'),
+		UMSL => $cfg->param('NTAR.UMSL')
 	);
 	my $path_to_files = $_[0];							#assign input args
 	my @files = read_dir($path_to_files); 						#get a list of files in the directory 
@@ -188,7 +178,7 @@ sub split_reports {
 	for my $file (@files)								#for each file in the directory
 	{	
 		my $file_path = "$path_to_files/$file";					#full path to file
-		printf("Opening file: %s\n", $file_path); 
+		#printf("Opening file: %s\n", $file_path); 
 		my $txt = read_file( $file_path ); 					#load whole file into 1 string w/ file::slurp	
 		my @records = split ( /$search_string/, $txt );
 		my $header = shift @records; 						#assign the first element of the array to $header, remove it from the array and shift all entries down
@@ -199,10 +189,10 @@ sub split_reports {
 		for my $key (keys %NTAR)						#for each key in the NTAR hash
 		{	
 			my $new_file_path = "$path_to_files/../$key/$key.$file";	#prepend key to each filename
-			printf("Writing header to file: %s\n", $new_file_path); 
+			#printf("Writing header to file: %s\n", $new_file_path); 
 			write_file($new_file_path, $header); 
-			my $num_records_this_key = ($num_records)*($NTAR{$key}/100);	#number of records that should go to the current library (key)
-			printf("Number of records required for $key is %.2f\n", $num_records_this_key);
+			my $num_records_this_key = (($num_records)*($NTAR{$key}/100));	#number of records that should go to the current library (key)
+			printf("Number of records required for $key is %f\n", $num_records_this_key);
 			$rec_count += $num_records_this_key;				#add to total processed for this file
 			for(my $i=0; $i<$num_records_this_key; $i++)			#starting at the beginning, process records until we reach the limit for this key
 			{
@@ -221,7 +211,7 @@ sub split_reports {
 				last;
 			}
 		}
-		printf("Records written/Records in file: %d/%d\n", $rec_count, $num_records);
+		printf("Total Records written/Total Records in file: %d/%d\n", $rec_count, $num_records);
 		print `rm -v $file_path`; 						#delete the original file (so we can verify all the side-by-side have been processed)
 
 	}
