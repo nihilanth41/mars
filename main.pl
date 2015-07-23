@@ -172,6 +172,9 @@ sub split_reports {
 		UMSL => $cfg->param('NTAR.UMSL')
 	);
 
+	#We specify the key order so that we can check if records_written == total_records whenever $key == ordered_keys[$#ordered_keys]; 
+	my @ntar_ordered_keys = $cfg->param('NTAR.ORDERED_KEYS');
+
 	my ($NTAR_DIR, $LCSH_DIR) = @_; 
 	my $path_to_files = $NTAR_DIR;							#assign input args
 	my @files = read_dir($path_to_files); 						#get a list of files in the directory 
@@ -179,7 +182,6 @@ sub split_reports {
 	my $search_string = quotemeta $delimiter; 					#quotemeta adds all the necessary escape characters to the string
 	for my $file (@files)								#for each file in the directory
 	{
-		my %FILES = ();								#hash to store number of files going into each place
 		my $file_path = "$path_to_files/$file";					#full path to file
 		printf("Opening file: %s\n", $file_path); 
 		my $txt = read_file( $file_path ); 					#load whole file into 1 string w/ file::slurp	
@@ -195,7 +197,7 @@ sub split_reports {
 			my $new_file_path = "$path_to_files/../$key/$key.$file";	#prepend key to each filename
 			#printf("Writing header to file: %s\n", $new_file_path); 
 			write_file($new_file_path, $header); 
-			my $num_records_this_key = int(($num_records_file)*($NTAR{$key}/100));	#number of records that should go to the current library (key)
+			my $num_records_this_key = (($num_records_file)*($NTAR{$key}/100));	#number of records that should go to the current library (key)
 			if ($num_records_this_key < 1)
 			{
 				$num_records_this_key++;
