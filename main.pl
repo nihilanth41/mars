@@ -212,7 +212,8 @@ sub split_reports {
 		my $rec_difference = ($num_records_file - $rpk_per_file);
 		if($rec_difference > 0)
 		{
-			printf("Records to be written (%d) does not match records in file (%d). Adding %d records to %s key\n", $rpk_per_file, $num_records_file, $rec_difference, $ordered_keys[$#ordered_keys]);
+			printf("Records to be written (%d) does not match records in file (%d) ", $rpk_per_file, $num_records_file);
+			printf("Adding %d records to %s key\n", $rec_difference, $ordered_keys[$#ordered_keys]);
 			#add any missing records to last key
 			$records_per_key{$ordered_keys[$#ordered_keys]} += $rec_difference;
 		}
