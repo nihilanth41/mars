@@ -153,7 +153,7 @@ sub mkDirs
 #get_record_array($file_path, $delimiter)
 #param $path_to_report: Full path to report file that contains records 
 #param $delimiter: 	The string we will use in conjunction with split()/join() to separate the file into records 
-#return @records:	An array of records retrieved from file $file_path 
+#return @records:	An array of records retrieved from file $file_path, index[0] is the header of the file not a record 
 sub get_record_array {
 	my ($file_path, $delimiter) = @_;
 	my $search_string = quotemeta $delimiter; 
@@ -161,6 +161,7 @@ sub get_record_array {
 	my @records = split(/$search_string/, $txt);
 	return @records;
 }
+
 
 #split_reports($NTAR_DIR, $LCSH_DIR)
 #param $NTAR_DIR: full path to directory containing NTAR reports
@@ -196,47 +197,49 @@ sub split_reports {
 	{
 		my $file_path = "$path_to_files/$file";					#full path to file
 		my @records = &get_record_array($file_path, $delimiter);	
+		next if($#records <= 0);
+		my $num_records_file = $#records; 					#last index will be eq to #records after we shift off the first element
 		my $header = shift @records; 						#assign the first element of the array to $header, remove it from the array and shift all entries down
-		my $num_records_file = $#records+1; 					#number of records in @records
+		my %records_per_key = ();
+		my $rpk_per_file=0;
+		foreach my $key (@ordered_keys)
+		{
+			$records_per_key{$key} = int($num_records_file*($NTAR{$key}/100));
+			$rpk_per_file += $records_per_key{$key};
+		}
+		my $rec_difference = ($num_records_file - $rpk_per_file);
+		if($rec_difference > 0)
+		{
+			printf("Records to be written does not match records in file. Adding %d records to %s key\n", $rec_difference, $ordered_keys[$#ordered_keys]);
+			#add any missing records to last key
+			$records_per_key{$ordered_keys[$#ordered_keys]} += $rec_difference;
+		}
 
-
-		next if($num_records_file <= 0);   					#line-format; ignore for now
 		printf("Opening file: %s\n", $file_path); 				#print only if there are records in the file
 		printf("Total number of records in file %s: %d\n", $file_path, $num_records_file);
 		my $records_written_file = 0; 						#This variable is to keep track of the # records going to each school (per file) 
 		my $records_pos = 0;		        				#variable to keep track of position in @records	
 		foreach my $key (@ordered_keys)						#for each key in the NTAR hash
 		{
-			my $num_records_this_key = (($num_records_file)*($NTAR{$key}/100));	#number of records that should go to the current library (key)
-			#if ($num_records_this_key < 1)
-			#{
-			#		$num_records_this_key++;
-			#}
-			printf("Number of records required for $key is (float)%f (int)%d\n", $num_records_this_key, $num_records_this_key);
-			##############################################
-			my $rec_unwritten_file = ($num_records_file-$records_written_file);
-			if($key eq $ordered_keys[$#ordered_keys])
-			{
 			
-				printf("Key=%s, number of unwritten records before processing: %d\n", $key, $rec_unwritten_file);
-				$num_records_this_key = $rec_unwritten_file;
-			}
+			printf("Number of records required for $key is (int)%d\n", $records_per_key{$key});
 			my $new_file_path = "$path_to_files/../$key/$key.$file";	#prepend key to each filename
 			#printf("Writing header to file: %s\n", $new_file_path); 
 			write_file($new_file_path, $header); 
-			for(my $i=0; $i<$num_records_this_key; $i++)			#starting at the beginning, process records until we reach the limit for this key
-			{
+			for(my $i=0; $i<$records_per_key{$key}; $i++)			#starting at the beginning, process records until we reach the limit for this key
+			{	
+				if($records_pos >= $num_records_file)
+				{
+					print "Exceeded records array(inner)\n";
+					last;
+				}
+
 				my $n = $i+1; #record number
 				my $new_delimiter = "<td class=\'rec-label\'>($n) Old version of Record:</td>"; 
 				$records[$records_pos] = join('', $new_delimiter,$records[$records_pos]);  #Add delimiter (w/ record number) to record array
 				write_file($new_file_path, {append => 1}, $records[$records_pos]);
 				$records_written_file++;
 				$records_pos++;
-				if($records_pos >= $num_records_file)
-				{
-					print "Exceeded records array(inner)\n";
-					last;
-				}
 			}
 			if($records_pos >= $num_records_file)
 			{
