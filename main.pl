@@ -37,10 +37,9 @@ unless ($ret)
 	&split_reports("$report_dir/$datestamp/School/LCSH","LCSH", "HTML.DEL_DELIM");
 
 }
+#temporary; testing line-format reports 
 &get_table_array("/home/zrrm74/test.html");
 exit(0);
-
-
 
 
 #unzip($src_file, $dest_dir)
@@ -58,6 +57,7 @@ sub unzip {
 	}
 	return 1; 					#Directory already exists -> skip unzipping
 }
+
 
 #sanitize_filenames($path_to_files) 
 #param $path_to_files: the full path to the directory containing the reports (probably the same directory passed to unzip) 
@@ -157,9 +157,9 @@ sub mkDirs
 
 
 #get_record_array($file_path, $delimiter)
-#param $path_to_report: Full path to report file that contains records 
-#param $delimiter: 	The string we will use in conjunction with split()/join() to separate the file into records 
-#return @records:	An array of records retrieved from file $file_path, index[0] is the header of the file not a record 
+#param $file_path: Full path to report file that contains records 
+#param $delimiter: The string we will use in conjunction with split()/join() to separate the file into records 
+#return @records: An array of records retrieved from file $file_path, index[0] is the header of the file (not a record)
 sub get_record_array {
 	my ($file_path, $delimiter) = @_;
 	my $search_string = quotemeta $delimiter; 
@@ -168,6 +168,11 @@ sub get_record_array {
 	return @records;
 }
 
+
+#number_delimiter($delimiter, $number) 
+#param $delimiter: The string that we are adding numbers to (Same as the delimiter for CHG/DELETE reports) 
+#param $number: The number to add in the string 
+#This function takes a string and a number as args, and inserts the number into the string. It tries to match the string in order to determine the location to insert the number. 
 sub number_delimiter {
 	my ($delimiter, $number) = @_;
 	my $split_loc; 
@@ -187,11 +192,10 @@ sub number_delimiter {
 }
 
 
-
-
 #split_reports($REPORT_DIR, $HASH_NAME, $DELIM_CFG_STR)
-#param $NTAR_DIR: full path to directory containing NTAR reports
-#param $LCSH_DIR: full path to directory containing LCSH reports
+#param $REPORT_DIR: full path to directory containing reports to be split
+#param $HASH_NAME: One of [LCSH/NTAR] - Uses this parameter to determine the percentages to use to split the report  
+#param $DELIM_CFG_STR: The name of the config file entry that contains the delimiter we want to use. (This gets passed directly to $cfg->param()) 
 sub split_reports {
 	#Get percentages from config file interface and add them to local hash
 	my %LCSH = (
@@ -282,9 +286,9 @@ sub split_reports {
 	}
 }
 
+
 #get_table_array
 #param $file_path
-#param $delimiter
 sub get_table_array {
 	my ($file_path) = $_[0]; 
 	my $table_delimiter = "<thead>";
