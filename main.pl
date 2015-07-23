@@ -30,8 +30,12 @@ unless ($ret)
 	&mkDirs("$report_dir/$datestamp", @sub_folders);
 	&mkDirs("$report_dir/$datestamp/School", @school_folders);
 	&sort_reports($report_dir);
-	&split_reports("$report_dir/$datestamp/School/NTAR", "$report_dir/$datestamp/School/LCSH");
+	&split_reports("$report_dir/$datestamp/School/NTAR", "$report_dir/$datestamp/School/LCSH", "HTML.CHG_DELIM");
+	&split_reports("$report_dir/$datestamp/School/NTAR", "$report_dir/$datestamp/School/LCSH", "HTML.DEL_DELIM");
+
 }
+#my $delim = $cfg->param("HTML.DEL_DELIM");
+#&number_delimiter($delim, 27, "Deleted");
 exit(0);
 
 
@@ -162,8 +166,28 @@ sub get_record_array {
 	return @records;
 }
 
+sub number_delimiter {
+	my ($delimiter, $number) = @_;
+	my $split_loc; 
+	if( $delimiter =~ /Old/)
+	{
+		$split_loc = "Old";
+	}
+	elsif( $delimiter =~ /Deleted/)
+	{
+		$split_loc = "Deleted";
+	}
+	my @lines = split(/$split_loc/, $delimiter);	#split delimiter into two whenver it matches $split_loc
+	my $n = "($number)";
+	my $new_delimiter = join('',$lines[0],"$n $split_loc",$lines[1]);
+	#printf("Old delim: %s\n", $delimiter);
+	#printf("New delim: %s\n", $new_delimiter);
+}
 
-#split_reports($NTAR_DIR, $LCSH_DIR)
+
+
+
+#split_reports($NTAR_DIR, $LCSH_DIR, $DELIM_CFG_STR)
 #param $NTAR_DIR: full path to directory containing NTAR reports
 #param $LCSH_DIR: full path to directory containing LCSH reports
 sub split_reports {
@@ -189,10 +213,11 @@ sub split_reports {
 	#We specify the key order so that we can check if records_written == total_records whenever $key == ordered_keys[$#ordered_keys]; 
 	my @ordered_keys = $cfg->param('NTAR.ORDERED_KEYS');
 
-	my ($NTAR_DIR, $LCSH_DIR) = @_; 
+	my ($NTAR_DIR, $LCSH_DIR, $DELIM_CFG_STR) = @_; 
 	my $path_to_files = $NTAR_DIR;							#assign input args
 	my @files = read_dir($path_to_files); 						#get a list of files in the directory 
-	my $delimiter = $cfg->param('HTML.CHG_DELIM');
+	my $delimiter = $cfg->param("$DELIM_CFG_STR");
+
 	for my $file (@files)								#for each file in the directory
 	{
 		my $file_path = "$path_to_files/$file";					#full path to file
@@ -235,7 +260,7 @@ sub split_reports {
 				}
 
 				my $n = $i+1; #record number
-				my $new_delimiter = "<td class=\'rec-label\'>($n) Old version of Record:</td>"; 
+				my $new_delimiter = &number_delimiter($delimiter, $n); 
 				$records[$records_pos] = join('', $new_delimiter,$records[$records_pos]);  #Add delimiter (w/ record number) to record array
 				write_file($new_file_path, {append => 1}, $records[$records_pos]);
 				$records_written_file++;
