@@ -32,14 +32,12 @@ unless ($ret)
 	&sort_reports($report_dir);
 	&split_reports("$report_dir/$datestamp/School/NTAR","NTAR", "HTML.CHG_DELIM");
 	&split_reports("$report_dir/$datestamp/School/NTAR","NTAR", "HTML.DEL_DELIM");
+	#So far none of the chg/delete reports have been in LCSH but we should check anyway: 
 	&split_reports("$report_dir/$datestamp/School/LCSH","LCSH", "HTML.CHG_DELIM");
 	&split_reports("$report_dir/$datestamp/School/LCSH","LCSH", "HTML.DEL_DELIM");
-	
-
 
 }
-#my $delim = $cfg->param("HTML.DEL_DELIM");
-#&number_delimiter($delim, 27, "Deleted");
+&get_table_array("/home/zrrm74/test.html");
 exit(0);
 
 
@@ -288,7 +286,37 @@ sub split_reports {
 #param $file_path
 #param $delimiter
 sub get_table_array {
-	my ($file_path, $delimiter) = @_; 
+	my ($file_path) = $_[0]; 
+	my $table_delimiter = "<thead>";
+	my $table_str = quotemeta $table_delimiter;
+	my $record_delimiter = "<tr>";
+	my $record_str = quotemeta $record_delimiter;
+	my $txt = read_file($file_path);
+	my @tables = split(/$table_str/, $txt);
+	my @records = ();
+
+	print "Length of tables: $#tables\n";
+	my @records0 = split(/$record_str/, $tables[0]);
+	my @records1 = split(/$record_str/, $tables[1]);
+	my @records2 = split(/$record_str/, $tables[2]);
+	foreach (@records0) 
+	{
+		print "Record(0): $_ \n";
+	}
+	foreach (@records1) 
+	{
+		print "Record(1): $_ \n";
+	}
+	foreach (@records2)
+	{
+		print "Record(2): $_ \n";
+	}
+
+
+
+}
+
+
 
 
 
