@@ -199,6 +199,8 @@ sub split_reports {
 		my @records = &get_record_array($file_path, $delimiter);	
 		next if($#records <= 0);
 		my $num_records_file = $#records; 					#last index will be eq to #records after we shift off the first element
+		printf("Opening file: %s\n", $file_path); 				#print only if there are records in the file
+		printf("Number of records in file %s: %d\n", $file, $num_records_file);
 		my $header = shift @records; 						#assign the first element of the array to $header, remove it from the array and shift all entries down
 		my %records_per_key = ();
 		my $rpk_per_file=0;
@@ -210,19 +212,16 @@ sub split_reports {
 		my $rec_difference = ($num_records_file - $rpk_per_file);
 		if($rec_difference > 0)
 		{
-			printf("Records to be written does not match records in file. Adding %d records to %s key\n", $rec_difference, $ordered_keys[$#ordered_keys]);
+			printf("Records to be written (%d) does not match records in file (%d). Adding %d records to %s key\n", $rpk_per_file, $num_records_file, $rec_difference, $ordered_keys[$#ordered_keys]);
 			#add any missing records to last key
 			$records_per_key{$ordered_keys[$#ordered_keys]} += $rec_difference;
 		}
-
-		printf("Opening file: %s\n", $file_path); 				#print only if there are records in the file
-		printf("Total number of records in file %s: %d\n", $file_path, $num_records_file);
 		my $records_written_file = 0; 						#This variable is to keep track of the # records going to each school (per file) 
 		my $records_pos = 0;		        				#variable to keep track of position in @records	
 		foreach my $key (@ordered_keys)						#for each key in the NTAR hash
 		{
 			
-			printf("Number of records required for $key is (int)%d\n", $records_per_key{$key});
+			printf("Number of records required for $key is %d (%.2f%%) \n", $records_per_key{$key}, (($records_per_key{$key}/$num_records_file)*100));
 			my $new_file_path = "$path_to_files/../$key/$key.$file";	#prepend key to each filename
 			#printf("Writing header to file: %s\n", $new_file_path); 
 			write_file($new_file_path, $header); 
@@ -248,7 +247,7 @@ sub split_reports {
 			}
 		}
 		printf("Total Records written/Total Records in file: %d/%d\n", $records_written_file, $num_records_file);
-		#print `rm -v $file_path`; 						#delete the original file (so we can verify all the side-by-side have been processed)
+		print `rm -v $file_path`; 						#delete the original file (so we can verify all the side-by-side have been processed)
 	}
 }
 
