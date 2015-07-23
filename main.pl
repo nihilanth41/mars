@@ -284,7 +284,11 @@ sub split_reports {
 	}
 }
 
-
+#get_table_array
+#param $file_path
+#param $delimiter
+sub get_table_array {
+	my ($file_path, $delimiter) = @_; 
 
 
 
