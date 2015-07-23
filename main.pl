@@ -30,8 +30,12 @@ unless ($ret)
 	&mkDirs("$report_dir/$datestamp", @sub_folders);
 	&mkDirs("$report_dir/$datestamp/School", @school_folders);
 	&sort_reports($report_dir);
-	&split_reports("$report_dir/$datestamp/School/NTAR", "$report_dir/$datestamp/School/LCSH", "HTML.CHG_DELIM");
-	&split_reports("$report_dir/$datestamp/School/NTAR", "$report_dir/$datestamp/School/LCSH", "HTML.DEL_DELIM");
+	&split_reports("$report_dir/$datestamp/School/NTAR","NTAR", "HTML.CHG_DELIM");
+	&split_reports("$report_dir/$datestamp/School/NTAR","NTAR", "HTML.DEL_DELIM");
+	&split_reports("$report_dir/$datestamp/School/LCSH","LCSH", "HTML.CHG_DELIM");
+	&split_reports("$report_dir/$datestamp/School/LCSH","LCSH", "HTML.DEL_DELIM");
+	
+
 
 }
 #my $delim = $cfg->param("HTML.DEL_DELIM");
@@ -187,7 +191,7 @@ sub number_delimiter {
 
 
 
-#split_reports($NTAR_DIR, $LCSH_DIR, $DELIM_CFG_STR)
+#split_reports($REPORT_DIR, $HASH_NAME, $DELIM_CFG_STR)
 #param $NTAR_DIR: full path to directory containing NTAR reports
 #param $LCSH_DIR: full path to directory containing LCSH reports
 sub split_reports {
@@ -209,12 +213,14 @@ sub split_reports {
 		MST => $cfg->param('NTAR.MST'),
 		UMSL => $cfg->param('NTAR.UMSL')
 	);
-
+	
+	my ($REPORT_DIR, $HASH_NAME, $DELIM_CFG_STR) = @_; 
 	#We specify the key order so that we can check if records_written == total_records whenever $key == ordered_keys[$#ordered_keys]; 
-	my @ordered_keys = $cfg->param('NTAR.ORDERED_KEYS');
-
-	my ($NTAR_DIR, $LCSH_DIR, $DELIM_CFG_STR) = @_; 
-	my $path_to_files = $NTAR_DIR;							#assign input args
+	my @ordered_keys;
+	if($HASH_NAME eq "NTAR") { @ordered_keys = $cfg->param('NTAR.ORDERED_KEYS'); }
+	elsif($HASH_NAME eq "LCSH") { @ordered_keys = $cfg->param('LCSH.ORDERED_KEYS'); }
+	
+	my $path_to_files = $REPORT_DIR;						#assign input args
 	my @files = read_dir($path_to_files); 						#get a list of files in the directory 
 	my $delimiter = $cfg->param("$DELIM_CFG_STR");
 
@@ -230,9 +236,10 @@ sub split_reports {
 		my %records_per_key = ();
 		my $rpk_per_file=0;
 		foreach my $key (@ordered_keys)
-		{
-			$records_per_key{$key} = int($num_records_file*($NTAR{$key}/100));
-			$rpk_per_file += $records_per_key{$key};
+		{	
+			if($HASH_NAME eq "NTAR") { $records_per_key{$key} = int($num_records_file*($NTAR{$key}/100)); }
+			elsif($HASH_NAME eq "LCSH") { $records_per_key{$key} = int($num_records_file*($LCSH{$key}/100)); }
+ 			$rpk_per_file += $records_per_key{$key};
 		}
 		my $rec_difference = ($num_records_file - $rpk_per_file);
 		if($rec_difference > 0)
