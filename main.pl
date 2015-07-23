@@ -221,7 +221,7 @@ sub split_reports {
 		my $records_pos = 0;		        				#variable to keep track of position in @records	
 		foreach my $key (@ordered_keys)						#for each key in the NTAR hash
 		{
-			
+			next if($records_per_key{$key} <= 0)				#don't create the file/write header if there are no records to be written	
 			printf("Number of records required for $key is %d (%.2f%%) \n", $records_per_key{$key}, (($records_per_key{$key}/$num_records_file)*100));
 			my $new_file_path = "$path_to_files/../$key/$key.$file";	#prepend key to each filename
 			#printf("Writing header to file: %s\n", $new_file_path); 
