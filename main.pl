@@ -295,7 +295,7 @@ sub get_table_array {
 	$subject_delim = quotemeta $subject_delim;
 	my $txt = read_file($file_path);
 	my @subj_temp = split(/($subject_delim)/, $txt); 	#parenthesis add the delimiter to their own index 
-	my $file_header = shift @subj_temp;			#assign all html up until first SectionSubHeading to $subject_header
+	my $file_header = shift @subj_temp;			#assign all html up until first SectionSubHeading to $file_header
 	#my $num_elements_pre_join = $#subj_temp+1;		#
 	#print "Num elements pre: $num_elements_pre_join\n";
 	my $j = (($#subj_temp)-1); #second to last element 
@@ -312,10 +312,13 @@ sub get_table_array {
 	my $row_delim = "<td class='ctl_no'"; 		#this line is the identifier for each row in a table 
 	$row_delim = quotemeta $row_delim;
 	my @rows = ();
+	my $subject_header;
 	for my $subj (@subjects)
 	{
+		#print "subj[0]: ", $subjects[0], "\n";
+		#print "subj[1]: ", $subjects[1], "\n";
 		my @rows_temp = split(/($row_delim)/, $subj);
-		$rows[0] = shift @rows_temp; 
+		$subject_header = shift @rows_temp; 
 		my $l = (($#rows_temp)-1); 	#second to last element 
 		for(my $k=0; $k<=$l; $k+=2) #start on 1 b/c we are not shifting the header 
 		{
@@ -325,12 +328,13 @@ sub get_table_array {
 	}
 
 	my $num_elements = $#rows+1;
-	print "Num elements rows: $num_elements\n";
-
-	printf("Rows[1]: %s\n", $rows[1]);
-	printf("Rows[2]: %s\n", $rows[2]);
-	printf("Rows[3]: %s\n", $rows[3]);
-	printf("Rows[4]: %s\n", $rows[4]);
+	#print "Num elements rows: $num_elements\n";
+	#print "File header: $file_header\n";
+	printf("%s", $rows[0]);
+	printf("%s", $rows[1]);
+	printf("%s", $rows[2]);
+	printf("%s", $rows[3]);
+	printf("%s", $rows[4]);
 
 }
 
