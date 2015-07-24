@@ -292,35 +292,45 @@ sub split_reports {
 sub get_table_array {
 	my ($file_path) = $_[0]; 
 	my $subject_delim = "<div class='SectionSubHeading'>"; 	#this line contains the SubHeading for each table 
-	my $row_delim = "<td class='ctl_no'"; 		#this line is the identifier for each row in a table 
 	$subject_delim = quotemeta $subject_delim;
-	$row_delim = quotemeta $row_delim;
 	my $txt = read_file($file_path);
 	my @subj_temp = split(/($subject_delim)/, $txt); 	#parenthesis add the delimiter to their own index 
 	my $file_header = shift @subj_temp;			#assign all html up until first SectionSubHeading to $subject_header
-	my $num_elements_pre_join = $#subj_temp+1;
-	print "Num elements pre: $num_elements_pre_join\n";
-	my $i=0;
+	#my $num_elements_pre_join = $#subj_temp+1;		#
+	#print "Num elements pre: $num_elements_pre_join\n";
 	my $j = (($#subj_temp)-1); #second to last element 
 	my @subjects = ();
-	for($i=0; $i<=$j; $i+=2)
+	for(my $i=0; $i<=$j; $i+=2)
 	{
 		my $subj = join('', $subj_temp[$i], $subj_temp[$i+1]);
 		push @subjects, $subj;
 	}
-
-	my $num_elements_post_join = $#subjects+1;
-	print "Num elements post: $num_elements_post_join\n";
-	for my $element (@subjects)
+	#my $num_elements_post_join = $#subjects+1;		#
+	#print "Num elements post: $num_elements_post_join\n";
+	#now @subjects contains as many elements as there are SubHeadings 
+	#we perform the same process as above (including rejoining at the end) but using a different delimiter to split on the row 
+	my $row_delim = "<td class='ctl_no'"; 		#this line is the identifier for each row in a table 
+	$row_delim = quotemeta $row_delim;
+	my @rows = ();
+	for my $subj (@subjects)
 	{
-		print "$element\n";
+		my @rows_temp = split(/($row_delim)/, $subj);
+		$rows[0] = shift @rows_temp; 
+		my $l = (($#rows_temp)-1); 	#second to last element 
+		for(my $k=0; $k<=$l; $k+=2) #start on 1 b/c we are not shifting the header 
+		{
+				my $row = join('', $rows_temp[$k], $rows_temp[$k+1]);
+				push @rows, $row;
+		}
 	}
 
+	my $num_elements = $#rows+1;
+	print "Num elements rows: $num_elements\n";
 
-
-	
-
-
+	printf("Rows[1]: %s\n", $rows[1]);
+	printf("Rows[2]: %s\n", $rows[2]);
+	printf("Rows[3]: %s\n", $rows[3]);
+	printf("Rows[4]: %s\n", $rows[4]);
 
 }
 
