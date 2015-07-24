@@ -296,14 +296,25 @@ sub get_table_array {
 	$subject_delim = quotemeta $subject_delim;
 	$row_delim = quotemeta $row_delim;
 	my $txt = read_file($file_path);
-	my @subjects = split(/($subject_delim)/, $txt); 	#parenthesis add the delimiter to their own index 
-	my $file_header = shift @subjects;			#assign all html up until first SectionSubHeading to $subject_header
-								#@subjects should contain (num_tables*2)+1 elements before shif
-	print "last index of array subjects: $#subjects\n";
-	while($#subjects >= 0)
+	my @subj_temp = split(/($subject_delim)/, $txt); 	#parenthesis add the delimiter to their own index 
+	my $file_header = shift @subj_temp;			#assign all html up until first SectionSubHeading to $subject_header
+	my $num_elements_pre_join = $#subj_temp+1;
+	print "Num elements pre: $num_elements_pre_join\n";
+	my $i=0;
+	my $j = (($#subj_temp)-1); #second to last element 
+	my @subjects = ();
+	for($i=0; $i<=$j; $i+=2)
 	{
-		my $SectionSubHeading = shift @subjects;		#
-		my @rows = split(/($row_delim)/, $subjects[0]   #			
+		my $subj = join('', $subj_temp[$i], $subj_temp[$i+1]);
+		push @subjects, $subj;
+	}
+
+	my $num_elements_post_join = $#subjects+1;
+	print "Num elements post: $num_elements_post_join\n";
+	for my $element (@subjects)
+	{
+		print "$element\n";
+	}
 
 
 
