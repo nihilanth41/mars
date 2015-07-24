@@ -291,30 +291,23 @@ sub split_reports {
 #param $file_path
 sub get_table_array {
 	my ($file_path) = $_[0]; 
-	my $table_delimiter = "<thead>";
-	my $table_str = quotemeta $table_delimiter;
-	my $record_delimiter = "<tr>";
-	my $record_str = quotemeta $record_delimiter;
+	my $subject_delim = "<div class='SectionSubHeading'>"; 	#this line contains the SubHeading for each table 
+	my $row_delim = "<td class='ctl_no'"; 		#this line is the identifier for each row in a table 
+	$subject_delim = quotemeta $subject_delim;
+	$row_delim = quotemeta $row_delim;
 	my $txt = read_file($file_path);
-	my @tables = split(/$table_str/, $txt);
-	my @records = ();
+	my @subjects = split(/($subject_delim)/, $txt); 	#parenthesis add the delimiter to their own index 
+	my $file_header = shift @subjects;			#assign all html up until first SectionSubHeading to $subject_header
+								#@subjects should contain (num_tables*2)+1 elements before shif
+	print "last index of array subjects: $#subjects\n";
+	while($#subjects >= 0)
+	{
+		my $SectionSubHeading = shift @subjects;		#
+		my @rows = split(/($row_delim)/, $subjects[0]   #			
 
-	print "Length of tables: $#tables\n";
-	my @records0 = split(/$record_str/, $tables[0]);
-	my @records1 = split(/$record_str/, $tables[1]);
-	my @records2 = split(/$record_str/, $tables[2]);
-	foreach (@records0) 
-	{
-		print "Record(0): $_ \n";
-	}
-	foreach (@records1) 
-	{
-		print "Record(1): $_ \n";
-	}
-	foreach (@records2)
-	{
-		print "Record(2): $_ \n";
-	}
+
+
+	
 
 
 
