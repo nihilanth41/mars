@@ -103,7 +103,7 @@ sub sort_reports {
 		GENRE => $cfg->param('FOLDER.GENRE'),   		#Any filename containing m/genre/i goes in Genre folder 
 		CHILDRENS => $cfg->param('FOLDER.CHILDRENS'), 		#Any filename containing m/childrens/i goes in Misc 
 		LOCAL => $cfg->param('FOLDER.LOCAL'),			#Any filename containing m/local/i goes in Misc
-		"LC-Subjects" => $cfg->param('FOLDER.LC-SUBJECTS'),	#Any filename containing LC-Subjects goes into School/LCSH  
+		SUBJECTS => $cfg->param('FOLDER.SUBJECTS'),	#Any filename containing LC-Subjects goes into School/LCSH  
 		R03 => $cfg->param('FOLDER.R03'),			#Any other school reports go into School/NTAR 		
 		R04 => $cfg->param('FOLDER.R04'), 
 		R06 => $cfg->param('FOLDER.R06'),
@@ -286,6 +286,11 @@ sub split_reports {
 	}
 }
 
+sub get_table_records {
+	my ($file_path, $delimiter) = @_;
+	my $search_string = quotemeta $delimiter; 
+
+
 
 #get_table_array
 #param $file_path
@@ -296,13 +301,18 @@ sub get_table_array {
 	my $subj_tail = "\<\/div\>";					#SubHeading line ends with closing </div>	
 	my $txt = read_file($file_path);				#read in file as one big string
 	my (@subj_headings) = $txt =~ /$subject_delim(.*)$subj_tail/g;	#Match the string between $subject_delim and $subj_tail, and store it in @subj_heading
+	#Recreate entire SectionSubHeading html line
 	for (my $i=0; $i<=$#subj_headings; $i++)
 	{
 		$subj_headings[$i] = quotemeta $subj_headings[$i];
 		$subj_headings[$i] = join('', $subject_delim, $subj_headings[$i], $subj_tail);
 		print "Split subj: $subj_headings[$i]\n";
 	}
-#	my @rows = split(/$split_string/, $txt);			#split the string on the subject heading 
+
+	
+	#for (my $i=0 $i<=$#subj_headings; $i++)
+	#{
+#		my @table = split(/$split_string/, $txt);			#split the string on the subject heading 
 #	foreach (@rows)
 #	{
 #		print("$_");
@@ -358,4 +368,4 @@ sub get_table_array {
 
 
 
-
+}
