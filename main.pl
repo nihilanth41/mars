@@ -296,10 +296,17 @@ sub get_table_array {
 	my $subj_tail = "\<\/div\>";					#SubHeading line ends with closing </div>	
 	my $txt = read_file($file_path);				#read in file as one big string
 	my (@subj_headings) = $txt =~ /$subject_delim(.*)$subj_tail/g;	#Match the string between $subject_delim and $subj_tail, and store it in @subj_heading
-	foreach (@subj_headings)
+	for (my $i=0; $i<=$#subj_headings; $i++)
 	{
-		print $_; 
+		$subj_headings[$i] = quotemeta $subj_headings[$i];
+		$subj_headings[$i] = join('', $subject_delim, $subj_headings[$i], $subj_tail);
+		print "Split subj: $subj_headings[$i]\n";
 	}
+#	my @rows = split(/$split_string/, $txt);			#split the string on the subject heading 
+#	foreach (@rows)
+#	{
+#		print("$_");
+#	}
 }
 		
 	#@subj_temp contains (2*num_subHeadings) elements
