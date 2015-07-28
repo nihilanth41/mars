@@ -308,6 +308,16 @@ sub get_table_array {
 		$subj_headings[$i] = join('', $subject_delim, $subj_headings[$i], $subj_tail);
 		print "Split subj: $subj_headings[$i]\n";
 	}
+	my $subj1 = $subj_headings[0];
+	my $subj2 = $subj_headings[1];
+	my @lines = read_file($file_path);
+	foreach (@lines)
+	{
+		if(/$subj1/../$subj2/)
+		{
+			print $_;
+		}
+	}
 
 	
 	#for (my $i=0 $i<=$#subj_headings; $i++)
