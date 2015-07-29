@@ -286,11 +286,6 @@ sub split_reports {
 	}
 }
 
-sub get_table_records {
-	my ($file_path, $delimiter) = @_;
-	my $search_string = quotemeta $delimiter; 
-
-
 
 #get_table_array
 #param $file_path
@@ -308,18 +303,21 @@ sub get_table_array {
 		$subj_headings[$i] = join('', $subject_delim, $subj_headings[$i], $subj_tail);
 		print "Split subj: $subj_headings[$i]\n";
 	}
-	my $subj1 = $subj_headings[0];
-	my $subj2 = $subj_headings[1];
-	my @lines = read_file($file_path);
-	foreach (@lines)
+	#for each SectionSubHeading (each table)
+	#foreach my $subject (@subj_headings)
 	{
-		if(/$subj1/../$subj2/)
+
+		$txt = read_file($file_path);
+		my @subj_temp = split(/$subject/, $txt);
+		my $file_header = shift @subj_temp;
+		foreach (@subj_temp)
 		{
+
 			print $_;
 		}
 	}
+}
 
-	
 	#for (my $i=0 $i<=$#subj_headings; $i++)
 	#{
 #		my @table = split(/$split_string/, $txt);			#split the string on the subject heading 
@@ -327,7 +325,7 @@ sub get_table_array {
 #	{
 #		print("$_");
 #	}
-}
+
 		
 	#@subj_temp contains (2*num_subHeadings) elements
 	#for my $subj (@subj_temp)
@@ -378,4 +376,4 @@ sub get_table_array {
 
 
 
-}
+
