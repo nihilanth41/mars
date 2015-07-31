@@ -3,6 +3,8 @@
 use strict;
 use warnings;
 use File::Slurp;
+use File::Basename;
+use File::chdir;
 use Config::Simple;
 
 #get current date/time for timestamps 
@@ -20,29 +22,6 @@ my $report_dir = $cfg->param('ENV.REPORT_DIR');
 my @main_folders = $cfg->param("ENV.MAINDIRS");
 my @sub_folders = $cfg->param("ENV.SUBDIRS");
 my @school_folders = $cfg->param("ENV.SCHOOLDIRS");
-
-my @dir_list = ();
-my $date_dir =  $report_dir."/$datestamp";
-my $school_dir = $report_dir."/$datestamp"."/School";
-push @dir_list, $date_dir;
-foreach (@sub_folders)
-{
-	next if($_ eq "School"); #Don't archive School/ directory (yet)
-	push @dir_list, $date_dir."/$_";
-}
-foreach (@school_folders)
-{
-	push @dir_list, $school_dir."/$_";
-}
-foreach (@dir_list)
-{
-	print $_, "\n";
-	my @fn = split(/\//); #EXPR = $_;
-	my $filename = $fn[$#fn]."-$datestamp";
-	my $dest_file = $_."/$filename".".zip";
-	print "Dest name: $dest_file\n";
-	&mkZip($_, $dest_file); 
-}
 	
 
 #attempt to unzip -- mkDirs and handle reports only if dir doesn't already exist 
@@ -61,6 +40,29 @@ unless ($ret)
 	&split_reports("$report_dir/$datestamp/School/LCSH","LCSH", "HTML.DEL_DELIM");
 
 }
+
+#my @dir_list = ();
+#my $date_dir =  $report_dir."/$datestamp";
+#my $school_dir = $report_dir."/$datestamp"."/School";
+#push @dir_list, $date_dir;
+#foreach (@sub_folders)
+#{
+#	next if($_ eq "School"); #Don't archive School/ directory (yet)
+#	push @dir_list, $date_dir."/$_";
+#}
+#foreach (@school_folders)
+#{
+#	push @dir_list, $school_dir."/$_";
+#}
+#foreach (@dir_list)
+#{
+#	print $_, "\n";
+#	my @fn = split(/\//); #EXPR = $_;
+#	my $filename = $fn[$#fn]."-$datestamp";
+#	my $dest_file = $_."/$filename".".zip";
+#	#print "Dest name: $dest_file\n";
+#	&mkZip($_, $dest_file); 
+#}
 #temporary; testing line-format reports 
 #&get_table_array("/home/zrrm74/test.html");
 exit(0);
@@ -87,17 +89,23 @@ sub unzip {
 #param $dest_file: a list containing full path (filename) of .zip file to be created 
 sub mkZip {
 	my ($src_file, $dest_file) = @_;
-	if(-d $src_file) 
-	{	#$file is directory 
-		print `zip -r $dest_file $src_file`;
+	#cd to diretory containing $src_file
+	my $dir = dirname($src_file);
+	my $file = basename($src_file);
+	print $dir;
+	print $file;
+	chdir($dir);
+	if(-d $src_file)
+	{
+		print `zip -r $dest_file $file`;
 	}
 	elsif(-f $src_file)
 	{
-		print `zip $dest_file $src_file`;
+		print `zip $dest_file $file`;
 	}
 	else
 	{
-		die "Directory '$src_file' doesn't exist (or is not a file or folder): $!"; 
+		die "'$file' doesn't exist (or is not a file or folder): $!"; 
 	}
 }	
 
