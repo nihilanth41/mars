@@ -21,6 +21,24 @@ my @main_folders = $cfg->param("ENV.MAINDIRS");
 my @sub_folders = $cfg->param("ENV.SUBDIRS");
 my @school_folders = $cfg->param("ENV.SCHOOLDIRS");
 
+my @dir_list = ();
+my $date_dir =  $report_dir."/$datestamp";
+my $school_dir = $report_dir."/$datestamp"."/School";
+push @dir_list, $date_dir;
+foreach (@sub_folders)
+{
+	push @dir_list, $date_dir."/$_";
+}
+foreach (@school_folders)
+{
+	push @dir_list, $school_dir."/$_";
+}
+foreach (@dir_list)
+{
+	print $_, "\n";
+}
+	
+
 #attempt to unzip -- mkDirs and handle reports only if dir doesn't already exist 
 my $ret = &unzip($zip_file, $report_dir);
 unless ($ret) 
