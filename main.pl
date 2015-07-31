@@ -27,6 +27,7 @@ my $school_dir = $report_dir."/$datestamp"."/School";
 push @dir_list, $date_dir;
 foreach (@sub_folders)
 {
+	next if($_ eq "School"); #Don't archive School/ directory (yet)
 	push @dir_list, $date_dir."/$_";
 }
 foreach (@school_folders)
@@ -36,6 +37,11 @@ foreach (@school_folders)
 foreach (@dir_list)
 {
 	print $_, "\n";
+	my @fn = split(/\//); #EXPR = $_;
+	my $filename = $fn[$#fn]."-$datestamp";
+	my $dest_file = $_."/$filename".".zip";
+	print "Dest name: $dest_file\n";
+	&mkZip($_, $dest_file); 
 }
 	
 
