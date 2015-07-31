@@ -38,7 +38,7 @@ unless ($ret)
 
 }
 #temporary; testing line-format reports 
-&get_table_array("/home/zrrm74/test.html");
+#&get_table_array("/home/zrrm74/test.html");
 exit(0);
 
 
@@ -96,10 +96,20 @@ sub sort_reports {
 
 	#Move excel files to their own folder to get them out of the way 
 	if(-d $path_to_files) 
-	{ 
-		print `mv -v $path_to_files/*.xls $path_to_files/$datestamp/XLS/`; 
-		print `mv -v $path_to_files*.MRC $path_to_files/$datestamp/MRC/`;
-	}	#my $xls_re = /(.+)[.]xls$/;
+	{
+		my @files = read_dir($path_to_files);
+		foreach (@files)
+		{
+			if(/(.+)[.]xls$/)
+			{
+				print `mv -v $path_to_files/$_ $path_to_files/$datestamp/XLS/`; 
+			}
+			elsif(/(.+)[.]MRC$/)
+			{
+				print `mv -v $path_to_files/$_ $path_to_files/$datestamp/MRC/`;
+			}
+		}
+	}
 	#%filename_hash is used to look up the destination folder for a given file, using the same string that we matched the file with. 
 	my %filename_hash = ( 
 		MESH => $cfg->param('FOLDER.MESH'),			#Any filename containing m/mesh/i goes in MU_HSL folder 
