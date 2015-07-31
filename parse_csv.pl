@@ -3,12 +3,12 @@
 use strict;
 use warnings;
 use Text::CSV;
-use utf8::all;
+use utf8::all;	#Closest thing to "use utf8 everywhere" 
 
 
 my $csv = Text::CSV->new ({
 		binary 	  => 1,
-		#auto_diag => 1,
+		auto_diag => 1,	 #call error_diag() automatically in void context upon errors 
 		sep_char  => '|' 
 	}); 
 
@@ -43,7 +43,7 @@ close $data;
 
 for(my $i=0; $i<=$#controlno; ++$i)
 {
-	print "$i: $controlno[$i], $tag[$i], $ind[$i], $fielddata[$i]\n";
+	print "\n$i: $controlno[$i], $tag[$i], $ind[$i], $fielddata[$i]";
 }
 my $num = $#controlno+1;
 print "No control no: $num\n";
