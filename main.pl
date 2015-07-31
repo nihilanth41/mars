@@ -95,8 +95,11 @@ sub sort_reports {
 	my $path_to_files = $_[0]; 
 
 	#Move excel files to their own folder to get them out of the way 
-	if(-d $path_to_files) { print `mv -v $path_to_files/*.xls $path_to_files/$datestamp/XLS/`; }	#my $xls_re = /(.+)[.]xls$/;
-
+	if(-d $path_to_files) 
+	{ 
+		print `mv -v $path_to_files/*.xls $path_to_files/$datestamp/XLS/`; 
+		print `mv -v $path_to_files*.MRC $path_to_files/$datestamp/MRC/`;
+	}	#my $xls_re = /(.+)[.]xls$/;
 	#%filename_hash is used to look up the destination folder for a given file, using the same string that we matched the file with. 
 	my %filename_hash = ( 
 		MESH => $cfg->param('FOLDER.MESH'),			#Any filename containing m/mesh/i goes in MU_HSL folder 
@@ -304,76 +307,30 @@ sub get_table_array {
 		print "Split subj: $subj_headings[$i]\n";
 	}
 	#for each SectionSubHeading (each table)
-	#foreach my $subject (@subj_headings)
+	my $record_delim = $cfg->param('HTML.TBL_DELIM');
+	$record_delim = quotemeta $record_delim;
+	print $record_delim;
+	foreach my $subject (@subj_headings)
 	{
 
 		$txt = read_file($file_path);
 		my @subj_temp = split(/$subject/, $txt);
 		my $file_header = shift @subj_temp;
-		foreach (@subj_temp)
+		foreach my $line (@subj_temp)
 		{
 
-			print $_;
-		}
+			#$record_delim = quotemeta $record_de;
+			if($line =~ /$record_delim/m)
+			{
+				print $line;
+
+			}
+			
+
+			}
 	}
-}
-
-	#for (my $i=0 $i<=$#subj_headings; $i++)
-	#{
-#		my @table = split(/$split_string/, $txt);			#split the string on the subject heading 
-#	foreach (@rows)
-#	{
-#		print("$_");
-#	}
-
-		
-	#@subj_temp contains (2*num_subHeadings) elements
-	#for my $subj (@subj_temp)
-	#{
-#		print $subj;
-#	}
-	
-
-
-
-	#my $num_elements_pre_join = $#subj_temp+1;		#
-	#print "Num elements pre: $num_elements_pre_join\n";
-	#my $j = (($#subj_temp)-1); #second to last element 
-	#my @subjects = ();
-	#for(my $i=0; $i<=$j; $i+=2)
-	#{
-#		my $subj = join('', $subj_temp[$i], $subj_temp[$i+1]);
-#		push @subjects, $subj;
-#	}
-	#my $num_elements_post_join = $#subjects+1;		#
-	#print "Num elements post: $num_elements_post_join\n";
-	#now @subjects contains as many elements as there are SubHeadings 
-	#we perform the same process as above (including rejoining at the end) but using a different delimiter to split on the row 
-#	my $row_delim = "<td class='ctl_no'"; 		#this line is the identifier for each row in a table 
-#	$row_delim = quotemeta $row_delim;
-#	my @rows = ();
-#	my $subject_header;
-#	for my $subj (@subjects)
-	
-		#print "subj[0]: ", $subjects[0], "\n";
-		#print "subj[1]: ", $subjects[1], "\n";
-#		my @rows_temp = split(/($row_delim)/, $subj);
-#		$subject_header = shift @rows_temp; 
-#		my $l = (($#rows_temp)-1); 	#second to last element 
-#		for(my $k=0; $k<=$l; $k+=2) #start on 1 b/c we are not shifting the header 
-#		{
-#				my $row = join('', $rows_temp[$k], $rows_temp[$k+1]);
-#				push @rows, $row;
-#		}
-#	}
-
-#	my $num_elements = $#rows+1;
-	#print "Num elements rows: $num_elements\n";
-	#print "File header: $file_header\n";
-
-
-
-
+			
+	}
 
 
 
