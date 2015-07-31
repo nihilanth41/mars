@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use File::Slurp;
 use File::Basename;
-use File::chdir;
+#use File::chdir;
 use Config::Simple;
 
 #get current date/time for timestamps 
