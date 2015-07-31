@@ -58,6 +58,25 @@ sub unzip {
 	return 1; 					#Directory already exists -> skip unzipping
 }
 
+#mkZip($src_file, $dest_file)
+#param @src_files: full path to file (OR DIRECTORY) to be archived
+#param $dest_file: a list containing full path (filename) of .zip file to be created 
+sub mkZip {
+	my ($src_file, $dest_file) = @_;
+	if(-d $src_file) 
+	{	#$file is directory 
+		print `zip -r $dest_file $src_file`;
+	}
+	elsif(-f $src_file)
+	{
+		print `zip $dest_file $src_file`;
+	}
+	else
+	{
+		die "Directory '$src_file' doesn't exist (or is not a file or folder): $!"; 
+	}
+}	
+
 
 #sanitize_filenames($path_to_files) 
 #param $path_to_files: the full path to the directory containing the reports (probably the same directory passed to unzip) 
