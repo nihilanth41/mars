@@ -18,13 +18,27 @@ my $csv = Text::CSV->new ({
 	}); 
 my $filename = "/home/zrrm74/src/mars/r160.txt";
 
+
+
+#TODO:
+#Get lines that can't be parsed and store them as headers
+#TITLE
+#FILENAME
+#REPORT TYPE
+#CREATED FOR
+#CREATED ON 
+#COUNT
+#DESC
+#COLUMN HEADERS
+#SUBJECT EXAMPLE (###) (Maybe more than one of these)
 open(my $data, '<:encoding(utf8)', $filename) or die "Could not open '$filename' $!\n";
 while(my $line = <$data>)
 {
 	chomp $line;
-	print $line;
+	#print $line;
 	if($csv->parse($line))
 	{
+		#print $line, "\n";
 		my @fields = $csv->fields();
 		push @controlno, $fields[0];
 		push @tag, $fields[1];
@@ -46,8 +60,8 @@ close $data;
 #{
 #	print "\n$i: $controlno[$i], $tag[$i], $ind[$i], $fielddata[$i]";
 #}
-#my $num = $#controlno+1;
-#print "No control no: $num\n";
+my $num = $#controlno+1;
+print "No control no: $num\n";
 
 #References to arrays which we will pass to $worksheet->write_col()
 my $controlno_ref = \@controlno;
