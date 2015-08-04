@@ -57,12 +57,16 @@ my $fielddata_ref = \@fielddata;
 
 my $output_file = "$filename.xls";
 my $workbook = Spreadsheet::WriteExcel->new($output_file);
-my $worksheet = $workbook->add_worksheet();
 
-$worksheet->write_col(0, 0, $controlno_ref);
-$worksheet->write_col(0, 1, $tag_ref);
-$worksheet->write_col(0, 2, $ind_ref);
-$worksheet->write_col(0, 3, $fielddata_ref);
+#Configure cell format
+my $format = $workbook->add_format();
+$format->set_align('left');
+
+my $worksheet = $workbook->add_worksheet();
+$worksheet->write_col(0, 0, $controlno_ref, $format);
+$worksheet->write_col(0, 1, $tag_ref, $format);
+$worksheet->write_col(0, 2, $ind_ref, $format);
+$worksheet->write_col(0, 3, $fielddata_ref, $format);
 
 $workbook->close();
 
