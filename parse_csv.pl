@@ -31,27 +31,39 @@ my $filename = "/home/zrrm74/src/mars/r160.txt";
 #DESC
 #COLUMN HEADERS
 #SUBJECT EXAMPLE (###) (Maybe more than one of these)
+my @headers = ();
+my $header_str = '"Control No"|Tag|Ind|"Field Data"';
+$header_str = quotemeta $header_str;
 open(my $data, '<:encoding(utf8)', $filename) or die "Could not open '$filename' $!\n";
 while(my $line = <$data>)
-{
+{	
 	chomp $line;
-	#print $line;
-	if($csv->parse($line))
+	if($line =~ /(\|)\1\1/) #Match '|' character that occurs 3 times in a row 
 	{
-		#print $line, "\n";
-		my @fields = $csv->fields();
-		push @controlno, $fields[0];
-		push @tag, $fields[1];
-		push @ind, $fields[2];
-		push @fielddata, $fields[3];
+			push @headers, $line;
 	}
-	else
-	{	print $line,"\n";
-		warn "Line could not be parsed: $line\n";
-		#my $diag = $csv->error_diag();
-		#print "$diag","\n";
+	elsif($line =~ /$header_str/)
+	{
+		#print $line;
+		push @headers, $line;
 	}
-
+	else{
+		if($csv->parse($line))
+		{
+			#print $line, "\n";
+			my @fields = $csv->fields();
+			push @controlno, $fields[0];
+			push @tag, $fields[1];
+			push @ind, $fields[2];
+			push @fielddata, $fields[3];
+		}
+		else
+		{	
+			warn "Line could not be parsed: $line\n";
+			#my $diag = $csv->error_diag();
+			#print "$diag","\n";
+		}
+	}
 }
 $csv->eof or $csv->error_diag();
 close $data;
