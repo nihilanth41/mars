@@ -40,7 +40,8 @@ while(my $line = <$data>)
 	chomp $line;
 	if($line =~ /(\|)\1\1/) #Match '|' character that occurs 3 times in a row 
 	{
-			push @headers, $line;
+		next if($line eq "|||");
+		push @headers, $line;
 	}
 	elsif($line =~ /$header_str/)
 	{
@@ -67,6 +68,11 @@ while(my $line = <$data>)
 }
 $csv->eof or $csv->error_diag();
 close $data;
+
+foreach(@headers)
+{
+	print $_, "\n";
+}
 
 my $num = $#controlno+1;
 print "No control no: $num\n";
