@@ -82,9 +82,9 @@ my $worksheet = $workbook->add_worksheet();
 #The following widths are taken from the existing XLS files
 $worksheet->keep_leading_zeros(1);
 $worksheet->set_column(0, 0, 15); 	#Column A width set to 15
-$worksheet->set_column(0, 1, 8.43);	#Column B width set to 8.43
-$worksheet->set_column(0, 2, 8.43);	#Column C wdith set to 8.43
-$worksheet->set_column(0, 3, 75);       #Column D width set to 75
+$worksheet->set_column(1, 1, 8.43);	#Column B width set to 8.43
+$worksheet->set_column(2, 2, 8.43);	#Column C wdith set to 8.43
+$worksheet->set_column(3, 3, 75);       #Column D width set to 75
 for(my $i=0; $i<$num; $i++)
 {
 	$worksheet->write_string($i, 0, $controlno[$i], $format);
