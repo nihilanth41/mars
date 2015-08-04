@@ -46,7 +46,7 @@ while(my $line = <$data>)
 		push @fielddata, $fields[3];
 	}
 	else
-	{
+	{	print $line,"\n";
 		warn "Line could not be parsed: $line\n";
 		#my $diag = $csv->error_diag();
 		#print "$diag","\n";
@@ -56,18 +56,8 @@ while(my $line = <$data>)
 $csv->eof or $csv->error_diag();
 close $data;
 
-#for(my $i=0; $i<=$#controlno; ++$i)
-#{
-#	print "\n$i: $controlno[$i], $tag[$i], $ind[$i], $fielddata[$i]";
-#}
 my $num = $#controlno+1;
 print "No control no: $num\n";
-
-#References to arrays which we will pass to $worksheet->write_col()
-#my $controlno_ref = \@controlno;
-#my $tag_ref = \@tag;
-#my $ind_ref = \@ind;
-#my $fielddata_ref = \@fielddata;
 
 my $output_file = "$filename.xls";
 my $workbook = Spreadsheet::WriteExcel->new($output_file);
@@ -92,11 +82,6 @@ for(my $i=0; $i<$num; $i++)
 	$worksheet->write_string($i, 2, $ind[$i], $format);
 	$worksheet->write_string($i, 3, $fielddata[$i], $format);
 }
-
-#$worksheet->write_col(0, 0, $controlno_ref, $format);
-#$worksheet->write_col(0, 1, $tag_ref, $format);
-#$worksheet->write_col(0, 2, $ind_ref, $format);
-#$worksheet->write_col(0, 3, $fielddata_ref, $format);
 
 $workbook->close();
 
