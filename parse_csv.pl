@@ -64,10 +64,10 @@ my $num = $#controlno+1;
 print "No control no: $num\n";
 
 #References to arrays which we will pass to $worksheet->write_col()
-my $controlno_ref = \@controlno;
-my $tag_ref = \@tag;
-my $ind_ref = \@ind;
-my $fielddata_ref = \@fielddata;
+#my $controlno_ref = \@controlno;
+#my $tag_ref = \@tag;
+#my $ind_ref = \@ind;
+#my $fielddata_ref = \@fielddata;
 
 my $output_file = "$filename.xls";
 my $workbook = Spreadsheet::WriteExcel->new($output_file);
@@ -76,11 +76,27 @@ my $workbook = Spreadsheet::WriteExcel->new($output_file);
 my $format = $workbook->add_format();
 $format->set_align('left');
 
+#Create worksheet
 my $worksheet = $workbook->add_worksheet();
-$worksheet->write_col(0, 0, $controlno_ref, $format);
-$worksheet->write_col(0, 1, $tag_ref, $format);
-$worksheet->write_col(0, 2, $ind_ref, $format);
-$worksheet->write_col(0, 3, $fielddata_ref, $format);
+
+#The following widths are taken from the existing XLS files
+$worksheet->keep_leading_zeros(1);
+$worksheet->set_column(0, 0, 15); 	#Column A width set to 15
+$worksheet->set_column(0, 1, 8.43);	#Column B width set to 8.43
+$worksheet->set_column(0, 2, 8.43);	#Column C wdith set to 8.43
+$worksheet->set_column(0, 3, 75);       #Column D width set to 75
+for(my $i=0; $i<$num; $i++)
+{
+	$worksheet->write_string($i, 0, $controlno[$i], $format);
+	$worksheet->write_string($i, 1, $tag[$i], $format);
+	$worksheet->write_string($i, 2, $ind[$i], $format);
+	$worksheet->write_string($i, 3, $fielddata[$i], $format);
+}
+
+#$worksheet->write_col(0, 0, $controlno_ref, $format);
+#$worksheet->write_col(0, 1, $tag_ref, $format);
+#$worksheet->write_col(0, 2, $ind_ref, $format);
+#$worksheet->write_col(0, 3, $fielddata_ref, $format);
 
 $workbook->close();
 
