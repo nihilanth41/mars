@@ -35,43 +35,51 @@ my @headers = ();
 my $header_str = '"Control No"|Tag|Ind|"Field Data"';
 $header_str = quotemeta $header_str;
 open(my $data, '<:encoding(utf8)', $filename) or die "Could not open '$filename' $!\n";
+my @lines = ();
+my $header_index;
+my @subj_index = (); #Array to store the index(es) in the array where the Subject lines are stored
+my $i=0;
 while(my $line = <$data>)
 {	
 	chomp $line;
+	push @lines, $line;
 	if($line =~ /(\|)\1\1/) #Match '|' character that occurs 3 times in a row 
-	{
-		next if($line eq "|||");
-		push @headers, $line;
-	}
-	elsif($line =~ /$header_str/)
-	{
-		#print $line;
-		push @headers, $line;
-	}
-	else{
-		if($csv->parse($line))
+	{	
+		#next if($line eq "|||"); #ignore empty line
+		if ($line =~ /Subject /) #trailing space 
 		{
-			#print $line, "\n";
-			my @fields = $csv->fields();
-			push @controlno, $fields[0];
-			push @tag, $fields[1];
-			push @ind, $fields[2];
-			push @fielddata, $fields[3];
-		}
-		else
-		{	
-			warn "Line could not be parsed: $line\n";
-			#my $diag = $csv->error_diag();
-			#print "$diag","\n";
+			push @subj_index, $i;	
 		}
 	}
+	if($line =~ /$header_str/)
+	{
+		$header_index = $i; 
+	}
+	if($csv->parse($line))
+	{
+		my @fields = $csv->fields();
+		push @controlno, $fields[0];
+		push @tag, $fields[1];
+		push @ind, $fields[2];
+		push @fielddata, $fields[3];
+	}
+	else
+	{	
+		warn "Line could not be parsed: $line\n";
+		#my $diag = $csv->error_diag();
+		#print "$diag","\n";
+	}
+	$i++;
+
 }
 $csv->eof or $csv->error_diag();
 close $data;
 
-foreach(@headers)
+
+foreach my $index (@subj_index)
 {
-	print $_, "\n";
+	print $lines[$index], "\n"; 
+
 }
 
 my $num = $#controlno+1;
