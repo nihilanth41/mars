@@ -361,25 +361,25 @@ sub xls_to_csv {
 	my $CSV_DELIMITER = $cfg->param('LINE.CSV_DELIMITER');
 	#Actual string that we pass as a cmd line argument to ssconvert 
 	my $option_string = "\'separator=$CSV_DELIMITER\'";
+	#if dir exists
 	if(-d $PATH_TO_FILES)
 	{
-		#Make working directory
+		#Make working directory if it doesn't exist 
 		if(!(-d "$PATH_TO_FILES/CSV")) { print `mkdir -v $PATH_TO_FILES/CSV`; }
 		my @files = read_dir($PATH_TO_FILES);
 		foreach (@files)
 		{
-			my $xls_file = "$PATH_TO_FILES/$_";
-			my ($filename, $dirs, $suffix) = fileparse($xls_file);
-			my $csv_file = "$PATH_TO_FILES/$filename.csv";
-			print "CSV: $csv_file\n";
-			if(/(.+)[.]xls$/) #if .xls file 
+			if(/(.+)[.]xls$/) #if .xls file
 			{
-				#`ssconvert -O $option_string $PATH_TO_FILES/$_ $PATH_TO_FILES/CSV/$filename.$
-
-			
+				my $xls_file = "$PATH_TO_FILES/$_";
+				#the regex matches the file extension and puts it in $suffix 
+				my ($filename, $dirs, $suffix) = fileparse($xls_file, qr/\.[^.]*/); 
+				my $csv_file = "$PATH_TO_FILES/CSV/$filename.txt";
+				#print "CSV: $csv_file\n";
+				`ssconvert -O $option_string $xls_file $csv_file\n`;
 			}
-			
 		}
+		return 0;
 	}
 	else
 	{
