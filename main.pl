@@ -68,12 +68,41 @@ unless ($ret)
 	#TODO
 	
 	#Make archives of directories
+	&archive_folders();
 	
 }
-&mkArchive("/home/zrrm74/XLS");
+
 #xls_to_csv("/home/zrrm74/XLS");
 #&split_csv;
 exit(0);
+
+
+sub archive_folders()
+{
+	#Construct list of folders to archive 
+	my $prefix = "$report_dir/$datestamp";
+	my $school = "$prefix/School";
+	my @folder_list = (
+		"$prefix/Genre",
+		"$prefix/Misc",
+		"$prefix/XLS",
+		"$prefix/MRC",
+		"$school/MST",
+		"$school/MU",
+		"$school/MU_HSL",
+		"$school/MU_LAW",
+		"$school/UMKC",
+		"$school/UMKC_LAW",
+		"$school/UMSL"
+		);
+	foreach (@folder_list)
+	{
+		my $ret = &mkArchive($_);
+	}
+}
+
+	
+
 
 #mkArchive($src_dir) 
 #param $src_dir: Directory to archive in a *.zip file 

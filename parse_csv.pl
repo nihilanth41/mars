@@ -71,7 +71,7 @@ while(my $line = <$data>)
 	#	#print "$diag","\n";
 	#}
 }
-$csv->eof or $csv->error_diag();
+#$csv->eof or $csv->error_diag();
 close $data;
 push @subj_index, $#lines+1; #Last entry in @subj_index is the last valid index in the array
 
@@ -90,8 +90,8 @@ my %records_per_key = ();
 for(my $i=0; $i<$#subj_index; $i++) #for the number of subjects (Last element is the last lineno) 
 {
 	#printf("Subject[%d]: Last index: %d, First Index: %d\n", $i, $subj_index[$i+1], $subj_index[$i]);
-	#Take the index of the (next subject heading - the index of the current)-1 to get the number of elements of that subject
-	#Unless we are dealing with the last subject, then add 1
+	#Take the index of the (next subject heading - current subj heading)-1 to get the number of elements of that subject
+	#Unless we are dealing with the last subject, then do [i+1]-[i] 
 	if($subj_index[$i+1] == $subj_index[$#subj_index])
 	{
 		$num_records_this_subject[$i] = ($subj_index[$i+1] - $subj_index[$i]);
