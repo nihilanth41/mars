@@ -40,7 +40,8 @@ unless ($ret)
 	&split_reports("$report_dir/$datestamp/School/LCSH","LCSH", "HTML.DEL_DELIM");
 
 }
-&split_csv;
+xls_to_csv("/home/zrrm74/XLS");
+#&split_csv;
 #my @dir_list = ();
 #my $date_dir =  $report_dir."/$datestamp";
 #my $school_dir = $report_dir."/$datestamp"."/School";
@@ -350,7 +351,44 @@ sub split_reports {
 	}
 }
 
+#xls_to_csv($PATH_TO_FILES, $EXPORT_PATH) 
+#param $PATH_TO_FILES: full path to directory containing XLS files
+#param $EXPORT_PATH: full path to directory where we should put the CSV files (can be the same) 
+#return [0/-1]: SUCCESS/FAILURE 
 sub xls_to_csv {
+	my $PATH_TO_FILES = $_[0];
+	#Delimiter to use w/ ssconvert, used as delimiter in CSV files
+	my $CSV_DELIMITER = $cfg->param('LINE.CSV_DELIMITER');
+	#Actual string that we pass as a cmd line argument to ssconvert 
+	my $option_string = "\'separator=$CSV_DELIMITER\'";
+	if(-d $PATH_TO_FILES)
+	{
+		#Make working directory
+		if(!(-d "$PATH_TO_FILES/CSV")) { print `mkdir -v $PATH_TO_FILES/CSV`; }
+		my @files = read_dir($PATH_TO_FILES);
+		foreach (@files)
+		{
+			my $xls_file = "$PATH_TO_FILES/$_";
+			my ($filename, $dirs, $suffix) = fileparse($xls_file);
+			my $csv_file = "$PATH_TO_FILES/$filename.csv";
+			print "CSV: $csv_file\n";
+			if(/(.+)[.]xls$/) #if .xls file 
+			{
+				#`ssconvert -O $option_string $PATH_TO_FILES/$_ $PATH_TO_FILES/CSV/$filename.$
+
+			
+			}
+			
+		}
+	}
+	else
+	{
+		return -1;
+	}
+}
+
+		
+
 
 
 
