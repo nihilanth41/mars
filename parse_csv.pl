@@ -48,13 +48,14 @@ while(my $line = <$data>)
 		#next if($line eq "|||"); #ignore empty line
 		if ($line =~ /Subject /) #trailing space 
 		{
-			push @subj_index, $no_lines;	
+			push @subj_index, $no_lines;	#Store the index of the subject heading	(may occur multiple times)
 		}
 	}
 	if($line =~ /$header_str/)
 	{
-		$header_index = $no_lines; 
+		$header_index = $no_lines; #Store the index of the field header (Ctrl_No|Tag|Etc.)  (should occur only once) 
 	}
+	
 	#if($csv->parse($line))
 	#{
 	#	my @fields = $csv->fields();
@@ -84,26 +85,30 @@ my %LCSH = (
 	"UMSL"=>18.7
 );
 
+my @num_records_this_subject;
 my %records_per_key = ();
-for(my $i=0; $i<$#subj_index; $i++) #for the number of subjects
+for(my $i=0; $i<$#subj_index; $i++) #for the number of subjects (Last element is the last lineno) 
 {
-	printf("Subject[%d]: Last index: %d, First Index: %d\n", $i, $subj_index[$i+1], $subj_index[$i]);
-	my $num_records_this_subject = ($subj_index[$i+1] - $subj_index[$i]);
-	if($i != $#subj_index-1)
+	#printf("Subject[%d]: Last index: %d, First Index: %d\n", $i, $subj_index[$i+1], $subj_index[$i]);
+	#Take the index of the (next subject heading - the index of the current)-1 to get the number of elements of that subject
+	#Unless we are dealing with the last subject, then add 1
+	if($subj_index[$i+1] == $subj_index[$#subj_index])
 	{
-		$num_records_this_subject -= 1;
+		$num_records_this_subject[$i] = ($subj_index[$i+1] - $subj_index[$i]);
 	}
-	print "num records subj[$i]: $num_records_this_subject\n", $;
-	#foreach my $key (@ORDERED_KEYS)
-	#{
-#		%records_per_key{$key} = int(
+	else
+	{
+		$num_records_this_subject[$i] = ($subj_index[$i+1] - $subj_index[$i])-1;
+	}
+
+	print "num records subj[$i]: $num_records_this_subject[$i]\n", $;
 }
 #Create new CSV file as single string
-my @new_lines = ();
-for(my $i=0; $i<$subj_index[0]; $i++)
-{
-	push @new_lines, $lines[$i];
-}
+#my @new_lines = ();
+#for(my $i=0; $i<$subj_index[0]; $i++)
+#{
+#	push @new_lines, $lines[$i];
+#}
 
 #For the number of subjects that exist in the file
 #for(my $i=0; $i<=$#subj_index; i++);
