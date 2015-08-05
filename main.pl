@@ -350,9 +350,36 @@ sub split_reports {
 	}
 }
 
+sub xls_to_csv {
+
 
 
 sub split_csv {
+	#Get percentages from config file interface and add them to local hash
+	my %LCSH = (
+		MU => $cfg->param('LCSH.MU'),
+		MU_LAW => $cfg->param('LCSH.MU_LAW'),
+		UMKC => $cfg->param('LCSH.UMKC'),
+		UMKC_LAW => $cfg->param('LCSH.UMKC_LAW'),
+		MST => $cfg->param('LCSH.MST'),
+		UMSL => $cfg->param('LCSH.UMSL')
+	);
+	my %NTAR = (
+		MU => $cfg->param('NTAR.MU'), 
+		MU_HSL => $cfg->param('NTAR.MU_HSL'),
+		MU_LAW => $cfg->param('NTAR.MU_LAW'),
+		UMKC => $cfg->param('NTAR.UMKC'),
+		UMKC_LAW => $cfg->param('NTAR.UMKC_LAW'),
+		MST => $cfg->param('NTAR.MST'),
+		UMSL => $cfg->param('NTAR.UMSL')
+	);
+	my $HASH_NAME = "LCSH"; #Temporary	
+	
+	#We specify the key order so that we can check if records_written == total_records whenever $key == ordered_keys[$#ordered_keys]; 
+	my @ordered_keys;
+	if($HASH_NAME eq "NTAR") { @ordered_keys = $cfg->param('NTAR.ORDERED_KEYS'); }
+	elsif($HASH_NAME eq "LCSH") { @ordered_keys = $cfg->param('LCSH.ORDERED_KEYS'); }
+	
 	#Get info from config file 
 	my $filename = "/home/zrrm74/src/mars/r160.txt";
 	my $header_str = $cfg->param('LINE.HEADER_STRING');
@@ -366,7 +393,7 @@ sub split_csv {
 	my @subj_index = (); #Array to store the index(es) in the array where the Subject lines are stored
 	my $no_lines=0; #Keep track of total number of lines in the file
 	
-	#Open file
+	#Open file, add lines line-by-line to @line array, and get the index (line no.) of the field header, and subject header(s)
 	open(my $data, '<:encoding(utf8)', $filename) or die "Could not open '$filename' $!\n";
 	while(my $line = <$data>)
 	{	
@@ -387,20 +414,11 @@ sub split_csv {
 		}
 	}
 	close $data;
-	push @subj_index, $#lines+1; #Last entry in @subj_index is the last valid index in the array
+	#Last entry in @subj_index is the last valid index in the array - Need this to figure out how many records in the last subject
+	push @subj_index, $#lines+1; 
 
-	my @ORDERED_KEYS = ("MU_LAW", "UMKC_LAW", "MST", "UMSL", "UMKC", "MU");
-	my %LCSH = ( 
-		"MU"=>42.4,
-		"MU_LAW"=>2.4,
-		"UMKC"=>26.4,
-		"UMKC_LAW"=>3.1,
-		"MST"=>7,
-		"UMSL"=>18.7
-	);
-
+	
 	my @num_records_this_subject;
-	my %records_per_key = ();
 	for(my $i=0; $i<$#subj_index; $i++) #for the number of subjects (Last element is the last lineno) 
 	{
 		#printf("Subject[%d]: Last index: %d, First Index: %d\n", $i, $subj_index[$i+1], $subj_index[$i]);
@@ -416,6 +434,5 @@ sub split_csv {
 		}
 		print "num records subj[$i]: $num_records_this_subject[$i]\n", $;
 	}
-
 }
 
