@@ -5,7 +5,11 @@ use File::Slurp;
 use File::Basename;
 use Config::Simple;
 
-#Get percentages from config file and add them to global hashes  
+#parse config file
+my $cfg_file = "/home/zrrm74/src/mars/mars.cfg";
+my $cfg = new Config::Simple();			#Config::Simple object 
+$cfg->read($cfg_file) or die $cfg->error();  	#Exception handling 
+
 my %LCSH = (
 	MU => $cfg->param('LCSH.MU'),
 	MU_LAW => $cfg->param('LCSH.MU_LAW'),
@@ -24,22 +28,18 @@ my %NTAR = (
 	UMSL => $cfg->param('NTAR.UMSL')
 );
 
-#get current date/time for timestamps 
-my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
-my $datestamp = sprintf("%4d_%02d_%02d", $year+1900, $mon+1, $mday);
-
-#parse config file
-my $cfg_file = "/home/zrrm74/src/mars/mars.cfg";
-my $cfg = new Config::Simple();			#Config::Simple object 
-$cfg->read($cfg_file) or die $cfg->error();  	#Exception handling 
-
-
 my $zip_file = $cfg->param('ENV.ZIP_FILE'); 
 my $report_dir = $cfg->param('ENV.REPORT_DIR');
 my @main_folders = $cfg->param("ENV.MAINDIRS");
 my @sub_folders = $cfg->param("ENV.SUBDIRS");
 my @school_folders = $cfg->param("ENV.SCHOOLDIRS");
 	
+#get current date/time for timestamps 
+my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
+my $datestamp = sprintf("%4d_%02d_%02d", $year+1900, $mon+1, $mday);
+
+#Check remote host for new archives
+#TODO
 
 #attempt to unzip -- mkDirs and handle reports only if dir doesn't already exist 
 my $ret = &unzip($zip_file, $report_dir);
@@ -67,39 +67,39 @@ unless ($ret)
 	#Split Line-format reports 
 	#TODO
 	
-	#Make archives of directories 
+	#Make archives of directories
 	
-
-
-
 }
-xls_to_csv("/home/zrrm74/XLS");
+&mkArchive("/home/zrrm74/XLS");
+#xls_to_csv("/home/zrrm74/XLS");
 #&split_csv;
-#my @dir_list = ();
-#my $date_dir =  $report_dir."/$datestamp";
-#my $school_dir = $report_dir."/$datestamp"."/School";
-#push @dir_list, $date_dir;
-#foreach (@sub_folders)
-#{
-#	next if($_ eq "School"); #Don't archive School/ directory (yet)
-#	push @dir_list, $date_dir."/$_";
-#}
-#foreach (@school_folders)
-#{
-#	push @dir_list, $school_dir."/$_";
-#}
-#foreach (@dir_list)
-#{
-#	print $_, "\n";
-#	my @fn = split(/\//); #EXPR = $_;
-#	my $filename = $fn[$#fn]."-$datestamp";
-#	my $dest_file = $_."/$filename".".zip";
-#	#print "Dest name: $dest_file\n";
-#	&mkZip($_, $dest_file); 
-#}
-#temporary; testing line-format reports 
-#&get_table_array("/home/zrrm74/test.html");
 exit(0);
+
+#mkArchive($src_dir) 
+#param $src_dir: Directory to archive in a *.zip file 
+#Makes a .zip archive of $src_dir, and puts it in $src_dir. 
+#NOTE: It will include the directory in the archive 
+#E.g., CSV.zip will expand to CSV/my_csv_files.txt
+sub mkArchive {
+	print "making archive\n";
+	my $src_dir = $_[0];
+	my ($filename, $dirs, $suffix) = fileparse($src_dir); 
+	#Change to directory containing folder 
+	chdir($dirs);
+	if(-d $dirs)
+	{
+		printf("Directory $src_dir exists! Creating archive...\n");
+		my $zipfile = "$filename.zip";
+		print `zip -rv $zipfile $filename`; 
+		print `mv -v $zipfile "$dirs$filename/"`;
+		return 0;
+	}
+	else
+	{
+		print "Error: directory $src_dir does not exist\n";
+		return -1;
+	}
+}
 
 
 #unzip($src_file, $dest_dir)
