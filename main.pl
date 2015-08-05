@@ -1,11 +1,28 @@
 #!/bin/env perl
-
 use strict;
 use warnings;
 use File::Slurp;
 use File::Basename;
-#use File::chdir;
 use Config::Simple;
+
+#Get percentages from config file and add them to global hashes  
+my %LCSH = (
+	MU => $cfg->param('LCSH.MU'),
+	MU_LAW => $cfg->param('LCSH.MU_LAW'),
+	UMKC => $cfg->param('LCSH.UMKC'),
+	UMKC_LAW => $cfg->param('LCSH.UMKC_LAW'),
+	MST => $cfg->param('LCSH.MST'),
+	UMSL => $cfg->param('LCSH.UMSL')
+);
+my %NTAR = (
+	MU => $cfg->param('NTAR.MU'), 
+	MU_HSL => $cfg->param('NTAR.MU_HSL'),
+	MU_LAW => $cfg->param('NTAR.MU_LAW'),
+	UMKC => $cfg->param('NTAR.UMKC'),
+	UMKC_LAW => $cfg->param('NTAR.UMKC_LAW'),
+	MST => $cfg->param('NTAR.MST'),
+	UMSL => $cfg->param('NTAR.UMSL')
+);
 
 #get current date/time for timestamps 
 my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
@@ -26,18 +43,34 @@ my @school_folders = $cfg->param("ENV.SCHOOLDIRS");
 
 #attempt to unzip -- mkDirs and handle reports only if dir doesn't already exist 
 my $ret = &unzip($zip_file, $report_dir);
+#Only work with a fresh directory structure. if dir exists -> skip 
 unless ($ret) 
 {
+	#Remove characters from filenames that need escaped on *nix systems
 	&sanitize_filenames($report_dir); 
+	
+	#Make (most of) the directory structure 
 	&mkDirs($report_dir, @main_folders);
 	&mkDirs("$report_dir/$datestamp", @sub_folders);
 	&mkDirs("$report_dir/$datestamp/School", @school_folders);
+	
+	#Move files into the proper directories 
 	&sort_reports($report_dir);
+	
+	#Split Side-by-side reports (CHG and DEL)
 	&split_reports("$report_dir/$datestamp/School/NTAR","NTAR", "HTML.CHG_DELIM");
 	&split_reports("$report_dir/$datestamp/School/NTAR","NTAR", "HTML.DEL_DELIM");
 	#So far none of the chg/delete reports have been in LCSH but we should check anyway: 
 	&split_reports("$report_dir/$datestamp/School/LCSH","LCSH", "HTML.CHG_DELIM");
 	&split_reports("$report_dir/$datestamp/School/LCSH","LCSH", "HTML.DEL_DELIM");
+
+	#Split Line-format reports 
+	#TODO
+	
+	#Make archives of directories 
+	
+
+
 
 }
 xls_to_csv("/home/zrrm74/XLS");
@@ -262,25 +295,6 @@ sub number_delimiter {
 #param $HASH_NAME: One of [LCSH/NTAR] - Uses this parameter to determine the percentages to use to split the report  
 #param $DELIM_CFG_STR: The name of the config file entry that contains the delimiter we want to use. (This gets passed directly to $cfg->param()) 
 sub split_reports {
-	#Get percentages from config file interface and add them to local hash
-	my %LCSH = (
-		MU => $cfg->param('LCSH.MU'),
-		MU_LAW => $cfg->param('LCSH.MU_LAW'),
-		UMKC => $cfg->param('LCSH.UMKC'),
-		UMKC_LAW => $cfg->param('LCSH.UMKC_LAW'),
-		MST => $cfg->param('LCSH.MST'),
-		UMSL => $cfg->param('LCSH.UMSL')
-	);
-	my %NTAR = (
-		MU => $cfg->param('NTAR.MU'), 
-		MU_HSL => $cfg->param('NTAR.MU_HSL'),
-		MU_LAW => $cfg->param('NTAR.MU_LAW'),
-		UMKC => $cfg->param('NTAR.UMKC'),
-		UMKC_LAW => $cfg->param('NTAR.UMKC_LAW'),
-		MST => $cfg->param('NTAR.MST'),
-		UMSL => $cfg->param('NTAR.UMSL')
-	);
-	
 	my ($REPORT_DIR, $HASH_NAME, $DELIM_CFG_STR) = @_; 
 	#We specify the key order so that we can check if records_written == total_records whenever $key == ordered_keys[$#ordered_keys]; 
 	my @ordered_keys;
@@ -375,7 +389,8 @@ sub xls_to_csv {
 				#the regex matches the file extension and puts it in $suffix 
 				my ($filename, $dirs, $suffix) = fileparse($xls_file, qr/\.[^.]*/); 
 				my $csv_file = "$PATH_TO_FILES/CSV/$filename.txt";
-				#print "CSV: $csv_file\n";
+				#NOTE: ssconvert has some issue that spews a whole bunch of errors to stdout. 
+				#It works fine, though. 
 				`ssconvert -O $option_string $xls_file $csv_file\n`;
 			}
 		}
@@ -393,26 +408,8 @@ sub xls_to_csv {
 
 
 sub split_csv {
-	#Get percentages from config file interface and add them to local hash
-	my %LCSH = (
-		MU => $cfg->param('LCSH.MU'),
-		MU_LAW => $cfg->param('LCSH.MU_LAW'),
-		UMKC => $cfg->param('LCSH.UMKC'),
-		UMKC_LAW => $cfg->param('LCSH.UMKC_LAW'),
-		MST => $cfg->param('LCSH.MST'),
-		UMSL => $cfg->param('LCSH.UMSL')
-	);
-	my %NTAR = (
-		MU => $cfg->param('NTAR.MU'), 
-		MU_HSL => $cfg->param('NTAR.MU_HSL'),
-		MU_LAW => $cfg->param('NTAR.MU_LAW'),
-		UMKC => $cfg->param('NTAR.UMKC'),
-		UMKC_LAW => $cfg->param('NTAR.UMKC_LAW'),
-		MST => $cfg->param('NTAR.MST'),
-		UMSL => $cfg->param('NTAR.UMSL')
-	);
+
 	my $HASH_NAME = "LCSH"; #Temporary	
-	
 	#We specify the key order so that we can check if records_written == total_records whenever $key == ordered_keys[$#ordered_keys]; 
 	my @ordered_keys;
 	if($HASH_NAME eq "NTAR") { @ordered_keys = $cfg->param('NTAR.ORDERED_KEYS'); }
