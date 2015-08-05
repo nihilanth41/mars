@@ -40,7 +40,7 @@ unless ($ret)
 	&split_reports("$report_dir/$datestamp/School/LCSH","LCSH", "HTML.DEL_DELIM");
 
 }
-
+&split_csv;
 #my @dir_list = ();
 #my $date_dir =  $report_dir."/$datestamp";
 #my $school_dir = $report_dir."/$datestamp"."/School";
@@ -351,47 +351,71 @@ sub split_reports {
 }
 
 
-#get_table_array
-#param $file_path
-sub get_table_array {
-	my ($file_path) = $_[0]; 
-	my $subject_delim = "<div class='SectionSubHeading'>"; 		#this line contains the SubHeading for each table 
-	$subject_delim = quotemeta $subject_delim;			#add escape characters 
-	my $subj_tail = "\<\/div\>";					#SubHeading line ends with closing </div>	
-	my $txt = read_file($file_path);				#read in file as one big string
-	my (@subj_headings) = $txt =~ /$subject_delim(.*)$subj_tail/g;	#Match the string between $subject_delim and $subj_tail, and store it in @subj_heading
-	#Recreate entire SectionSubHeading html line
-	for (my $i=0; $i<=$#subj_headings; $i++)
-	{
-		$subj_headings[$i] = quotemeta $subj_headings[$i];
-		$subj_headings[$i] = join('', $subject_delim, $subj_headings[$i], $subj_tail);
-		print "Split subj: $subj_headings[$i]\n";
-	}
-	#for each SectionSubHeading (each table)
-	my $record_delim = $cfg->param('HTML.TBL_DELIM');
-	$record_delim = quotemeta $record_delim;
-	print $record_delim;
-	foreach my $subject (@subj_headings)
-	{
 
-		$txt = read_file($file_path);
-		my @subj_temp = split(/$subject/, $txt);
-		my $file_header = shift @subj_temp;
-		foreach my $line (@subj_temp)
-		{
-
-			#$record_delim = quotemeta $record_de;
-			if($line =~ /$record_delim/m)
+sub split_csv {
+	#Get info from config file 
+	my $filename = "/home/zrrm74/src/mars/r160.txt";
+	my $header_str = $cfg->param('LINE.HEADER_STRING');
+	my $subject_str = $cfg->param('LINE.SUBJECT_STRING');
+	$header_str = quotemeta $header_str;
+	$subject_str = quotemeta $subject_str;
+	
+	#Declare variables
+	my @lines = (); #Array to store all the lines in the file as we read through them one by one
+	my $header_index; #Line_no where the header index occurs (Ctrl No, Tag, Ind, Field Data)
+	my @subj_index = (); #Array to store the index(es) in the array where the Subject lines are stored
+	my $no_lines=0; #Keep track of total number of lines in the file
+	
+	#Open file
+	open(my $data, '<:encoding(utf8)', $filename) or die "Could not open '$filename' $!\n";
+	while(my $line = <$data>)
+	{	
+		$no_lines++;
+		chomp $line;
+		push @lines, $line;
+		if($line =~ /(\|)\1\1/) #Match '|' character that occurs 3 times in a row 
+		{	
+			#next if($line eq "|||"); #ignore empty line
+			if ($line =~ /$subject_str/) #trailing space 
 			{
-				print $line;
-
+				push @subj_index, $no_lines;	#Store the index of the subject heading	(may occur multiple times)
 			}
-			
-
-			}
+		}
+		if($line =~ /$header_str/)
+		{
+			$header_index = $no_lines; #Store the index of the field header (Ctrl_No|Tag|Etc.)  (should occur only once) 
+		}
 	}
-			
+	close $data;
+	push @subj_index, $#lines+1; #Last entry in @subj_index is the last valid index in the array
+
+	my @ORDERED_KEYS = ("MU_LAW", "UMKC_LAW", "MST", "UMSL", "UMKC", "MU");
+	my %LCSH = ( 
+		"MU"=>42.4,
+		"MU_LAW"=>2.4,
+		"UMKC"=>26.4,
+		"UMKC_LAW"=>3.1,
+		"MST"=>7,
+		"UMSL"=>18.7
+	);
+
+	my @num_records_this_subject;
+	my %records_per_key = ();
+	for(my $i=0; $i<$#subj_index; $i++) #for the number of subjects (Last element is the last lineno) 
+	{
+		#printf("Subject[%d]: Last index: %d, First Index: %d\n", $i, $subj_index[$i+1], $subj_index[$i]);
+		#Take the index of the (next subject heading - current subj heading)-1 to get the number of elements of that subject
+		#Unless we are dealing with the last subject, then do [i+1]-[i] 
+		if($subj_index[$i+1] == $subj_index[$#subj_index])
+		{
+			$num_records_this_subject[$i] = ($subj_index[$i+1] - $subj_index[$i]);
+		}
+		else
+		{
+			$num_records_this_subject[$i] = ($subj_index[$i+1] - $subj_index[$i])-1;
+		}
+		print "num records subj[$i]: $num_records_this_subject[$i]\n", $;
 	}
 
-
+}
 
