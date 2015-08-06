@@ -17,10 +17,6 @@ my @fields = ( "Ctrl #", "Tag", "Ind", "Field Data" );
 my ($HeadingText, $ReportType, $CreatedFor, $CreatedOn, $Count, $ReportExplanation, $Legend);
 my @SectionSubHeading; 
 
-
-
-
-
 #deal with each table individually
 my @tables;
 my @thead;
@@ -92,10 +88,23 @@ foreach my $table (@tables)
 	);
 	push @td, $td_ref; 
 }
-
+#Print the number of tables (number of indicies)
 print "Size of td: $#td\n";
+#Example of deferencing our data structure
+#Try to turn this into one line if possible
+	#my $hr = $td[0];
+	#my $ar = $hr->{"CTL_NO"};
+	#print $ar->[0]->as_text;
+	#$tree->delete;
+	print $td[0]->{"CTL_NO"}->[0]->as_text;
 
-$tree->delete;
+
+
+
+	##########
+	#Old stuff -- for if we are processing each file as one big table#
+
+
 ##Get HeadingText 
 #($HeadingText) = $tree->look_down( 
 #	_tag => "div",
