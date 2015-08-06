@@ -12,7 +12,7 @@ unless(-e $file)
 	print "Error: $file not found\n";
 	die;
 }
-
+#Deal with file as one big table 
 my @fields = ( "Ctrl #", "Tag", "Ind", "Field Data" );
 my ($HeadingText, $ReportType, $CreatedFor, $CreatedOn, $Count, $ReportExplanation, $Legend);
 my @SectionSubHeading; 
@@ -21,90 +21,125 @@ my @tag;
 my @ind;
 my @fielddata;
 
+#deal with each table individually
+my @table_body;
+my @thead;
 
 
-open(my $fh, '<:encoding(utf8)', $filename) or die "Could not open '$filename' $!\n";
+open(my $fh, '<:encoding(utf8)', $file) or die "Could not open '$file' $!\n";
 my $tree = HTML::TreeBuilder->new();
 $tree->parse_file($fh);
 #Do stuff w/ tree here
 
-#Get HeadingText 
-($HeadingText) = $tree->look_down( 
-	_tag => "div",
-	id => "HeadingText",
-);
-#Get ReportType
-($ReportType) = $tree->look_down(
-	_tag => "div", 
-	id => "ReportType",
+#Match each table and put it in @table_body 
+@table_body = $tree->look_down(
+	_tag => "table",
+	class => qr/field-info table-autosort table-autostripe table-autofilter table-rowshade-EvenRow/,
 );
 
-#CreatedFor and CreatedOn have same tag and id, so we capture all matches and assign them manually
-my @CreatedInfo = $tree->look_down(
-	_tag => "div",
-	class => "CreatedInfo",
-);
-$CreatedFor = $CreatedInfo[0];
-$CreatedOn = $CreatedInfo[1];
-
-@SectionSubHeading = $tree->look_down(
-	_tag => "div",
-	class="SectionSubHeading",
+#Match each table header (later remove from @table_body)
+@thead = $tree->look_down(
+	_tag => "thead",
 );
 
-#get ctl_no(s)
-@ctl_no = $tree->look_down(
-	_tag => "td",
-	class => "ctl_no",
-);
 
-@tag = $tree->look_down(
-	_tag => "td",
-	class => "tag",
-);
-
-@ind = $tree->look_down( 
-	_tag => "td",
-	class => "ind",
-);
-
-@fielddata = $tree->look_down(
-	_tag => "td",
-	class => "fielddata",
-);
-
-#Get count 
-$Count = $#ctl_no+1;
-
-$ReportExplanation = $tree->look_down(
-	_tag => "div",
-	class => "ReportExplanation",
-);
-
-#Get node of legend 
- $Legend = $tree->look_down(
-	_tag => "fieldset",
-	class => "legend_set",
-);
-#Remove legend node (child node of ReportExplaination) 
-$Legend->delete;
-
-
-
-print $HeadingText->as_text, "\n";
-print $ReportType->as_text, "\n";
-print $CreatedFor->as_text, "\n";
-print $CreatedOn->as_text, "\n";
-print "Count: $Count\n";
-print $ReportExplanation->as_text, "\n";
-for (@fields) { print $_, "\t"; }
-for (my $i=0; $i<$Count; $i++)
+#Delete thead from each @table_body
+foreach my $th (@thead)
 {
-	print $ctl_no[$i]->as_text, "\t";
-	print $tag[$i]->as_text, "\t";
-	print $ind[$i]->as_text, "\t";
-	print $fielddata[$i]->as_text, "\n";
+	$th->delete;
 }
+
+print "Size of tablebody: $#table_body \n";
+foreach my $table (@table_body)
+{
+	@ctl_no = $table->look_down(
+		_tag => "td",
+		class => "ctl_no",
+	);
+
+	foreach my $ctl (@ctl_no)
+	{
+		print $ctl->as_text, "\n";
+	}
+}
+
+$tree->delete;
+##Get HeadingText 
+#($HeadingText) = $tree->look_down( 
+#	_tag => "div",
+#	id => "HeadingText",
+#);
+##Get ReportType
+#($ReportType) = $tree->look_down(
+#	_tag => "div", 
+#	id => "ReportType",
+#);
+#
+##CreatedFor and CreatedOn have same tag and id, so we capture all matches and assign them manually
+#my @CreatedInfo = $tree->look_down(
+#	_tag => "div",
+#	class => "CreatedInfo",
+#);
+#$CreatedFor = $CreatedInfo[0];
+#$CreatedOn = $CreatedInfo[1];
+#
+#@SectionSubHeading = $tree->look_down(
+#	_tag => "div",
+#	class => "SectionSubHeading",
+#);
+#
+##get ctl_no(s)
+#@ctl_no = $tree->look_down(
+#	_tag => "td",
+#	class => "ctl_no",
+#);
+#
+#@tag = $tree->look_down(
+#	_tag => "td",
+#	class => "tag",
+#);
+#
+#@ind = $tree->look_down( 
+#	_tag => "td",
+#	class => "ind",
+#);
+#
+#@fielddata = $tree->look_down(
+#	_tag => "td",
+#	class => "fielddata",
+#);
+#
+##Get count 
+#$Count = $#ctl_no+1;
+#
+#$ReportExplanation = $tree->look_down(
+#	_tag => "div",
+#	class => "ReportExplanation",
+#);
+#
+##Get node of legend 
+# $Legend = $tree->look_down(
+#	_tag => "fieldset",
+#	class => "legend_set",
+#);
+##Remove legend node (child node of ReportExplaination) 
+#$Legend->delete;
+#
+
+#print $HeadingText->as_text, "\n";
+#print $ReportType->as_text, "\n";
+#print $CreatedFor->as_text, "\n";
+#print $CreatedOn->as_text, "\n";
+#print "Count: $Count\n";
+#print $ReportExplanation->as_text, "\n";
+#for (@fields) { print $_, "\t\t"; }
+#for (my $i=0; $i<$Count; $i++)
+#{
+#	print "\n", $ctl_no[$i]->as_text, "\t";
+#	print $tag[$i]->as_text, "\t";
+#	print $ind[$i]->as_text, "\t";
+#	print $fielddata[$i]->as_text;
+#}
 
 
 
@@ -120,4 +155,4 @@ for (my $i=0; $i<$Count; $i++)
 #$tree->dump; #print a representation of the tree
 
 
-$tree->delete;
+
