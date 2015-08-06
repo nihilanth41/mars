@@ -16,13 +16,13 @@ unless(-e $file)
 my @fields = ( "Ctrl #", "Tag", "Ind", "Field Data" );
 my ($HeadingText, $ReportType, $CreatedFor, $CreatedOn, $Count, $ReportExplanation, $Legend);
 my @SectionSubHeading; 
-my @ctl_no;
-my @tag;
-my @ind;
-my @fielddata;
+
+
+
+
 
 #deal with each table individually
-my @table_body;
+my @tables;
 my @thead;
 
 
@@ -32,7 +32,7 @@ $tree->parse_file($fh);
 #Do stuff w/ tree here
 
 #Match each table and put it in @table_body 
-@table_body = $tree->look_down(
+@tables = $tree->look_down(
 	_tag => "table",
 	class => qr/field-info table-autosort table-autostripe table-autofilter table-rowshade-EvenRow/,
 );
@@ -41,27 +41,59 @@ $tree->parse_file($fh);
 @thead = $tree->look_down(
 	_tag => "thead",
 );
-
-
 #Delete thead from each @table_body
 foreach my $th (@thead)
 {
 	$th->delete;
 }
 
-print "Size of tablebody: $#table_body \n";
-foreach my $table (@table_body)
+#Get SectionSubHeading and store -- Index of correct heading will be same as the index of the table 
+@SectionSubHeading = $tree->look_down(
+	_tag => "div",
+	class => "SectionSubHeading",
+);
+
+#Debugging:
+#print "Size of tablebody: $#table_body \n";
+my @td = ();
+foreach my $table (@tables)
 {
+	#Construct local arrays of table data 
+	my @ctl_no;
+	my @tag;
+	my @ind;
+	my @fielddata; 
+	my $ctl_ref = \@ctl_no;
+	my $tag_ref = \@tag;
+	my $ind_ref = \@ind;
+	my $fd_ref = \@fielddata;
+	my %table_data = (
+		"CTL_NO" => $ctl_ref,
+		"TAG" => $tag_ref,
+		"IND" => $ind_ref,
+		"FIELDDATA" => $fd_ref,
+	);
+	my $td_ref = \%table_data;
 	@ctl_no = $table->look_down(
 		_tag => "td",
 		class => "ctl_no",
 	);
-
-	foreach my $ctl (@ctl_no)
-	{
-		print $ctl->as_text, "\n";
-	}
+	@tag = $tree->look_down(
+		_tag => "td",
+		class => "tag",
+	);
+	@ind = $tree->look_down( 
+		_tag => "td",
+		class => "ind",
+	);
+	@fielddata = $tree->look_down(
+		_tag => "td",
+		class => "fielddata",
+	);
+	push @td, $td_ref; 
 }
+
+print "Size of td: $#td\n";
 
 $tree->delete;
 ##Get HeadingText 
