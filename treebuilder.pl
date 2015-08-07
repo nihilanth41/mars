@@ -263,8 +263,11 @@ sub tree_init
 		_tag => "fieldset",
 		class => "legend_set",
 	);
-	##Remove legend node (child node of ReportExplanation) 
-	$Legend->delete;
+	##Remove legend node (child node of ReportExplanation)
+	if(defined $Legend)
+	{
+		$Legend->delete;
+	}
 
 	#Get ReportType
 	($ReportType) = $tree->look_down(
