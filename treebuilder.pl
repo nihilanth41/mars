@@ -146,33 +146,6 @@ sub parse_html
 	get_total_count();
 }
 
-#	print "Size: $size\n";
-#	for(my $j=0; $j<$size; $j++) #For each row 
-#	{
-#		my @ordered_keys = ("CTL_NO", "TAG", "IND", "FIELDDATA" );
-#		for my $key (@ordered_keys) #For each column 
-#		{
-#			print $td[$i]->{$key}->[$j]->as_text, "\t";
-#		}
-#		print "\n";
-#	}
-#}
-
-##getRecords($hashref)
-##param $hashref: reference to the hash which contains the arrayrefs which contain the column data for the table
-##return @records: a list of records from that table in single line format 
-#sub getRecords
-#{
-#	my $hashref = $_[0];
-#	my @records = ();
-#	my $arrayref = $hashref->{"CTL_NO"};
-#	my $rec_count = getCount($arrayref);
-#	for(my $i=0; $i<$rec_count; $i++)
-#	{
-		
-
-	
-
 
 sub printHeader
 {
