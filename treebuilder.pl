@@ -74,15 +74,15 @@ foreach my $table (@tables)
 		_tag => "td",
 		class => "ctl_no",
 	);
-	@tag = $tree->look_down(
+	@tag = $table->look_down(
 		_tag => "td",
 		class => "tag",
 	);
-	@ind = $tree->look_down( 
+	@ind = $table->look_down( 
 		_tag => "td",
 		class => "ind",
 	);
-	@fielddata = $tree->look_down(
+	@fielddata = $table->look_down(
 		_tag => "td",
 		class => "fielddata",
 	);
@@ -90,14 +90,29 @@ foreach my $table (@tables)
 }
 #Print the number of tables (number of indicies)
 print "Size of td: $#td\n";
-#Example of deferencing our data structure
-#Try to turn this into one line if possible
-	#my $hr = $td[0];
-	#my $ar = $hr->{"CTL_NO"};
-	#print $ar->[0]->as_text;
-	#$tree->delete;
-	print $td[0]->{"CTL_NO"}->[0]->as_text;
+for(my $i=0; $i<=$#td; $i++) #For each table in the file 
+{
+	print("\n", " ----------------- Table: $i -----------------", "\n");
+	my $hashref = $td[$i]; #Point the reference at the hash  
+	my $ar_temp = $hashref->{"CTL_NO"};
+	my $size = @{$ar_temp};
+	print "Size: $size\n";
+	for(my $j=0; $j<$size; $j++) #For each row 
+	{
+		my @ordered_keys = ("CTL_NO", "TAG", "IND", "FIELDDATA" );
+		for my $key (@ordered_keys) #For each column 
+		{
+			print $td[$i]->{$key}->[$j]->as_text, "\t";
+		}
+		print "\n";
+	}
+}
 
+#tree->delete; #This is called when the program dies
+#print $td[0]->{"CTL_NO"}->[0]->as_text, "\n";
+
+
+	
 
 
 
