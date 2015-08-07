@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use File::Slurp;
-use utf8::all;
+use utf8;
 use HTML::TreeBuilder;
 use Config::Simple;
 
@@ -112,18 +112,41 @@ sub split_line_reports
 			}
 			###START WRITING RECORDS###
 			my $records_written_file = 0; 						#This variable is to keep track of the # records going to each school (per file) 
-			my $records_pos = 0;		        				#variable to keep track of position in @records	
+			my $rp = 0;		        				#variable to keep track of position in @records	
 			foreach my $key (@ordered_keys)						#for each key in the NTAR hash
 			{
 				printf("Number of records required for $key is %d (%.2f%%) \n", $RPK{$key}, (($RPK{$key}/$size)*100));
 				next if($RPK{$key} <= 0);				#don't create the file/write header if there are no records to be written	
 				my $new_file_path = "$PATH_TO_FILES/../$key/$key.$file";	#prepend key to each filename
+				#manually create filehandle -- set encoding
 				my $header = printHeader(); 
-				write_file($new_file_path, $header);
-			}	
-		}
+				write_file($new_file_path, {binmode=> ':utf8'}, $header);
+				if(defined $SectionSubHeading[$i])
+				{
+					my $ssh = join('', "\n", $SectionSubHeading[$i]->as_text); 
+					write_file($new_file_path, {binmode=> ':utf8', append=>1}, $ssh);
+				}
+				for(my $j=0; $j<$RPK{$key}; $j++)
+				{
+					if($rp >= $size)
+					{
+						print "Exceeded records array (Inner)\n";
+						last;
+					}
+					my $ctl =  $td[$i]->{"CTL_NO"}->[$rp]->as_text;
+					my $tag =  $td[$i]->{"TAG"}->[$rp]->as_text; 
+					my $ind = $td[$i]->{"IND"}->[$rp]->as_text;
+					my $fd =  $td[$i]->{"FIELDDATA"}->[$rp]->as_text;  
+					my $row = $ctl;
+					$row = join('|', $tag, $ind, $fd, "\n");
+					write_file($new_file_path, {binmode=> ':utf8', append=>1}, $row);
+					$rp++;
+				}
+			}
+		}	
 	}
 }
+
 
 
 #parse_html($file)
@@ -150,11 +173,12 @@ sub parse_html
 sub printHeader
 {
 	my $header;
-	$header = join("\n", $HeadingText->as_HTML,$ReportType->as_HTML,$CreatedFor->as_HTML,$CreatedOn->as_HTML,$ReportExplanation->as_HTML);
-	if(defined $Legend)
-	{
-		$header = join("", $header, $Legend->as_HTML);
-	}
+	$header = join("\n", $HeadingText->as_text,$ReportType->as_text,$CreatedFor->as_text,$CreatedOn->as_text,$ReportExplanation->as_text);
+	#if(defined $Legend)
+	#{
+#		$header = join("", $header, $Legend->as_HTML);
+#	}
+#
 	#print $HeadingText->as_text, "\n";
 	#print $ReportType->as_text, "\n";
 	#print $CreatedFor->as_text, "\n";
