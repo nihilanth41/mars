@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use File::Slurp;
-use utf8;
+use Encode;
 use HTML::TreeBuilder;
 use Config::Simple;
 
