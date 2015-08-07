@@ -4,6 +4,21 @@ use strict;
 use warnings;
 use utf8::all;
 use HTML::TreeBuilder;
+use Config::Simple;
+
+#parse config file
+my $cfg_file = "/home/zrrm74/src/mars/mars.cfg";
+my $cfg = new Config::Simple();			#Config::Simple object 
+$cfg->read($cfg_file) or die $cfg->error();  	#Exception handling 
+
+my %LCSH = (
+	MU => $cfg->param('LCSH.MU'),
+	MU_LAW => $cfg->param('LCSH.MU_LAW'),
+	UMKC => $cfg->param('LCSH.UMKC'),
+	UMKC_LAW => $cfg->param('LCSH.UMKC_LAW'),
+	MST => $cfg->param('LCSH.MST'),
+	UMSL => $cfg->param('LCSH.UMSL')
+);
 
 my $HOME = $ENV{"HOME"};
 my $file = "$HOME/r06.htm";
@@ -39,34 +54,63 @@ get_tables();
 get_total_count();
 
 #Print header info in same format as XLS files
-#printHeader();
+printHeader();
 
-
-
-
-
-
-
-
-
-
+#print $td[0]->{"CTL_NO"}->[0]->as_text, "\n";
 for(my $i=0; $i<=$#td; $i++) #For each table in the file 
 {
-	print("\n", " ----------------- Table: $i -----------------", "\n");
+	my $HASH_NAME = "LCSH";	
+#	#print("\n", " ----------------- Table: $i -----------------", "\n");
 	my $hashref = $td[$i]; #Point the reference at the hash  
 	my $ar_temp = $hashref->{"CTL_NO"};
 	my $size = @{$ar_temp};
-	print "Size: $size\n";
-	for(my $j=0; $j<$size; $j++) #For each row 
+	my @ordered_keys = ( "MU_LAW", "UMKC_LAW", "MST", "UMSL", "UMKC", "MU" );
+	my %RPK = ();
+	my $rpk_total=0;
+	foreach my $key (@ordered_keys)
 	{
-		my @ordered_keys = ("CTL_NO", "TAG", "IND", "FIELDDATA" );
-		for my $key (@ordered_keys) #For each column 
-		{
-			print $td[$i]->{$key}->[$j]->as_text, "\t";
-		}
-		print "\n";
+		$RPK{$key} = int($size*($LCSH{$key}/100)); 
+		$rpk_total += $RPK{$key};
+	}
+	my $rec_difference = $size - $rpk_total;
+	if($rec_difference > 0)
+	{
+		printf("Records to be written (%d) does not match records in file (%d) ", $rpk_total, $size);
+		printf("Adding %d records to %s key\n", $rec_difference, $ordered_keys[$#ordered_keys]);
+		#add any missing records to last key
+		$RPK{$ordered_keys[$#ordered_keys]} += $rec_difference;
 	}
 }
+	
+
+
+#	print "Size: $size\n";
+#	for(my $j=0; $j<$size; $j++) #For each row 
+#	{
+#		my @ordered_keys = ("CTL_NO", "TAG", "IND", "FIELDDATA" );
+#		for my $key (@ordered_keys) #For each column 
+#		{
+#			print $td[$i]->{$key}->[$j]->as_text, "\t";
+#		}
+#		print "\n";
+#	}
+#}
+
+##getRecords($hashref)
+##param $hashref: reference to the hash which contains the arrayrefs which contain the column data for the table
+##return @records: a list of records from that table in single line format 
+#sub getRecords
+#{
+#	my $hashref = $_[0];
+#	my @records = ();
+#	my $arrayref = $hashref->{"CTL_NO"};
+#	my $rec_count = getCount($arrayref);
+#	for(my $i=0; $i<$rec_count; $i++)
+#	{
+		
+
+	
+
 
 sub printHeader
 {
@@ -77,6 +121,16 @@ sub printHeader
 	print "Count: $Count\n";
 	print $ReportExplanation->as_text, "\n";
 }
+
+#getCount($arrayref)
+#param $arrayref: reference to an array that contains the number of elements as that of the table
+#return $count: scalar size of array (NOTE: NOT THE LAST INDEX)
+sub getCount
+{
+	my $arrayref = $_[0];
+	my $count = @{$arrayref};
+}
+
 
 #Get count of all the records in the file
 sub get_total_count
