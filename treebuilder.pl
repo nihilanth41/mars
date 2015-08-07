@@ -2,6 +2,7 @@
 
 use strict;
 use warnings;
+use File::Slurp;
 use utf8::all;
 use HTML::TreeBuilder;
 use Config::Simple;
@@ -30,13 +31,14 @@ my %NTAR = (
 	UMSL => $cfg->param('NTAR.UMSL')
 );
 
-my $HOME = $ENV{"HOME"};
-my $file = "$HOME/r06.htm";
-unless(-e $file) 
-{
-	print "Error: $file not found\n";
-	die;
-}
+#my $HOME = $ENV{"HOME"};
+#my $file = "$HOME/r06.htm";
+#unless(-e $file) 
+#{
+#	print "Error: $file not found\n";
+#	die;
+#}
+
 #Declare global variables
 #Variables used to store text that's not associated with tables (headings, etc.) 
 my ($HeadingText, $ReportType, $CreatedFor, $CreatedOn, $Count, $ReportExplanation, $Legend);
@@ -44,29 +46,15 @@ my @SectionSubHeading;
 #@tables stores each of the raw tables (separated by SectionSubHeading) 
 my @tables;
 my @thead;
-
-#Manually create filehandle so we can specify the encoding, and pass it to HTML::TreeBuilder
-open(my $fh, '<:encoding(utf8)', $file) or die "Could not open '$file' $!\n";
-my $tree = HTML::TreeBuilder->new();
-$tree->parse_file($fh);
-### Do stuff w/ tree here ###
-
-#Assign our global vars to nodes 
-tree_init();
-
 #Get the tables out of the file and put them in @td(); 
 #NOTE: td() is an array of hashes AoH
 #Each hash has 4 keys that point to an array reference, which contains the column data for that table
 my @td = ();
-get_tables();
-
-#Get the number of records (from all tables) in the file, store in global $Count
-get_total_count();
-
+my $tree;
 #Print header info in same format as XLS files
-printHeader();
+#printHeader();
 
-split_line_reports("/home/zrrm74/", "LCSH");
+split_line_reports("/home/zrrm74/extract/2015_08_06/School/LCSH", "LCSH");
 #split_line_reports($REPORT_DIR, $HASH_NAME)
 #param $REPORT_DIR: full path to directory containing reports 
 #param $HASH_NAME: One of [LCSH/NTAR]. Used to specify the percentage split and the @ordered_keys list from the cfg file
@@ -82,40 +70,81 @@ sub split_line_reports
 	{
 		@ordered_keys = $cfg->param("NTAR.ORDERED_KEYS");
 	}
-	#print $td[0]->{"CTL_NO"}->[0]->as_text, "\n";
-	for(my $i=0; $i<=$#td; $i++) #For each table in the file 
+	my $PATH_TO_FILES = $REPORT_DIR;
+	my @files = read_dir($PATH_TO_FILES);
+	foreach my $file (@files)
 	{
-		#print("\n", " ----------------- Table: $i -----------------", "\n");
-		my $hashref = $td[$i]; #Point the reference at the hash  
-		my $ar_temp = $hashref->{"CTL_NO"};
-		my $size = @{$ar_temp};
-		my %RPK = ();
-		my $rpk_total=0;
-		foreach my $key (@ordered_keys)
+		my $file_path = "$PATH_TO_FILES/$file";
+		printf("Opening file %s\n", $file_path);
+		parse_html($file_path);
+		next if($#td < 0);
+		#print $td[0]->{"CTL_NO"}->[0]->as_text, "\n";
+		for(my $i=0; $i<=$#td; $i++) #For each table in the file 
 		{
-			if($HASH_NAME eq "LCSH")
+			#print("\n", " ----------------- Table: $i -----------------", "\n");
+			my $hashref = $td[$i]; #Point the reference at the hash  
+			my $ar_temp = $hashref->{"CTL_NO"};
+			my $size = @{$ar_temp};
+			print "File: $file_path\n";
+			print "Number of records in td[$i] = $size\n";
+			my %RPK = ();
+			my $rpk_total=0;
+			foreach my $key (@ordered_keys)
 			{
-				$RPK{$key} = int($size*($LCSH{$key}/100)); 
-			}
-			elsif($HASH_NAME eq "NTAR")
-			{
-				$RPK{$key} = int($size*($NTAR{$key}/100));
+				if($HASH_NAME eq "LCSH")
+				{
+					$RPK{$key} = int($size*($LCSH{$key}/100)); 
+				}
+				elsif($HASH_NAME eq "NTAR")
+				{
+					$RPK{$key} = int($size*($NTAR{$key}/100));
 
+				}
+				$rpk_total += $RPK{$key};
 			}
-			$rpk_total += $RPK{$key};
-		}
-		my $rec_difference = $size - $rpk_total;
-		if($rec_difference > 0)
-		{
-			printf("Records to be written (%d) does not match records in file (%d) ", $rpk_total, $size);
-			printf("Adding %d records to %s key\n", $rec_difference, $ordered_keys[$#ordered_keys]);
-			#add any missing records to last key
-			$RPK{$ordered_keys[$#ordered_keys]} += $rec_difference;
+			my $rec_difference = $size - $rpk_total;
+			if($rec_difference > 0)
+			{
+				printf("Records to be written (%d) does not match records in file (%d) ", $rpk_total, $size);
+				printf("Adding %d records to %s key\n", $rec_difference, $ordered_keys[$#ordered_keys]);
+				#add any missing records to last key
+				$RPK{$ordered_keys[$#ordered_keys]} += $rec_difference;
+			}
+			###START WRITING RECORDS###
+			my $records_written_file = 0; 						#This variable is to keep track of the # records going to each school (per file) 
+			my $records_pos = 0;		        				#variable to keep track of position in @records	
+			foreach my $key (@ordered_keys)						#for each key in the NTAR hash
+			{
+				printf("Number of records required for $key is %d (%.2f%%) \n", $RPK{$key}, (($RPK{$key}/$size)*100));
+				next if($RPK{$key} <= 0);				#don't create the file/write header if there are no records to be written	
+				my $new_file_path = "$PATH_TO_FILES/../$key/$key.$file";	#prepend key to each filename
+				my $header = printHeader(); 
+				write_file($new_file_path, $header);
+			}	
 		}
 	}
 }
-	
 
+
+#parse_html($file)
+sub parse_html
+{
+	my $file = $_[0];
+	#Manually create filehandle so we can specify the encoding, and pass it to HTML::TreeBuilder
+	open(my $fh, '<:encoding(utf8)', $file) or die "Could not open '$file' $!\n";
+	$tree = HTML::TreeBuilder->new();
+	$tree->parse_file($fh);
+	### Do stuff w/ tree here ###
+
+	#Assign our global vars to nodes 
+	tree_init();
+	
+	#store in td();
+	get_tables();
+	
+	#Get the number of records (from all tables) in the file, store in global $Count
+	get_total_count();
+}
 
 #	print "Size: $size\n";
 #	for(my $j=0; $j<$size; $j++) #For each row 
@@ -147,12 +176,15 @@ sub split_line_reports
 
 sub printHeader
 {
-	print $HeadingText->as_text, "\n";
-	print $ReportType->as_text, "\n";
-	print $CreatedFor->as_text, "\n";
-	print $CreatedOn->as_text, "\n";
-	print "Count: $Count\n";
-	print $ReportExplanation->as_text, "\n";
+	my $header;
+	$header = join("\n", $HeadingText->as_text,$ReportType->as_text,$CreatedFor->as_text,$CreatedOn->as_text,$Count,$ReportExplanation->as_text);
+	#print $HeadingText->as_text, "\n";
+	#print $ReportType->as_text, "\n";
+	#print $CreatedFor->as_text, "\n";
+	#print $CreatedOn->as_text, "\n";
+	#print "Count: $Count\n";
+	#print $ReportExplanation->as_text, "\n";
+	return $header;
 }
 
 #getCount($arrayref)
