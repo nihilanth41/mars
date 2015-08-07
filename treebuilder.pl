@@ -54,7 +54,7 @@ my $tree;
 #Print header info in same format as XLS files
 #printHeader();
 
-split_line_reports("/home/zrrm74/extract/2015_08_06/School/LCSH", "LCSH");
+split_line_reports("/home/zrrm74/extract/2015_08_07/School/LCSH", "LCSH");
 #split_line_reports($REPORT_DIR, $HASH_NAME)
 #param $REPORT_DIR: full path to directory containing reports 
 #param $HASH_NAME: One of [LCSH/NTAR]. Used to specify the percentage split and the @ordered_keys list from the cfg file
@@ -177,7 +177,11 @@ sub parse_html
 sub printHeader
 {
 	my $header;
-	$header = join("\n", $HeadingText->as_text,$ReportType->as_text,$CreatedFor->as_text,$CreatedOn->as_text,$Count,$ReportExplanation->as_text);
+	$header = join("\n", $HeadingText->as_HTML,$ReportType->as_HTML,$CreatedFor->as_HTML,$CreatedOn->as_HTML,$ReportExplanation->as_HTML);
+	if(defined $Legend)
+	{
+		$header = join("", $header, $Legend->as_HTML);
+	}
 	#print $HeadingText->as_text, "\n";
 	#print $ReportType->as_text, "\n";
 	#print $CreatedFor->as_text, "\n";
@@ -266,7 +270,7 @@ sub tree_init
 	##Remove legend node (child node of ReportExplanation)
 	if(defined $Legend)
 	{
-		$Legend->delete;
+		$Legend->detach;
 	}
 
 	#Get ReportType
