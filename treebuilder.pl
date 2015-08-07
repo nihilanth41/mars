@@ -12,12 +12,12 @@ unless(-e $file)
 	print "Error: $file not found\n";
 	die;
 }
-#Deal with file as one big table 
-my @fields = ( "Ctrl #", "Tag", "Ind", "Field Data" );
+#Declare global variables
+#Variables used to store text that's not associated with tables (headings, etc.) 
 my ($HeadingText, $ReportType, $CreatedFor, $CreatedOn, $Count, $ReportExplanation, $Legend);
+#Separate array for Section Headings 
 my @SectionSubHeading; 
-
-#deal with each table individually
+#@tables stores each of the raw tables (separated by SectionSubHeading) 
 my @tables;
 my @thead;
 
