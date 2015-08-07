@@ -74,6 +74,8 @@ sub split_line_reports
 	my @files = read_dir($PATH_TO_FILES);
 	foreach my $file (@files)
 	{
+		@tables = ();
+		@td = ();
 		my $file_path = "$PATH_TO_FILES/$file";
 		printf("Opening file %s\n", $file_path);
 		parse_html($file_path);
@@ -81,12 +83,15 @@ sub split_line_reports
 		#print $td[0]->{"CTL_NO"}->[0]->as_text, "\n";
 		for(my $i=0; $i<=$#td; $i++) #For each table in the file 
 		{
-			#print("\n", " ----------------- Table: $i -----------------", "\n");
 			my $hashref = $td[$i]; #Point the reference at the hash  
 			my $ar_temp = $hashref->{"CTL_NO"};
 			my $size = @{$ar_temp};
 			print "File: $file_path\n";
 			print "Number of records in td[$i] = $size\n";
+			if(defined $SectionSubHeading[$i])
+			{
+				print $SectionSubHeading[$i]->as_text, "\n";
+			}
 			my %RPK = ();
 			my $rpk_total=0;
 			foreach my $key (@ordered_keys)
@@ -123,7 +128,7 @@ sub split_line_reports
 				write_file($new_file_path, {binmode=> ':utf8'}, $header);
 				if(defined $SectionSubHeading[$i])
 				{
-					my $ssh = join('', "\n", $SectionSubHeading[$i]->as_text); 
+					my $ssh = join('', "\n", $SectionSubHeading[$i]->as_text, "\n"); 
 					write_file($new_file_path, {binmode=> ':utf8', append=>1}, $ssh);
 				}
 				for(my $j=0; $j<$RPK{$key}; $j++)
@@ -139,7 +144,7 @@ sub split_line_reports
 					my $fd =  $td[$i]->{"FIELDDATA"}->[$rp]->as_text;  
 					my $row = $ctl;
 					$row = join('|', $tag, $ind, $fd, "\n");
-					write_file($new_file_path, {binmode=> ':utf8', append=>1}, $row);
+					append_file($new_file_path, {binmode=> ':utf8'}, $row);
 					$rp++;
 				}
 			}
