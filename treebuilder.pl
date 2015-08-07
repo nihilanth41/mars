@@ -20,6 +20,16 @@ my %LCSH = (
 	UMSL => $cfg->param('LCSH.UMSL')
 );
 
+my %NTAR = (
+	MU => $cfg->param('NTAR.MU'), 
+	MU_HSL => $cfg->param('NTAR.MU_HSL'),
+	MU_LAW => $cfg->param('NTAR.MU_LAW'),
+	UMKC => $cfg->param('NTAR.UMKC'),
+	UMKC_LAW => $cfg->param('NTAR.UMKC_LAW'),
+	MST => $cfg->param('NTAR.MST'),
+	UMSL => $cfg->param('NTAR.UMSL')
+);
+
 my $HOME = $ENV{"HOME"};
 my $file = "$HOME/r06.htm";
 unless(-e $file) 
@@ -56,29 +66,52 @@ get_total_count();
 #Print header info in same format as XLS files
 printHeader();
 
-#print $td[0]->{"CTL_NO"}->[0]->as_text, "\n";
-for(my $i=0; $i<=$#td; $i++) #For each table in the file 
+split_line_reports("/home/zrrm74/", "LCSH");
+#split_line_reports($REPORT_DIR, $HASH_NAME)
+#param $REPORT_DIR: full path to directory containing reports 
+#param $HASH_NAME: One of [LCSH/NTAR]. Used to specify the percentage split and the @ordered_keys list from the cfg file
+sub split_line_reports
 {
-	my $HASH_NAME = "LCSH";	
-#	#print("\n", " ----------------- Table: $i -----------------", "\n");
-	my $hashref = $td[$i]; #Point the reference at the hash  
-	my $ar_temp = $hashref->{"CTL_NO"};
-	my $size = @{$ar_temp};
-	my @ordered_keys = ( "MU_LAW", "UMKC_LAW", "MST", "UMSL", "UMKC", "MU" );
-	my %RPK = ();
-	my $rpk_total=0;
-	foreach my $key (@ordered_keys)
+	my ($REPORT_DIR, $HASH_NAME) = @_;
+	my @ordered_keys;
+	if($HASH_NAME eq "LCSH")
 	{
-		$RPK{$key} = int($size*($LCSH{$key}/100)); 
-		$rpk_total += $RPK{$key};
+		@ordered_keys = $cfg->param("LCSH.ORDERED_KEYS");
 	}
-	my $rec_difference = $size - $rpk_total;
-	if($rec_difference > 0)
+	elsif($HASH_NAME eq "NTAR")
 	{
-		printf("Records to be written (%d) does not match records in file (%d) ", $rpk_total, $size);
-		printf("Adding %d records to %s key\n", $rec_difference, $ordered_keys[$#ordered_keys]);
-		#add any missing records to last key
-		$RPK{$ordered_keys[$#ordered_keys]} += $rec_difference;
+		@ordered_keys = $cfg->param("NTAR.ORDERED_KEYS");
+	}
+	#print $td[0]->{"CTL_NO"}->[0]->as_text, "\n";
+	for(my $i=0; $i<=$#td; $i++) #For each table in the file 
+	{
+		#print("\n", " ----------------- Table: $i -----------------", "\n");
+		my $hashref = $td[$i]; #Point the reference at the hash  
+		my $ar_temp = $hashref->{"CTL_NO"};
+		my $size = @{$ar_temp};
+		my %RPK = ();
+		my $rpk_total=0;
+		foreach my $key (@ordered_keys)
+		{
+			if($HASH_NAME eq "LCSH")
+			{
+				$RPK{$key} = int($size*($LCSH{$key}/100)); 
+			}
+			elsif($HASH_NAME eq "NTAR")
+			{
+				$RPK{$key} = int($size*($NTAR{$key}/100));
+
+			}
+			$rpk_total += $RPK{$key};
+		}
+		my $rec_difference = $size - $rpk_total;
+		if($rec_difference > 0)
+		{
+			printf("Records to be written (%d) does not match records in file (%d) ", $rpk_total, $size);
+			printf("Adding %d records to %s key\n", $rec_difference, $ordered_keys[$#ordered_keys]);
+			#add any missing records to last key
+			$RPK{$ordered_keys[$#ordered_keys]} += $rec_difference;
+		}
 	}
 }
 	
