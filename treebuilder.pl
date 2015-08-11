@@ -42,7 +42,8 @@ my %NTAR = (
 
 #Declare global variables
 #Variables used to store text that's not associated with tables (headings, etc.) 
-my ($HeadingText, $ReportType, $CreatedFor, $CreatedOn, $Count, $ReportExplanation, $Legend);
+my ($HeadingText, $ReportType, $CreatedFor, $CreatedOn, $Count, $ReportExplanation, $Legend, $Script);
+my @Style; 
 my @SectionSubHeading; 
 #@tables stores each of the raw tables (separated by SectionSubHeading) 
 my @tables;
@@ -273,6 +274,15 @@ sub get_tables
 
 sub tree_init 
 {
+	#Get style tags 
+	@Style = $tree->look_down(
+		_tag => "style"
+	);
+
+	($Script) = $tree->look_down(
+		_tag => "script"
+	);
+
 	#Get HeadingText 
 	($HeadingText) = $tree->look_down( 
 		_tag => "div",
