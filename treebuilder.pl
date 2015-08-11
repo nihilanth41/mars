@@ -3,9 +3,10 @@
 use strict;
 use warnings;
 use File::Slurp;
-use Encode;
+use Encode qw(encode decode);
 use HTML::TreeBuilder;
 use Config::Simple;
+use 5.10.1;
 
 #parse config file
 my $cfg_file = "/home/zrrm74/src/mars/mars.cfg";
@@ -89,7 +90,7 @@ sub split_line_reports
 			print "Number of records in td[$i] = $size\n";
 			if(defined $SectionSubHeading[$i])
 			{
-				print $SectionSubHeading[$i]->as_text, "\n";
+					print $SectionSubHeading[$i]->as_text, "\n";
 			}
 			my %RPK = ();
 			my $rpk_total=0;
@@ -124,7 +125,10 @@ sub split_line_reports
 				my $new_file_path = "$PATH_TO_FILES/../$key/$key.$file";	#prepend key to each filename
 				#manually create filehandle -- set encoding
 				my $header = printHeader(); 
-				write_file($new_file_path, {binmode=> ':utf8'}, $header);
+				unless(-e $new_file_path)
+				{
+					write_file($new_file_path, {binmode=> ':utf8'}, $header);
+				}
 				if(defined $SectionSubHeading[$i])
 				{
 					my $ssh = join('', "\n", $SectionSubHeading[$i]->as_text, "\n"); 
@@ -146,9 +150,9 @@ sub split_line_reports
 					append_file($new_file_path, {binmode=> ':utf8'}, $row);
 					$rp++;
 				}
-			}
-		}	
-	}
+			}#foreach key 
+		}#foreach td()	
+	}#foreach $file 
 }
 
 
