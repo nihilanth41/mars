@@ -310,7 +310,7 @@ sub tree_init
 	#Delete thead from each @table_body
 	foreach my $th (@thead)
 	{
-		$th->delete;
+		$th->detach;
 	}
 
 	#Get SectionSubHeading and store -- Index of correct heading will be same as the index of the table 
