@@ -165,6 +165,7 @@ sub split_line_reports
 					$rp++;
 				}
 				print $fh '</table></div></div>';
+				print $fh $Script->as_HTML;
 				close $fh;
 			}#foreach key 
 		}#foreach td()	
@@ -209,7 +210,7 @@ sub printHeader
 	$header = join("\n", $header, $ReportExplanation->as_HTML);
 	if(defined $Legend)
 	{
-		$header = join("\n", $header, $Legend->as_HTML);
+		$header = join("\n", $header, $Legend->as_HTML, '<\div>');
 	}
 	#print $HeadingText->as_text, "\n";
 	#print $ReportType->as_text, "\n";
