@@ -141,7 +141,7 @@ sub split_line_reports
 					my $ssh = join('', "\n", $SectionSubHeading[$i]->as_HTML, "\n");
 					#write_file($new_file_path, {binmode=> ':utf8', append=>1}, $ssh);
 					my $h = join("\n", '<div class=\'table-outer-container\'>', '<div class=\'table-container\'>', '<table>');
-					$ssh = join("\n", $ssh, $h);
+					$ssh = join("\n", $ssh, $h, $thead[$i]->as_HTML);
 					print $fh $ssh;
 				}
 				for(my $j=0; $j<$RPK{$key}; $j++)
