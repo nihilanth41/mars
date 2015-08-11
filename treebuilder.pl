@@ -61,7 +61,7 @@ split_line_reports("/home/zrrm74/extract/2015_08_11/School/LCSH", "LCSH");
 #param $HASH_NAME: One of [LCSH/NTAR]. Used to specify the percentage split and the @ordered_keys list from the cfg file
 sub split_line_reports
 {
-	my ($REPORT_DIR, $HASH_NAME) = @_;
+	my ($REPORT_DIR, $HASH_NAME, $FILETYPE) = @_;
 	my @ordered_keys;
 	if($HASH_NAME eq "LCSH")
 	{
@@ -81,7 +81,6 @@ sub split_line_reports
 		printf("Opening file %s\n", $file_path);
 		parse_html($file_path);
 		next if($#td < 0);
-		#print $td[0]->{"CTL_NO"}->[0]->as_text, "\n";
 		for(my $i=0; $i<=$#td; $i++) #For each table in the file 
 		{
 			my $hashref = $td[$i]; #Point the reference at the hash  
@@ -116,7 +115,6 @@ sub split_line_reports
 				$RPK{$ordered_keys[$#ordered_keys]} += $rec_difference;
 			}
 			###START WRITING RECORDS###
-			my $records_written_file = 0; 						#This variable is to keep track of the # records going to each school (per file) 
 			my $rp = 0;		        				#variable to keep track of position in @records	
 			foreach my $key (@ordered_keys)						#for each key in the NTAR hash
 			{
@@ -148,13 +146,17 @@ sub split_line_reports
 						print "Exceeded records array (Inner)\n";
 						last;
 					}
+					#Write HTML
 					my $ctl =  $td[$i]->{"CTL_NO"}->[$rp]->as_HTML;
 					my $tag =  $td[$i]->{"TAG"}->[$rp]->as_HTML; 
 					my $ind = $td[$i]->{"IND"}->[$rp]->as_HTML;
 					my $fd =  $td[$i]->{"FIELDDATA"}->[$rp]->as_HTML;  
-					my $row = join('', $ctl, $tag, $ind, $fd, "\n");
+					my $row = join("\n", "\n\<tr\>", $ctl, $tag, $ind, $fd, '</tr>' );
 					#append_file($new_file_path, {binmode=> ':utf8'}, $row);
 					print $fh $row;
+					
+					#Write XLS
+
 					$rp++;
 				}
 				close $fh;
@@ -162,6 +164,8 @@ sub split_line_reports
 		}#foreach td()	
 	}#foreach $file 
 }
+
+
 
 
 
