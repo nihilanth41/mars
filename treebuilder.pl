@@ -123,16 +123,23 @@ sub split_line_reports
 				printf("Number of records required for $key is %d (%.2f%%) \n", $RPK{$key}, (($RPK{$key}/$size)*100));
 				next if($RPK{$key} <= 0);				#don't create the file/write header if there are no records to be written	
 				my $new_file_path = "$PATH_TO_FILES/../$key/$key.$file";	#prepend key to each filename
-				#manually create filehandle -- set encoding
 				my $header = printHeader(); 
 				unless(-e $new_file_path)
 				{
-					write_file($new_file_path, {binmode=> ':utf8'}, $header);
+					#write_file($new_file_path, {binmode=> ':utf8'}, $header);
+					#Auto encoding on write 
+					open(my $fh, '>:encoding(UTF-8)', $new_file_path) || die "Couldn't open file for write $new_file_path: $!";
+					print $fh $header;
+					close $fh;
 				}
+
+				#Open file for append 
+				open(my $fh, '>>:encoding(UTF-8)', $new_file_path) || die "Couldn't open file for write $new_file_path: $!";
 				if(defined $SectionSubHeading[$i])
 				{
-					my $ssh = join('', "\n", $SectionSubHeading[$i]->as_text, "\n"); 
-					write_file($new_file_path, {binmode=> ':utf8', append=>1}, $ssh);
+					my $ssh = join('', "\n", $SectionSubHeading[$i]->as_text, "\n");
+					#write_file($new_file_path, {binmode=> ':utf8', append=>1}, $ssh);
+					print $fh $ssh;
 				}
 				for(my $j=0; $j<$RPK{$key}; $j++)
 				{
@@ -147,9 +154,11 @@ sub split_line_reports
 					my $fd =  $td[$i]->{"FIELDDATA"}->[$rp]->as_text;  
 					my $row = $ctl;
 					$row = join('|', $tag, $ind, $fd, "\n");
-					append_file($new_file_path, {binmode=> ':utf8'}, $row);
+					#append_file($new_file_path, {binmode=> ':utf8'}, $row);
+					print $fh $row;
 					$rp++;
 				}
+				close $fh;
 			}#foreach key 
 		}#foreach td()	
 	}#foreach $file 
