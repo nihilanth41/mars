@@ -42,7 +42,7 @@ my %NTAR = (
 
 #Declare global variables
 #Variables used to store text that's not associated with tables (headings, etc.) 
-my ($HeadingText, $ReportType, $CreatedFor, $CreatedOn, $Count, $ReportExplanation, $Legend, $Script);
+my ($Meta, $HeadingText, $ReportType, $ReportName, $CreatedFor, $CreatedOn, $Count, $ReportExplanation, $Legend, $Script);
 my @Style; 
 my @SectionSubHeading; 
 #@tables stores each of the raw tables (separated by SectionSubHeading) 
@@ -62,7 +62,7 @@ split_line_reports("/home/zrrm74/extract/2015_08_11/School/LCSH", "LCSH");
 #param $HASH_NAME: One of [LCSH/NTAR]. Used to specify the percentage split and the @ordered_keys list from the cfg file
 sub split_line_reports
 {
-	my ($REPORT_DIR, $HASH_NAME, $FILETYPE) = @_;
+	my ($REPORT_DIR, $HASH_NAME) = @_;
 	my @ordered_keys;
 	if($HASH_NAME eq "LCSH")
 	{
@@ -128,9 +128,11 @@ sub split_line_reports
 					#write_file($new_file_path, {binmode=> ':utf8'}, $header);
 					#Auto encoding on write 
 					open(my $fh, '>:encoding(UTF-8)', $new_file_path) || die "Couldn't open file for write $new_file_path: $!";
-					print $fh $header;
-					close $fh;
+					#	if($FILETYPE eq 'HTML')
+						print $fh $header;
+						close $fh;
 				}
+				
 
 				#Open file for append 
 				open(my $fh, '>>:encoding(UTF-8)', $new_file_path) || die "Couldn't open file for write $new_file_path: $!";
@@ -138,6 +140,8 @@ sub split_line_reports
 				{
 					my $ssh = join('', "\n", $SectionSubHeading[$i]->as_HTML, "\n");
 					#write_file($new_file_path, {binmode=> ':utf8', append=>1}, $ssh);
+					my $h = join("\n", '<div class=\'table-outer-container\'>', '<div class=\'table-container\'>', '<table>');
+					$ssh = join("\n", $ssh, $h);
 					print $fh $ssh;
 				}
 				for(my $j=0; $j<$RPK{$key}; $j++)
@@ -160,6 +164,7 @@ sub split_line_reports
 
 					$rp++;
 				}
+				print $fh '</table></div></div>';
 				close $fh;
 			}#foreach key 
 		}#foreach td()	
@@ -193,13 +198,19 @@ sub parse_html
 
 sub printHeader
 {
-	my $header;
-	$header = join("\n", $HeadingText->as_HTML,$ReportType->as_HTML,$CreatedFor->as_HTML,$CreatedOn->as_HTML,$ReportExplanation->as_HTML);
-	#if(defined $Legend)
-	#{
-#		$header = join("", $header, $Legend->as_HTML);
-#	}
-#
+	my $head = "<html>\n<head>";	
+	$Meta = '<meta http-equiv=\'Content-Type\' content=\'text/html; charset=UTF-8\'/>';
+	my $title = join('', '<title>', $ReportName->as_text, '</title>');
+	my $header = join("\n", $head, $Meta, $title, $Style[0]->as_HTML, $Style[1]->as_HTML, '</head>');
+	$header = join("\n", $header, '<body>', '<div id=\'container\'>', '<div id=\'Heading\' class=\'clearfix\'>');
+	$header = join("\n", $header, $HeadingText->as_HTML, $ReportType->as_HTML);
+	$header = join("\n", $header, '<div id=\'Created\'><div class=\'CreatedLabel\'>Created for: </div>', $CreatedFor->as_HTML, '</div>');
+	$header = join("\n", $header, '<div id=\'CreatedRight\'><div class=\'CreatedLabel\'>Created on: </div>', $CreatedOn->as_HTML,'</div></div>');
+	$header = join("\n", $header, $ReportExplanation->as_HTML);
+	if(defined $Legend)
+	{
+		$header = join("\n", $header, $Legend->as_HTML);
+	}
 	#print $HeadingText->as_text, "\n";
 	#print $ReportType->as_text, "\n";
 	#print $CreatedFor->as_text, "\n";
@@ -274,6 +285,7 @@ sub get_tables
 
 sub tree_init 
 {
+
 	#Get style tags 
 	@Style = $tree->look_down(
 		_tag => "style"
@@ -281,6 +293,11 @@ sub tree_init
 
 	($Script) = $tree->look_down(
 		_tag => "script"
+	);
+
+	($ReportName) = $tree->look_down(
+		_tag => "span",
+		id => "ReportName",
 	);
 
 	#Get HeadingText 
