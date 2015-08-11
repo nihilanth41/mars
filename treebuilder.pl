@@ -55,7 +55,7 @@ my $tree;
 #Print header info in same format as XLS files
 #printHeader();
 
-split_line_reports("/home/zrrm74/extract/2015_08_11/School/LCSH/", "LCSH");
+split_line_reports("/home/zrrm74/extract/2015_08_11/School/LCSH", "LCSH");
 #split_line_reports($REPORT_DIR, $HASH_NAME)
 #param $REPORT_DIR: full path to directory containing reports 
 #param $HASH_NAME: One of [LCSH/NTAR]. Used to specify the percentage split and the @ordered_keys list from the cfg file
@@ -137,7 +137,7 @@ sub split_line_reports
 				open(my $fh, '>>:encoding(UTF-8)', $new_file_path) || die "Couldn't open file for write $new_file_path: $!";
 				if(defined $SectionSubHeading[$i])
 				{
-					my $ssh = join('', "\n", $SectionSubHeading[$i]->as_text, "\n");
+					my $ssh = join('', "\n", $SectionSubHeading[$i]->as_HTML, "\n");
 					#write_file($new_file_path, {binmode=> ':utf8', append=>1}, $ssh);
 					print $fh $ssh;
 				}
@@ -148,12 +148,11 @@ sub split_line_reports
 						print "Exceeded records array (Inner)\n";
 						last;
 					}
-					my $ctl =  $td[$i]->{"CTL_NO"}->[$rp]->as_text;
-					my $tag =  $td[$i]->{"TAG"}->[$rp]->as_text; 
-					my $ind = $td[$i]->{"IND"}->[$rp]->as_text;
-					my $fd =  $td[$i]->{"FIELDDATA"}->[$rp]->as_text;  
-					my $row = $ctl;
-					$row = join('|', $tag, $ind, $fd, "\n");
+					my $ctl =  $td[$i]->{"CTL_NO"}->[$rp]->as_HTML;
+					my $tag =  $td[$i]->{"TAG"}->[$rp]->as_HTML; 
+					my $ind = $td[$i]->{"IND"}->[$rp]->as_HTML;
+					my $fd =  $td[$i]->{"FIELDDATA"}->[$rp]->as_HTML;  
+					my $row = join('', $ctl, $tag, $ind, $fd, "\n");
 					#append_file($new_file_path, {binmode=> ':utf8'}, $row);
 					print $fh $row;
 					$rp++;
@@ -190,7 +189,7 @@ sub parse_html
 sub printHeader
 {
 	my $header;
-	$header = join("\n", $HeadingText->as_text,$ReportType->as_text,$CreatedFor->as_text,$CreatedOn->as_text,$ReportExplanation->as_text);
+	$header = join("\n", $HeadingText->as_HTML,$ReportType->as_HTML,$CreatedFor->as_HTML,$CreatedOn->as_HTML,$ReportExplanation->as_HTML);
 	#if(defined $Legend)
 	#{
 #		$header = join("", $header, $Legend->as_HTML);
