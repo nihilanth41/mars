@@ -54,7 +54,7 @@ my $tree;
 #Print header info in same format as XLS files
 #printHeader();
 
-split_line_reports("/home/zrrm74/extract/2015_08_07/School/LCSH", "LCSH");
+split_line_reports("/home/zrrm74/extract/2015_08_11/School/LCSH/", "LCSH");
 #split_line_reports($REPORT_DIR, $HASH_NAME)
 #param $REPORT_DIR: full path to directory containing reports 
 #param $HASH_NAME: One of [LCSH/NTAR]. Used to specify the percentage split and the @ordered_keys list from the cfg file
@@ -86,7 +86,6 @@ sub split_line_reports
 			my $hashref = $td[$i]; #Point the reference at the hash  
 			my $ar_temp = $hashref->{"CTL_NO"};
 			my $size = @{$ar_temp};
-			print "File: $file_path\n";
 			print "Number of records in td[$i] = $size\n";
 			if(defined $SectionSubHeading[$i])
 			{
