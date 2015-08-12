@@ -52,6 +52,7 @@ my $tree;
 
 #split_line_reports("/home/zrrm74/extract/2015_08_12/School/LCSH", "LCSH");
 #split_line_reports("/home/zrrm74/extract/2015_08_12/School/NTAR", "NTAR");
+split_line_reports_CSV("/home/zrrm74/extract/2015_08_12/School/LCSH", "LCSH");
 split_line_reports_CSV("/home/zrrm74/extract/2015_08_12/School/NTAR", "NTAR");
 
 #split_line_reports($REPORT_DIR, $HASH_NAME)
@@ -166,7 +167,7 @@ sub split_line_reports
 				close $fh;
 			}#foreach key 
 		}#foreach td()	
-	print `rm -v $file_path`;
+		#print `rm -v $file_path`;
 	}#foreach $file 
 }
 
@@ -414,7 +415,16 @@ sub split_line_reports_CSV
 				printf("Number of records required for $key is %d (%.2f%%) \n", $RPK{$key}, (($RPK{$key}/$size)*100));
 				next if($RPK{$key} <= 0);				#don't create the file/write header if there are no records to be written	
 				my ($filename, $dirs, $suffix) = fileparse($file_path); 
-				my $new_file_path = "$PATH_TO_FILES/../$key/$key.$filename.csv"; #prepend key to each filename
+				my $CSV_DIR = "$dirs"."CSV";
+				unless(-d $CSV_DIR)
+				{
+					print `mkdir -v $CSV_DIR`;
+				}
+				my @CSV_FILE = split("htm", $filename); 
+				$CSV_FILE[0] = join('', $CSV_FILE[0], "csv");
+				my $csvf = $CSV_FILE[0];
+				#my $new_file_path = "$PATH_TO_FILES/../$key/$key.$filename.csv"; #prepend key to each filename
+				my $new_file_path = "$CSV_DIR/$key.$csvf";
 				my $header = printHeader_CSV(); 
 				unless(-e $new_file_path)
 				{
@@ -456,7 +466,7 @@ sub split_line_reports_CSV
 				close $fh;
 			}#foreach key 
 		}#foreach td()	
-		#print `rm -v $file_path`;
+		print `rm -v $file_path`;
 	}#foreach $file 
 }
 
