@@ -505,38 +505,83 @@ sub printHeader_CSV
 
 #csv_to_xls($PATH_TO_FILES)
 sub csv_to_xls {
+	my $csv = Text::CSV->new({
+			auto_diag => 1,
+			sep_char => '|'
+		});
+
 	my $PATH_TO_FILES = $_[0];
 	my @files = read_dir($PATH_TO_FILES);
 	foreach my $file (@files)
 	{
+		my @controlno;
+		my @tag;
+		my @ind;
+		my @fielddata;
+		#Parse CSV File
+		my $fpath = "$PATH_TO_FILES/$file";
+		open(my $fh, '<encoding(UTF-8)', $fpath) or die "Could not open '$fpath' $!\n";
+		while(my $line = <$fh>)
+		{
+			chomp $line;
+			if($csv->parse($line))
+			{
+				my @fields = $csv->fields();
+				push @controlno, $fields[0];
+				push @tag, $fields[1];
+				push @ind, $fields[2];
+				push @fielddata, $fields[3];
+			}
+			else
+			{
+				warn "Line could not be parsed: $line\n";
+			}
+		}
+		$csv->eof or $csv->error_diag();
+		close $fh;
+		
+		#Begin writing excel file
 		my @fname = split(/\./, $file);
 		my $key = $fname[0];
 		my $name = $fname[1].".xls"; 
 		my $output_file = "$PATH_TO_FILES/../../$key/$name";
-		print "XLS Output file $output_file\n";
-		#my $workbook = Spreadsheet::WriteExcel->new($output_file);
-	}
-}
-	#
-	##Configure cell format
-	#my $format = $workbook->add_format();
-	#$format->set_align('left');
-	#
-	##Create worksheet
-	#my $worksheet = $workbook->add_worksheet();
-	#
-	##The following widths are taken from the existing XLS files
-	#$worksheet->keep_leading_zeros(1);
-	#$worksheet->set_column(0, 0, 15); 	#Column A width set to 15
-	#$worksheet->set_column(1, 1, 8.43);	#Column B width set to 8.43
-	#$worksheet->set_column(2, 2, 8.43);	#Column C wdith set to 8.43
-	#$worksheet->set_column(3, 3, 75);       #Column D width set to 75
+
+		#print "XLS Output file $output_file\n";
+		#open (my $fh, '>:encoding(UTF-8)', $output_file);
+		my $workbook = Spreadsheet::WriteExcel->new($output_file);
+		#Configure cell format
+		my $format = $workbook->add_format();
+		$format->set_align('left');
+		#Create worksheet
+		my $worksheet = $workbook->add_worksheet();                       	                                                             
+		#The following widths are taken from the existing XLS files       	
+		$worksheet->keep_leading_zeros(1);
+		$worksheet->set_column(0, 0, 15); 	#Column A width set to 15	
+		$worksheet->set_column(1, 1, 8.43);	#Column B width set to 8.43	
+		$worksheet->set_column(2, 2, 8.43);	#Column C wdith set to 8.43	
+		$worksheet->set_column(3, 3, 75);       #Column D width set to 75 
+		my $num = $#controlno+1;
+		for(my $i=0; $i<$num; $i++)
+		{
+			$worksheet->write_string($i, 0, $controlno[$i], $format);
+			$worksheet->write_string($i, 1, $tag[$i], $format);
+			$worksheet->write_string($i, 2, $ind[$i], $format);
+			$worksheet->write_string($i, 3, $fielddata[$i], $format);
+		}
+		$workbook->close();
+		close $fh;
+	}#foreach file
+}#endsub
+
+
+
+
+
+
+	
 	#for(my $i=0; $i<$num; $i++)
 	#{
-	#	$worksheet->write_string($i, 0, $controlno[$i], $format);
-	#	$worksheet->write_string($i, 1, $tag[$i], $format);
-	#	$worksheet->write_string($i, 2, $ind[$i], $format);
-	#	$worksheet->write_string($i, 3, $fielddata[$i], $format);
+
 	#}
 	#
 	#$workbook->close();
