@@ -477,8 +477,10 @@ sub printHeader_CSV
 	my $ct = "Count:|||$Count";
 
 	my $header = join("\n", $head, $type, $cf, $co, $ct);
-
-	$header = join("\n", $header, '|||', $ReportExplanation->as_text, '|||');
+	
+	my $re_txt = $ReportExplanation->as_text;
+	my $re = "\"$re_txt\"|||";
+	$header = join("\n", $header, '|||', $re, '|||');
 	$header = join("\n", $header, $ReportType->as_text);
 	$header = join("\n", $header, '"Control No"|Tag|Ind|"Field Data"');
 	return $header;
