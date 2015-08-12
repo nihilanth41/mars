@@ -506,8 +506,11 @@ sub printHeader_CSV
 #csv_to_xls($PATH_TO_FILES)
 sub csv_to_xls {
 	my $csv = Text::CSV->new({
+			binary => 1,
 			auto_diag => 1,
-			sep_char => '|'
+			sep_char => '|',
+			quote_char => undef,
+			escape_char => undef,
 		});
 
 	my $PATH_TO_FILES = $_[0];
@@ -578,11 +581,3 @@ sub csv_to_xls {
 
 
 
-	
-	#for(my $i=0; $i<$num; $i++)
-	#{
-
-	#}
-	#
-	#$workbook->close();
-	#
