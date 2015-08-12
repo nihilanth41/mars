@@ -387,8 +387,37 @@ sub split_line_reports_xls
 		@td = ();
 		my $file_path = "$PATH_TO_FILES/$file";
 		printf("Opening file %s\n", $file_path);
+		#Get tables from file
 		parse_html($file_path);
+
+		#Skip if no recognized tables in file
 		next if($#td < 0);
+
+		#Split file path into parts
+		my ($filename, $dirs, $suffix) = fileparse($file_path); 
+		my $new_file_path = "$PATH_TO_FILES/../$key/$key.$filename.xls";	#prepend key to each filename
+		#vars for writeExcel
+		my ($workbook, $format, $worksheet);
+		#unless file exists
+		unless(-e $new_file_path)
+		{
+			#Auto encoding on write 
+			open(my $fh, '>:encoding(UTF-8)', $new_file_path) || die "Couldn't open file for write $new_file_path: $!";
+			$workbook = Spreadsheet::WriteExcel->new($fh);
+			$format->set_align('left');
+			#Create worksheet
+			$worksheet = $workbook->add_worksheet();
+			##The following widths are taken from the existing XLS files
+			$worksheet->keep_leading_zeros(1);
+			$worksheet->set_column(0, 0, 15); 	#Column A width set to 15
+			$worksheet->set_column(1, 1, 8.43);	#Column B width set to 8.43
+			$worksheet->set_column(2, 2, 8.43);	#Column C wdith set to 8.43
+			$worksheet->set_column(3, 3, 75);       #Column D width set to 75
+
+			
+							
+			close $fh;
+		}
 		for(my $i=0; $i<=$#td; $i++) #For each table in the file 
 		{
 			my $hashref = $td[$i]; #Point the reference at the hash  
@@ -429,18 +458,9 @@ sub split_line_reports_xls
 				printf("Number of records required for $key is %d (%.2f%%) \n", $RPK{$key}, (($RPK{$key}/$size)*100));
 				next if($RPK{$key} <= 0);				#don't create the file/write header if there are no records to be written	
 
-				my ($filename, $dirs, $suffix) = fileparse($file_path); 
-				my $new_file_path = "$PATH_TO_FILES/../$key/$key.$filename.xls";	#prepend key to each filename
-				my $header = printHeader_XLS(); 
-				unless(-e $new_file_path)
-				{
-					#write_file($new_file_path, {binmode=> ':utf8'}, $header);
-					#Auto encoding on write 
-					open(my $fh, '>:encoding(UTF-8)', $new_file_path) || die "Couldn't open file for write $new_file_path: $!";
-					#	if($FILETYPE eq 'HTML')
-						print $fh $header;
-						close $fh;
-				}
+
+				
+
 				
 
 				#Open file for append 
