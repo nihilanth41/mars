@@ -466,10 +466,12 @@ sub printHeader_CSV
 	
 	@tmp = split(':', $ReportType->as_text);
 	$tmp[1] =~ s/^\s+//; #Remove whitespace from left side 
-	my $type = join('|||', "\"$tmp[0]\"", "\"$tmp[1]\"");
+	my $type = join('|||', "\"$tmp[0]:\"", "\"$tmp[1]\"");
 
-	
-	my $header = join("\n", $head, $type, $CreatedFor->as_text, $CreatedOn->as_text, "Count: $Count");
+	my $cft = $CreatedFor->as_text;
+	my $cf = "\"Created For:\"|||\"$cft\"";
+
+	my $header = join("\n", $head, $type, $cf, $CreatedOn->as_text, "Count: $Count");
 	$header = join("\n", $header, '|||', $ReportExplanation->as_text, '|||');
 	$header = join("\n", $header, $ReportType->as_text);
 	$header = join("\n", $header, '"Control No"|Tag|Ind|"Field Data"');
