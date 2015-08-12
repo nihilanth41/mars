@@ -49,8 +49,10 @@ my @thead;
 my @td = ();
 my $tree;
 
-split_line_reports("/home/zrrm74/extract/2015_08_12/School/LCSH", "LCSH");
-split_line_reports("/home/zrrm74/extract/2015_08_12/School/NTAR", "NTAR");
+#split_line_reports("/home/zrrm74/extract/2015_08_12/School/LCSH", "LCSH");
+#split_line_reports("/home/zrrm74/extract/2015_08_12/School/NTAR", "NTAR");
+split_line_reports_xls("/home/zrrm74/extract/2015_08_12/School/LCSH", "LCSH");
+
 #split_line_reports($REPORT_DIR, $HASH_NAME)
 #param $REPORT_DIR: full path to directory containing reports 
 #param $HASH_NAME: One of [LCSH/NTAR]. Used to specify the percentage split and the @ordered_keys list from the cfg file
@@ -207,12 +209,6 @@ sub printHeader_HTML
 	{
 		$header = join("\n", $header, $Legend->as_HTML);
 	}
-	#print $HeadingText->as_text, "\n";
-	#print $ReportType->as_text, "\n";
-	#print $CreatedFor->as_text, "\n";
-	#print $CreatedOn->as_text, "\n";
-	#print "Count: $Count\n";
-	#print $ReportExplanation->as_text, "\n";
 	return $header;
 }
 
@@ -353,153 +349,6 @@ sub tree_init
 		_tag => "div",
 		class => "SectionSubHeading",
 	);
-}
-
-sub printHeader_XLS
-{
-	print $HeadingText->as_text, "\n";
-	print $ReportType->as_text, "\n";
-	print $CreatedFor->as_text, "\n";
-	print $CreatedOn->as_text, "\n";
-	print "Count: $Count\n";
-	print $ReportExplanation->as_text, "\n";
-	return $header;
-}
-
-#split_line_reports_xls($REPORT_DIR, $HASH_NAME)
-sub split_line_reports_xls
-{
-	my ($REPORT_DIR, $HASH_NAME) = @_;
-	my @ordered_keys;
-	if($HASH_NAME eq "LCSH")
-	{
-		@ordered_keys = $cfg->param("LCSH.ORDERED_KEYS");
-	}
-	elsif($HASH_NAME eq "NTAR")
-	{
-		@ordered_keys = $cfg->param("NTAR.ORDERED_KEYS");
-	}
-	my $PATH_TO_FILES = $REPORT_DIR;
-	my @files = read_dir($PATH_TO_FILES);
-	foreach my $file (@files)
-	{
-		@tables = ();
-		@td = ();
-		my $file_path = "$PATH_TO_FILES/$file";
-		printf("Opening file %s\n", $file_path);
-		#Get tables from file
-		parse_html($file_path);
-
-		#Skip if no recognized tables in file
-		next if($#td < 0);
-
-		#Split file path into parts
-		my ($filename, $dirs, $suffix) = fileparse($file_path); 
-		my $new_file_path = "$PATH_TO_FILES/../$key/$key.$filename.xls";	#prepend key to each filename
-		#vars for writeExcel
-		my ($workbook, $format, $worksheet);
-		#unless file exists
-		unless(-e $new_file_path)
-		{
-			#Auto encoding on write 
-			open(my $fh, '>:encoding(UTF-8)', $new_file_path) || die "Couldn't open file for write $new_file_path: $!";
-			$workbook = Spreadsheet::WriteExcel->new($fh);
-			$format->set_align('left');
-			#Create worksheet
-			$worksheet = $workbook->add_worksheet();
-			##The following widths are taken from the existing XLS files
-			$worksheet->keep_leading_zeros(1);
-			$worksheet->set_column(0, 0, 15); 	#Column A width set to 15
-			$worksheet->set_column(1, 1, 8.43);	#Column B width set to 8.43
-			$worksheet->set_column(2, 2, 8.43);	#Column C wdith set to 8.43
-			$worksheet->set_column(3, 3, 75);       #Column D width set to 75
-
-			
-							
-			close $fh;
-		}
-		for(my $i=0; $i<=$#td; $i++) #For each table in the file 
-		{
-			my $hashref = $td[$i]; #Point the reference at the hash  
-			my $ar_temp = $hashref->{"CTL_NO"};
-			my $size = @{$ar_temp};
-			print "Number of records in td[$i] = $size\n";
-			if(defined $SectionSubHeading[$i])
-			{
-					print $SectionSubHeading[$i]->as_text, "\n";
-			}
-			my %RPK = ();
-			my $rpk_total=0;
-			foreach my $key (@ordered_keys)
-			{
-				if($HASH_NAME eq "LCSH")
-				{
-					$RPK{$key} = int($size*($LCSH{$key}/100)); 
-				}
-				elsif($HASH_NAME eq "NTAR")
-				{
-					$RPK{$key} = int($size*($NTAR{$key}/100));
-
-				}
-				$rpk_total += $RPK{$key};
-			}
-			my $rec_difference = $size - $rpk_total;
-			if($rec_difference > 0)
-			{
-				printf("Records to be written (%d) does not match records in file (%d) ", $rpk_total, $size);
-				printf("Adding %d records to %s key\n", $rec_difference, $ordered_keys[$#ordered_keys]);
-				#add any missing records to last key
-				$RPK{$ordered_keys[$#ordered_keys]} += $rec_difference;
-			}
-			###START WRITING RECORDS###
-			my $rp = 0;		        				#variable to keep track of position in @records	
-			foreach my $key (@ordered_keys)						#for each key in the NTAR hash
-			{
-				printf("Number of records required for $key is %d (%.2f%%) \n", $RPK{$key}, (($RPK{$key}/$size)*100));
-				next if($RPK{$key} <= 0);				#don't create the file/write header if there are no records to be written	
-
-
-				
-
-				
-
-				#Open file for append 
-				open(my $fh, '>>:encoding(UTF-8)', $new_file_path) || die "Couldn't open file for write $new_file_path: $!";
-				if(defined $SectionSubHeading[$i])
-				{
-					my $ssh = join('', "\n", $SectionSubHeading[$i]->as_HTML, "\n");
-					#write_file($new_file_path, {binmode=> ':utf8', append=>1}, $ssh);
-					my $h = join("\n", '<div class=\'table-outer-container\'>', '<div class=\'table-container\'>', '<table>');
-					$ssh = join("\n", $ssh, $h, $thead[$i]->as_HTML);
-					print $fh $ssh;
-				}
-				for(my $j=0; $j<$RPK{$key}; $j++)
-				{
-					if($rp >= $size)
-					{
-						print "Exceeded records array (Inner)\n";
-						last;
-					}
-					#Write HTML
-					my $ctl =  $td[$i]->{"CTL_NO"}->[$rp]->as_HTML;
-					my $tag =  $td[$i]->{"TAG"}->[$rp]->as_HTML; 
-					my $ind = $td[$i]->{"IND"}->[$rp]->as_HTML;
-					my $fd =  $td[$i]->{"FIELDDATA"}->[$rp]->as_HTML;  
-					my $row = join("\n", "\n\<tr\>", $ctl, $tag, $ind, $fd, '</tr>' );
-					#append_file($new_file_path, {binmode=> ':utf8'}, $row);
-					print $fh $row;
-					
-					#Write XLS
-
-					$rp++;
-				}
-				print $fh '</table></div></div>';
-				print $fh $Script->as_HTML;
-				close $fh;
-			}#foreach key 
-		}#foreach td()	
-	print `rm -v $file_path`;
-	}#foreach $file 
 }
 
 	#my $output_file = "$filename.xls";
