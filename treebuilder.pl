@@ -431,7 +431,7 @@ sub split_line_reports_CSV
 				open(my $fh, '>>:encoding(UTF-8)', $new_file_path) || die "Couldn't open file for write $new_file_path: $!";
 				if(defined $SectionSubHeading[$i])
 				{
-					my $ssh = join('', $SectionSubHeading[$i]->as_text, '|||');
+					my $ssh = join('', $SectionSubHeading[$i]->as_text, '|||', "\n");
 					print $fh $ssh;
 				}
 				for(my $j=0; $j<$RPK{$key}; $j++)
@@ -481,8 +481,7 @@ sub printHeader_CSV
 	my $re_txt = $ReportExplanation->as_text;
 	my $re = "\"$re_txt\"|||";
 	$header = join("\n", $header, '|||', $re, '|||');
-	$header = join("\n", $header, $ReportType->as_text);
-	$header = join("\n", $header, '"Control No"|Tag|Ind|"Field Data"');
+	$header = join("\n", $header, "\"Control No\"|Tag|Ind|\"Field Data\"\n");
 	return $header;
 }
 
