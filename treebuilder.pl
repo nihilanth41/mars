@@ -6,6 +6,7 @@ use File::Slurp;
 use Encode qw(encode decode);
 use HTML::TreeBuilder;
 use Config::Simple;
+use Spreadsheet::WriteExcel;
 use 5.10.1;
 
 #parse config file
@@ -32,13 +33,6 @@ my %NTAR = (
 	UMSL => $cfg->param('NTAR.UMSL')
 );
 
-#my $HOME = $ENV{"HOME"};
-#my $file = "$HOME/r06.htm";
-#unless(-e $file) 
-#{
-#	print "Error: $file not found\n";
-#	die;
-#}
 
 #Declare global variables
 #Variables used to store text that's not associated with tables (headings, etc.) 
@@ -48,15 +42,15 @@ my @SectionSubHeading;
 #@tables stores each of the raw tables (separated by SectionSubHeading) 
 my @tables;
 my @thead;
+
 #Get the tables out of the file and put them in @td(); 
 #NOTE: td() is an array of hashes AoH
 #Each hash has 4 keys that point to an array reference, which contains the column data for that table
 my @td = ();
 my $tree;
-#Print header info in same format as XLS files
-#printHeader();
 
-split_line_reports("/home/zrrm74/extract/2015_08_11/School/LCSH", "LCSH");
+split_line_reports("/home/zrrm74/extract/2015_08_12/School/LCSH", "LCSH");
+split_line_reports("/home/zrrm74/extract/2015_08_12/School/NTAR", "NTAR");
 #split_line_reports($REPORT_DIR, $HASH_NAME)
 #param $REPORT_DIR: full path to directory containing reports 
 #param $HASH_NAME: One of [LCSH/NTAR]. Used to specify the percentage split and the @ordered_keys list from the cfg file
@@ -169,6 +163,7 @@ sub split_line_reports
 				close $fh;
 			}#foreach key 
 		}#foreach td()	
+	print `rm -v $file_path`;
 	}#foreach $file 
 }
 
@@ -210,7 +205,7 @@ sub printHeader
 	$header = join("\n", $header, $ReportExplanation->as_HTML);
 	if(defined $Legend)
 	{
-		$header = join("\n", $header, $Legend->as_HTML, '<\div>');
+		$header = join("\n", $header, $Legend->as_HTML);
 	}
 	#print $HeadingText->as_text, "\n";
 	#print $ReportType->as_text, "\n";
@@ -359,3 +354,32 @@ sub tree_init
 		class => "SectionSubHeading",
 	);
 }
+
+
+	#my $output_file = "$filename.xls";
+	#my $workbook = Spreadsheet::WriteExcel->new($output_file);
+	#
+	##Configure cell format
+	#my $format = $workbook->add_format();
+	#$format->set_align('left');
+	#
+	##Create worksheet
+	#my $worksheet = $workbook->add_worksheet();
+	#
+	##The following widths are taken from the existing XLS files
+	#$worksheet->keep_leading_zeros(1);
+	#$worksheet->set_column(0, 0, 15); 	#Column A width set to 15
+	#$worksheet->set_column(1, 1, 8.43);	#Column B width set to 8.43
+	#$worksheet->set_column(2, 2, 8.43);	#Column C wdith set to 8.43
+	#$worksheet->set_column(3, 3, 75);       #Column D width set to 75
+	#for(my $i=0; $i<$num; $i++)
+	#{
+	#	$worksheet->write_string($i, 0, $controlno[$i], $format);
+	#	$worksheet->write_string($i, 1, $tag[$i], $format);
+	#	$worksheet->write_string($i, 2, $ind[$i], $format);
+	#	$worksheet->write_string($i, 3, $fielddata[$i], $format);
+	#}
+	#
+	#$workbook->close();
+	#
+
