@@ -8,6 +8,7 @@ use Encode qw(encode decode);
 use HTML::TreeBuilder;
 use Config::Simple;
 use Spreadsheet::WriteExcel;
+use Text::CSV;
 use 5.10.1;
 
 #parse config file
@@ -50,8 +51,9 @@ my @thead;
 my @td = ();
 my $tree;
 
-#split_line_reports("/home/zrrm74/extract/2015_08_12/School/LCSH", "LCSH");
-#split_line_reports("/home/zrrm74/extract/2015_08_12/School/NTAR", "NTAR");
+split_line_reports("/home/zrrm74/extract/2015_08_12/School/LCSH", "LCSH");
+split_line_reports("/home/zrrm74/extract/2015_08_12/School/NTAR", "NTAR");
+
 split_line_reports_CSV("/home/zrrm74/extract/2015_08_12/School/LCSH", "LCSH");
 split_line_reports_CSV("/home/zrrm74/extract/2015_08_12/School/NTAR", "NTAR");
 
@@ -227,6 +229,7 @@ sub getCount
 #Get count of all the records in the file
 sub get_total_count
 {
+	$Count = 0;
 	for(my $i=0; $i<=$#td; $i++) #For each table in the file 
 	{
 		my $hr = $td[$i];
