@@ -3,6 +3,7 @@
 use strict;
 use warnings;
 use File::Slurp;
+use File::Basename;
 use Encode qw(encode decode);
 use HTML::TreeBuilder;
 use Config::Simple;
@@ -51,6 +52,7 @@ my $tree;
 
 #split_line_reports("/home/zrrm74/extract/2015_08_12/School/LCSH", "LCSH");
 #split_line_reports("/home/zrrm74/extract/2015_08_12/School/NTAR", "NTAR");
+split_line_reports_CSV("/home/zrrm74/extract/2015_08_12/School/NTAR", "NTAR");
 
 #split_line_reports($REPORT_DIR, $HASH_NAME)
 #param $REPORT_DIR: full path to directory containing reports 
@@ -350,7 +352,7 @@ sub tree_init
 	);
 }
 
-sub split_line_reports_csv
+sub split_line_reports_CSV
 {
 	my ($REPORT_DIR, $HASH_NAME) = @_;
 	my @ordered_keys;
@@ -429,10 +431,7 @@ sub split_line_reports_csv
 				open(my $fh, '>>:encoding(UTF-8)', $new_file_path) || die "Couldn't open file for write $new_file_path: $!";
 				if(defined $SectionSubHeading[$i])
 				{
-					my $ssh = join('', "\n", $SectionSubHeading[$i]->as_HTML, "\n");
-					#write_file($new_file_path, {binmode=> ':utf8', append=>1}, $ssh);
-					my $h = join("\n", '<div class=\'table-outer-container\'>', '<div class=\'table-container\'>', '<table>');
-					$ssh = join("\n", $ssh, $h, $thead[$i]->as_HTML);
+					my $ssh = join('', $SectionSubHeading[$i]->as_text, '|||');
 					print $fh $ssh;
 				}
 				for(my $j=0; $j<$RPK{$key}; $j++)
@@ -442,25 +441,20 @@ sub split_line_reports_csv
 						print "Exceeded records array (Inner)\n";
 						last;
 					}
-					#Write HTML
-					my $ctl =  $td[$i]->{"CTL_NO"}->[$rp]->as_HTML;
-					my $tag =  $td[$i]->{"TAG"}->[$rp]->as_HTML; 
-					my $ind = $td[$i]->{"IND"}->[$rp]->as_HTML;
-					my $fd =  $td[$i]->{"FIELDDATA"}->[$rp]->as_HTML;  
-					my $row = join("\n", "\n\<tr\>", $ctl, $tag, $ind, $fd, '</tr>' );
-					#append_file($new_file_path, {binmode=> ':utf8'}, $row);
+					#Write CSV
+					my $ctl =  $td[$i]->{"CTL_NO"}->[$rp]->as_text;
+					my $tag =  $td[$i]->{"TAG"}->[$rp]->as_text; 
+					my $ind = $td[$i]->{"IND"}->[$rp]->as_text;
+					my $fd =  $td[$i]->{"FIELDDATA"}->[$rp]->as_text;  
+					my $row = join("|", $ctl, $tag, $ind, $fd);
 					print $fh $row;
-					
-					#Write XLS
-
+					print $fh "\n";
 					$rp++;
 				}
-				print $fh '</table></div></div>';
-				print $fh $Script->as_HTML;
 				close $fh;
 			}#foreach key 
 		}#foreach td()	
-	print `rm -v $file_path`;
+		#print `rm -v $file_path`;
 	}#foreach $file 
 }
 	#my $output_file = "$filename.xls";
