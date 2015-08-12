@@ -445,6 +445,7 @@ sub split_line_reports_CSV
 					my $ctl =  $td[$i]->{"CTL_NO"}->[$rp]->as_text;
 					my $tag =  $td[$i]->{"TAG"}->[$rp]->as_text; 
 					my $ind = $td[$i]->{"IND"}->[$rp]->as_text;
+					$ind =~ s/^\s+|\s+$//g; #Remove whitespace from both sides
 					my $fd =  $td[$i]->{"FIELDDATA"}->[$rp]->as_text; 
 					$fd = "\"$fd\"";
 					my $row = join("|", $ctl, $tag, $ind, $fd);
