@@ -51,11 +51,14 @@ my @thead;
 my @td = ();
 my $tree;
 
-split_line_reports("/home/zrrm74/extract/2015_08_12/School/LCSH", "LCSH");
-split_line_reports("/home/zrrm74/extract/2015_08_12/School/NTAR", "NTAR");
+#split_line_reports("/home/zrrm74/extract/2015_08_12/School/LCSH", "LCSH");
+#split_line_reports("/home/zrrm74/extract/2015_08_12/School/NTAR", "NTAR");
 
 split_line_reports_CSV("/home/zrrm74/extract/2015_08_12/School/LCSH", "LCSH");
 split_line_reports_CSV("/home/zrrm74/extract/2015_08_12/School/NTAR", "NTAR");
+
+csv_to_xls("/home/zrrm74/extract/2015_08_12/School/LCSH/CSV");
+csv_to_xls("/home/zrrm74/extract/2015_08_12/School/NTAR/CSV");
 
 #split_line_reports($REPORT_DIR, $HASH_NAME)
 #param $REPORT_DIR: full path to directory containing reports 
@@ -500,9 +503,20 @@ sub printHeader_CSV
 	return $header;
 }
 
-
-	#my $output_file = "$filename.xls";
-	#my $workbook = Spreadsheet::WriteExcel->new($output_file);
+#csv_to_xls($PATH_TO_FILES)
+sub csv_to_xls {
+	my $PATH_TO_FILES = $_[0];
+	my @files = read_dir($PATH_TO_FILES);
+	foreach my $file (@files)
+	{
+		my @fname = split(/\./, $file);
+		my $key = $fname[0];
+		my $name = $fname[1].".xls"; 
+		my $output_file = "$PATH_TO_FILES/../../$key/$name";
+		print "XLS Output file $output_file\n";
+		#my $workbook = Spreadsheet::WriteExcel->new($output_file);
+	}
+}
 	#
 	##Configure cell format
 	#my $format = $workbook->add_format();
