@@ -457,6 +457,26 @@ sub split_line_reports_CSV
 		#print `rm -v $file_path`;
 	}#foreach $file 
 }
+
+
+sub printHeader_CSV
+{	my @tmp = split(':', $HeadingText->as_text);
+	$tmp[1] =~ s/^\s+//; #Remove leading white space from left side of string 
+	my $head = join('|||', "\"$tmp[0]\"", "\"$tmp[1]\""); #Join the header with '|||' as the delimiter and each string in double quotes " "
+	
+	@tmp = split(':', $ReportType->as_text);
+	$tmp[1] =~ s/^\s+//; #Remove whitespace from left side 
+	my $type = join('|||', "\"$tmp[0]\"", "\"$tmp[1]\"");
+
+	
+	my $header = join("\n", $head, $type, $CreatedFor->as_text, $CreatedOn->as_text, "Count: $Count");
+	$header = join("\n", $header, '|||', $ReportExplanation->as_text, '|||');
+	$header = join("\n", $header, $ReportType->as_text);
+	$header = join("\n", $header, '"Control No"|Tag|Ind|"Field Data"');
+	return $header;
+}
+
+
 	#my $output_file = "$filename.xls";
 	#my $workbook = Spreadsheet::WriteExcel->new($output_file);
 	#
@@ -483,12 +503,3 @@ sub split_line_reports_CSV
 	#
 	#$workbook->close();
 	#
-
-sub printHeader_CSV
-{
-	my $header = join("\n", $HeadingText->as_text, $ReportType->as_text, $CreatedFor->as_text, $CreatedOn->as_text, "Count: $Count");
-	$header = join("\n", $header, '|||', $ReportExplanation->as_text, '|||');
-	$header = join("\n", $header, $ReportType->as_text);
-	$header = join("\n", $header, '"Control No"|Tag|Ind|"Field Data"');
-	return $header;
-}

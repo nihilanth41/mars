@@ -69,7 +69,7 @@ unless ($ret)
 	
 	
 	#Make archives of directories
-	&archive_folders();
+	#&archive_folders();
 	
 }
 
