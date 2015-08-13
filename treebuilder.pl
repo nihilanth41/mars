@@ -579,7 +579,7 @@ sub csv_to_xls {
 		for(my $i=0; $i<$num; $i++)
 		{
 			#Insert space after $a
-			$fielddata[$i] =~ s/(?<=[a-z])(?=[A-Z])/ /g;
+			$fielddata[$i] =~ s/(?<=[a-z])(?=[A-Z0-9\$])/ /g;
 			$worksheet->write_string($i, 0, $controlno[$i], $format);
 			$worksheet->write_string($i, 1, $tag[$i], $format);
 			$worksheet->write_string($i, 2, $ind[$i], $format);
