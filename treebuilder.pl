@@ -9,6 +9,8 @@ use HTML::TreeBuilder;
 use Config::Simple;
 use Spreadsheet::WriteExcel;
 use Text::CSV;
+use HTML::Restrict;
+#use HTML::TagFilter;
 use 5.10.1;
 
 #get current date/time for timestamps 
@@ -466,7 +468,13 @@ sub split_line_reports_CSV
 					my $tag =  $td[$i]->{"TAG"}->[$rp]->as_text; 
 					my $ind = $td[$i]->{"IND"}->[$rp]->as_text;
 					$ind =~ s/^\s+|\s+$//g; #Remove whitespace from both sides
-					my $fd =  $td[$i]->{"FIELDDATA"}->[$rp]->as_text; 
+					my $fd =  $td[$i]->{"FIELDDATA"}->[$rp]->as_HTML; 
+					my $hr = HTML::Restrict->new(
+						rules => {
+							span => [qw( class )]
+						}
+					);
+					my $processed = $hr->process( $fd ); 
 					$fd = "\"$fd\"";
 					my $row = join("|", $ctl, $tag, $ind, $fd);
 					print $fh $row;
