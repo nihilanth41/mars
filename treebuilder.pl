@@ -11,6 +11,10 @@ use Spreadsheet::WriteExcel;
 use Text::CSV;
 use 5.10.1;
 
+#get current date/time for timestamps 
+my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
+my $datestamp = sprintf("%4d_%02d_%02d", $year+1900, $mon+1, $mday);
+
 #parse config file
 my $cfg_file = "/home/zrrm74/src/mars/mars.cfg";
 my $cfg = new Config::Simple();			#Config::Simple object 
@@ -51,14 +55,14 @@ my @thead;
 my @td = ();
 my $tree;
 
-#split_line_reports("/home/zrrm74/extract/2015_08_12/School/LCSH", "LCSH");
-#split_line_reports("/home/zrrm74/extract/2015_08_12/School/NTAR", "NTAR");
+#split_line_reports("/home/zrrm74/extract/$datestamp/School/LCSH", "LCSH");
+#split_line_reports("/home/zrrm74/extract/$datestamp/School/NTAR", "NTAR");
 
-split_line_reports_CSV("/home/zrrm74/extract/2015_08_12/School/LCSH", "LCSH");
-split_line_reports_CSV("/home/zrrm74/extract/2015_08_12/School/NTAR", "NTAR");
+split_line_reports_CSV("/home/zrrm74/extract/$datestamp/School/LCSH", "LCSH");
+split_line_reports_CSV("/home/zrrm74/extract/$datestamp/School/NTAR", "NTAR");
 
-csv_to_xls("/home/zrrm74/extract/2015_08_12/School/LCSH/CSV");
-csv_to_xls("/home/zrrm74/extract/2015_08_12/School/NTAR/CSV");
+csv_to_xls("/home/zrrm74/extract/$datestamp/School/LCSH/CSV");
+csv_to_xls("/home/zrrm74/extract/$datestamp/School/NTAR/CSV");
 
 #split_line_reports($REPORT_DIR, $HASH_NAME)
 #param $REPORT_DIR: full path to directory containing reports 
@@ -563,6 +567,7 @@ sub csv_to_xls {
 		$worksheet->set_column(1, 1, 8.43);	#Column B width set to 8.43	
 		$worksheet->set_column(2, 2, 8.43);	#Column C wdith set to 8.43	
 		$worksheet->set_column(3, 3, 75);       #Column D width set to 75 
+		$worksheet->freeze_panes(9, 0); 	#Freeze panes 0-9
 		my $num = $#controlno+1;
 		for(my $i=0; $i<$num; $i++)
 		{
