@@ -133,7 +133,6 @@ sub split_line_reports
 				my $header = printHeader_HTML(); 
 				unless(-e $new_file_path)
 				{
-					#write_file($new_file_path, {binmode=> ':utf8'}, $header);
 					#Auto encoding on write 
 					open(my $fh, '>:encoding(UTF-8)', $new_file_path) || die "Couldn't open file for write $new_file_path: $!";
 					#	if($FILETYPE eq 'HTML')
@@ -147,7 +146,6 @@ sub split_line_reports
 				if(defined $SectionSubHeading[$i])
 				{
 					my $ssh = join('', "\n", $SectionSubHeading[$i]->as_HTML, "\n");
-					#write_file($new_file_path, {binmode=> ':utf8', append=>1}, $ssh);
 					my $h = join("\n", '<div class=\'table-outer-container\'>', '<div class=\'table-container\'>', '<table>');
 					$ssh = join("\n", $ssh, $h, $thead[$i]->as_HTML);
 					print $fh $ssh;
@@ -190,7 +188,7 @@ sub parse_html
 {
 	my $file = $_[0];
 	#Manually create filehandle so we can specify the encoding, and pass it to HTML::TreeBuilder
-	open(my $fh, '<:encoding(utf8)', $file) or die "Could not open '$file' $!\n";
+	open(my $fh, '<:encoding(UTF-8)', $file) or die "Could not open '$file' $!\n";
 	$tree = HTML::TreeBuilder->new();
 	$tree->parse_file($fh);
 	### Do stuff w/ tree here ###
@@ -439,7 +437,6 @@ sub split_line_reports_CSV
 				my $header = printHeader_CSV(); 
 				unless(-e $new_file_path)
 				{
-					#write_file($new_file_path, {binmode=> ':utf8'}, $header);
 					#Auto encoding on write 
 					open(my $fh, '>:encoding(UTF-8)', $new_file_path) || die "Couldn't open file for write $new_file_path: $!";
 					#	if($FILETYPE eq 'HTML')
@@ -467,7 +464,7 @@ sub split_line_reports_CSV
 					my $tag =  $td[$i]->{"TAG"}->[$rp]->as_text; 
 					my $ind = $td[$i]->{"IND"}->[$rp]->as_text;
 					$ind =~ s/^\s+|\s+$//g; #Remove whitespace from both sides
-					my $fd =  $td[$i]->{"FIELDDATA"}->[$rp]->as_HTML; 
+					my $fd =  $td[$i]->{"FIELDDATA"}->[$rp]->as_text; 
 					my $tf = HTML::TagFilter->new();
 					$tf->clear_rules();
 					$tf->allow_tags( { span => { class => [qw(valid invalid partly_valid)] } } );
@@ -559,9 +556,8 @@ sub csv_to_xls {
 		my $key = $fname[0];
 		my $name = $fname[1].".xls"; 
 		my $output_file = "$PATH_TO_FILES/../../$key/$key.$name";
-
+		#open($fh, '>:encoding(UTF-8)', $output_file) or die "Could not open '$file' $!\n";
 		#print "XLS Output file $output_file\n";
-		#open (my $fh, '>:encoding(UTF-8)', $output_file);
 		my $workbook = Spreadsheet::WriteExcel->new($output_file);
 		#Configure cell format
 		my $format = $workbook->add_format();
@@ -580,13 +576,19 @@ sub csv_to_xls {
 		{
 			#Insert space after $a
 			$fielddata[$i] =~ s/(?<=[a-z])(?=[A-Z0-9\$])/ /g;
+			$_ = $fielddata[$i];
+			#if m/(class=")/;
+			
+			#print "Left: $`\n";
+			#print "Match: $&\n";
+			#print "Right: $'\n";
 			$worksheet->write_string($i, 0, $controlno[$i], $format);
 			$worksheet->write_string($i, 1, $tag[$i], $format);
 			$worksheet->write_string($i, 2, $ind[$i], $format);
 			$worksheet->write_string($i, 3, $fielddata[$i], $format);
 		}
 		$workbook->close();
-		close $fh;
+		#close $fh;
 	}#foreach file
 }#endsub
 
