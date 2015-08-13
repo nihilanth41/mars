@@ -473,7 +473,7 @@ sub split_line_reports_CSV
 					$tf->allow_tags( { span => { class => [qw(valid invalid partly_valid)] } } );
 					my $processed = $tf->filter( $fd ); 
 					#Remove span tags but keep content
-					$processed =~ s{<span>(.*?)</span>}{\1}gi;
+					$processed =~ s{<span>(.*?)</span>}{$1}gi;
 					$fd = "\"$processed\"";
 					my $row = join("|", $ctl, $tag, $ind, $fd);
 					print $fh $row;
@@ -558,7 +558,7 @@ sub csv_to_xls {
 		my @fname = split(/\./, $file);
 		my $key = $fname[0];
 		my $name = $fname[1].".xls"; 
-		my $output_file = "$PATH_TO_FILES/../../$key/$name";
+		my $output_file = "$PATH_TO_FILES/../../$key/$key.$name";
 
 		#print "XLS Output file $output_file\n";
 		#open (my $fh, '>:encoding(UTF-8)', $output_file);
@@ -578,6 +578,8 @@ sub csv_to_xls {
 		my $num = $#controlno+1;
 		for(my $i=0; $i<$num; $i++)
 		{
+			#Insert space after $a
+			$fielddata[$i] =~ s/(?<=[a-z])(?=[A-Z])/ /g;
 			$worksheet->write_string($i, 0, $controlno[$i], $format);
 			$worksheet->write_string($i, 1, $tag[$i], $format);
 			$worksheet->write_string($i, 2, $ind[$i], $format);
