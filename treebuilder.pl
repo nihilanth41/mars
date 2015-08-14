@@ -564,8 +564,28 @@ sub csv_to_xls {
 		#print "XLS Output file $output_file\n";
 		my $workbook = Spreadsheet::WriteExcel->new($output_file);
 		#Configure cell format
-		my $format = $workbook->add_format();
-		$format->set_align('left');
+		my $fmt_red = $workbook->add_format(
+			align => 'left',
+			color => 10,
+		);
+		my $fmt_green = $workbook->add_format(
+			align => 'left',
+			color => 17,
+		);
+		my $fmt_brown = $workbook->add_format(
+			align => 'left',
+			color => 16,
+		);
+		my $fmt_bold = $workbook->add_format(
+			align => 'left',
+			color => 8,
+			bold => 1,
+		);
+		my $format = $workbook->add_format(
+			align => 'left',
+			color => 8,
+		);
+		
 		#Create worksheet
 		my $worksheet = $workbook->add_worksheet();                       	                                                             
 		#The following widths are taken from the existing XLS files       	
@@ -578,8 +598,6 @@ sub csv_to_xls {
 		my $num = $#controlno+1;
 		for(my $i=0; $i<$num; $i++)
 		{
-			$format->set_color('black');
-			$format->set_bold(0);
 			$worksheet->write_string($i, 0, $controlno[$i], $format);
 			$worksheet->write_string($i, 1, $tag[$i], $format);
 			$worksheet->write_string($i, 2, $ind[$i], $format);
@@ -590,16 +608,10 @@ sub csv_to_xls {
 			#First submark is always bold 
 			my $first = shift @fd;
 			#Set bold for writing first fielddata 
-			$format->set_bold(1);
-			$format->set_color('black');
-			$worksheet->write_string($i, 3, $first, $format);
-			#Unset bold, set black
-			$format->set_bold(0);
-			$format->set_color('black');
+			$worksheet->write_string($i, 3, $first, $fmt_bold);
 			my $col=0;
 			foreach my $str (@fd) 
 			{
-
 				$col++;
 				#If the string has a class attribute
 				if($str =~ /class/) 
@@ -610,31 +622,30 @@ sub csv_to_xls {
 					if(defined $1)
 					{
 						$class = $1;
-						if($class eq "valid")
-						{
-							$format->set_color('green');
-						}
-						elsif($class eq "invalid")
-						{
-							$format->set_color('red');
-						}
-						elsif($class eq "partly_valid")
-						{
-							$format->set_color('brown');
-						}
 					}
 					$str =~ />(.+?)<\/span>/;
 					if(defined $1)
 					{
 						$content = $1;
-						$worksheet->write_string($i, 3+$col, $content, $format);
+					}
+					if($class eq "valid")
+					{
+						$worksheet->write_string($i, 3+$col, $content, $fmt_green);
+					}
+					elsif($class eq "invalid")
+					{
+						$worksheet->write_string($i, 3+$col, $content, $fmt_red);
+					}
+					elsif($class eq "partly_valid")
+					{
+						$worksheet->write_string($i, 3+$col, $content, $fmt_brown);
+					
 					}
 				}
 				else
 				{
-					$fd_format->set_color('black');
-					$fd_format->set_bold(0);
 					$worksheet->write_string($i, 3+$col, $str, $format);
+					
 				}
 			}
 		}
