@@ -469,7 +469,7 @@ sub split_line_reports_CSV
 					$tf->clear_rules();
 					$tf->allow_tags( { span => { class => [qw(valid invalid partly_valid)] } } );
 					my $processed = $tf->filter( $fd ); 
-					#Remove span tags but keep content
+					##Remove span tags but keep content
 					$processed =~ s{<span>(.*?)</span>}{$1}gi;
 					$fd = "\"$processed\"";
 					my $row = join("|", $ctl, $tag, $ind, $fd);
@@ -480,7 +480,7 @@ sub split_line_reports_CSV
 				close $fh;
 			}#foreach key 
 		}#foreach td()	
-		print `rm -v $file_path`;
+		#print `rm -v $file_path`;
 	}#foreach $file 
 }
 
