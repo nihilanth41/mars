@@ -12,7 +12,7 @@ use Text::CSV;
 #use HTML::TagFilter;
 use HTML::Restrict;
 use 5.10.1;
-
+use HTML::Entities;
 #get current date/time for timestamps 
 my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
 my $datestamp = sprintf("%4d_%02d_%02d", $year+1900, $mon+1, $mday);
@@ -475,6 +475,7 @@ sub split_line_reports_CSV
 					my $processed = $hr->process( $fd ); 
 					##Remove span tags w/ submark but keep content
 					$processed =~ s{<span class="submark">(.*?)</span>}{$1}gi;
+					$processed = decode_entities($processed);
 					$fd = "\"$processed\"";
 					my $row = join("|", $ctl, $tag, $ind, $fd);
 					print $fh $row;
