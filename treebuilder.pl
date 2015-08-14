@@ -9,7 +9,8 @@ use HTML::TreeBuilder;
 use Config::Simple;
 use Spreadsheet::WriteExcel;
 use Text::CSV;
-use HTML::TagFilter;
+#use HTML::TagFilter;
+use HTML::Restrict;
 use 5.10.1;
 
 #get current date/time for timestamps 
@@ -464,13 +465,16 @@ sub split_line_reports_CSV
 					my $tag =  $td[$i]->{"TAG"}->[$rp]->as_text; 
 					my $ind = $td[$i]->{"IND"}->[$rp]->as_text;
 					$ind =~ s/^\s+|\s+$//g; #Remove whitespace from both sides
-					my $fd =  $td[$i]->{"FIELDDATA"}->[$rp]->as_text; 
-					my $tf = HTML::TagFilter->new();
-					$tf->clear_rules();
-					$tf->allow_tags( { span => { class => [qw(valid invalid partly_valid)] } } );
-					my $processed = $tf->filter( $fd ); 
+					my $fd =  $td[$i]->{"FIELDDATA"}->[$rp]->as_HTML; 
+					my $hr = HTML::Restrict->new(
+						rules => {
+							span => [qw(class)],
+							wbr => [],
+						}
+					);	
+					my $processed = $hr->process( $fd ); 
 					##Remove span tags but keep content
-					$processed =~ s{<span>(.*?)</span>}{$1}gi;
+					$processed =~ s{<span class="submark">(.*?)</span>}{$1}gi;
 					$fd = "\"$processed\"";
 					my $row = join("|", $ctl, $tag, $ind, $fd);
 					print $fh $row;
@@ -576,9 +580,9 @@ sub csv_to_xls {
 		{
 			#Insert space after $a
 			$fielddata[$i] =~ s/(?<=[a-z])(?=[A-Z0-9\$])/ /g;
-			$_ = $fielddata[$i];
-			#if m/(class=")/;
+			#my @fd = split($fielddata[$i];
 			
+				
 			#print "Left: $`\n";
 			#print "Match: $&\n";
 			#print "Right: $'\n";
