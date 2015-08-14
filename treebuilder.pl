@@ -617,10 +617,16 @@ sub csv_to_xls {
 			$fielddata[$i] =~ s/(?<=[a-z])(?=[A-Z0-9\$])/ /g;
 			#Split data line on <wbr> tag
 			my @fd = split('<wbr \/>', $fielddata[$i]);
-			#First submark is always bold 
+			#First submark is always bold
 			my $first = shift @fd;
+			if(defined $first)
+			{	if($first =~ /<b>/)
+				{
+					$first =~ s{<b>(.*?)</b>}{$1}gi;
+				}
+			}
 			#Set bold for writing first fielddata 
-			$worksheet->write_string($i, 3, $first, $fmt_bold);
+			#$worksheet->write_string($i, 3, $first, $fmt_bold);
 			my $col=0;
 			foreach my $str (@fd) 
 			{
@@ -656,10 +662,23 @@ sub csv_to_xls {
 				}
 				else
 				{
-					$worksheet->write_string($i, 3+$col, $str, $format);
+					#Bold tag found
+					if($str =~ /<b>/)
+					{
+						#Remove bold tag 
+						$str =~ s{<b>(.*?)</b>}{$1}gi;
+						#Concatenate First String 
+						$first = join(' ', $first, $str);
+						$col--;
+					}
+					else
+					{
+						$worksheet->write_string($i, 3+$col, $str, $format);
+					}
 					
 				}
 			}
+			$worksheet->write_string($i, 3, $first, $fmt_bold);
 		}
 		$workbook->close();
 		#close $fh;
