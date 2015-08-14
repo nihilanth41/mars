@@ -578,33 +578,65 @@ sub csv_to_xls {
 		my $num = $#controlno+1;
 		for(my $i=0; $i<$num; $i++)
 		{
+			$format->set_color('black');
+			$format->set_bold(0);
 			$worksheet->write_string($i, 0, $controlno[$i], $format);
 			$worksheet->write_string($i, 1, $tag[$i], $format);
 			$worksheet->write_string($i, 2, $ind[$i], $format);
 			#Insert space after $submark
 			$fielddata[$i] =~ s/(?<=[a-z])(?=[A-Z0-9\$])/ /g;
 			#Split data line on <wbr> tag
-			my @fd = split('<wbr />', $fielddata[$i]);
+			my @fd = split('<wbr \/>', $fielddata[$i]);
 			#First submark is always bold 
 			my $first = shift @fd;
-			my $bold_fmt = $workbook->add_format();
-			$bold_fmt->set_align('left');
-			$bold_fmt->set_bold();
-			$worksheet->write_string($i, 3, $fielddata[$i], $bold_fmt);
+			#Set bold for writing first fielddata 
+			$format->set_bold(1);
+			$format->set_color('black');
+			$worksheet->write_string($i, 3, $first, $format);
+			#Unset bold, set black
+			$format->set_bold(0);
+			$format->set_color('black');
+			my $col=0;
 			foreach my $str (@fd) 
 			{
-				if($str =~ m/'span class='/)
+
+				$col++;
+				#If the string has a class attribute
+				if($str =~ /class/) 
 				{
-					#my $color = /(?<=span class=)(.*)(?=">)/;
-					print $str, "\n";
+					my $class;
+					my $content;
+					$str =~ /"(.+?)"/;
+					if(defined $1)
+					{
+						$class = $1;
+						if($class eq "valid")
+						{
+							$format->set_color('green');
+						}
+						elsif($class eq "invalid")
+						{
+							$format->set_color('red');
+						}
+						elsif($class eq "partly_valid")
+						{
+							$format->set_color('brown');
+						}
+					}
+					$str =~ />(.+?)<\/span>/;
+					if(defined $1)
+					{
+						$content = $1;
+						$worksheet->write_string($i, 3+$col, $content, $format);
+					}
+				}
+				else
+				{
+					$fd_format->set_color('black');
+					$fd_format->set_bold(0);
+					$worksheet->write_string($i, 3+$col, $str, $format);
 				}
 			}
-				
-			print "Left: $`\n";
-			print "Match: $&\n";
-			print "Right: $'\n";
-
-			$worksheet->write_string($i, 3, $fielddata[$i], $format);
 		}
 		$workbook->close();
 		#close $fh;
