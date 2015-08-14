@@ -470,6 +470,7 @@ sub split_line_reports_CSV
 						rules => {
 							span => [qw(class)],
 							wbr => [],
+							b => [],
 						}
 					);	
 					my $processed = $hr->process( $fd ); 
@@ -582,6 +583,11 @@ sub csv_to_xls {
 			color => 8,
 			bold => 1,
 		);
+		my $fmt_subject = $workbook->add_format(
+			align => 'left',
+			color => 'blue',
+			bold => 1,
+		);
 		my $format = $workbook->add_format(
 			align => 'left',
 			color => 8,
@@ -599,7 +605,12 @@ sub csv_to_xls {
 		my $num = $#controlno+1;
 		for(my $i=0; $i<$num; $i++)
 		{
-			$worksheet->write_string($i, 0, $controlno[$i], $format);
+			if($controlno[$i] =~ m/Subject /) {
+				$worksheet->write_string($i, 0, $controlno[$i], $fmt_subject);
+			}
+			else {	
+				$worksheet->write_string($i, 0, $controlno[$i], $format); 
+			}
 			$worksheet->write_string($i, 1, $tag[$i], $format);
 			$worksheet->write_string($i, 2, $ind[$i], $format);
 			#Insert space after $submark
