@@ -473,7 +473,7 @@ sub split_line_reports_CSV
 						}
 					);	
 					my $processed = $hr->process( $fd ); 
-					##Remove span tags but keep content
+					##Remove span tags w/ submark but keep content
 					$processed =~ s{<span class="submark">(.*?)</span>}{$1}gi;
 					$fd = "\"$processed\"";
 					my $row = join("|", $ctl, $tag, $ind, $fd);
@@ -578,17 +578,32 @@ sub csv_to_xls {
 		my $num = $#controlno+1;
 		for(my $i=0; $i<$num; $i++)
 		{
-			#Insert space after $a
-			$fielddata[$i] =~ s/(?<=[a-z])(?=[A-Z0-9\$])/ /g;
-			#my @fd = split($fielddata[$i];
-			
-				
-			#print "Left: $`\n";
-			#print "Match: $&\n";
-			#print "Right: $'\n";
 			$worksheet->write_string($i, 0, $controlno[$i], $format);
 			$worksheet->write_string($i, 1, $tag[$i], $format);
 			$worksheet->write_string($i, 2, $ind[$i], $format);
+			#Insert space after $submark
+			$fielddata[$i] =~ s/(?<=[a-z])(?=[A-Z0-9\$])/ /g;
+			#Split data line on <wbr> tag
+			my @fd = split('<wbr />', $fielddata[$i]);
+			#First submark is always bold 
+			my $first = shift @fd;
+			my $bold_fmt = $workbook->add_format();
+			$bold_fmt->set_align('left');
+			$bold_fmt->set_bold();
+			$worksheet->write_string($i, 3, $fielddata[$i], $bold_fmt);
+			foreach my $str (@fd) 
+			{
+				if($str =~ m/'span class='/)
+				{
+					#my $color = /(?<=span class=)(.*)(?=">)/;
+					print $str, "\n";
+				}
+			}
+				
+			print "Left: $`\n";
+			print "Match: $&\n";
+			print "Right: $'\n";
+
 			$worksheet->write_string($i, 3, $fielddata[$i], $format);
 		}
 		$workbook->close();
