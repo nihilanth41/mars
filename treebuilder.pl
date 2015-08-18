@@ -588,6 +588,21 @@ sub csv_to_xls {
 			color => 'blue',
 			bold => 1,
 		);
+		my $fmt_headerb = $workbook->add_format(
+			align => 'left',
+			color => 'black',
+			bold => 1,
+		);
+		my $fmt_headeri = $workbook->add_format(
+			align => 'left',
+			color => 'black',
+			italic => 1,
+		);
+		my $fmt_header = $workbook->add_format(
+			align => 'left',
+			color => 'black',
+			bold => 1,
+		);
 		my $format = $workbook->add_format(
 			align => 'left',
 			color => 8,
@@ -599,16 +614,44 @@ sub csv_to_xls {
 		$worksheet->keep_leading_zeros(1);
 		$worksheet->set_column(0, 0, 15); 	#Column A width set to 15	
 		$worksheet->set_column(1, 1, 8.43);	#Column B width set to 8.43	
-		$worksheet->set_column(2, 2, 8.43);	#Column C wdith set to 8.43	
+		$worksheet->set_column(2, 2, 15.29);	#Column C wdith set to 8.43	
 		$worksheet->set_column(3, 3, 75);       #Column D width set to 75 
 		$worksheet->set_column(4, 4, 25);	#Column E width set to 25
 		$worksheet->set_column(5, 5, 25);       #Column F width set to 25
 		$worksheet->set_column(6, 6, 25);	#Column G width set to 25
 		$worksheet->freeze_panes(9, 0); 	#Freeze panes 0-9
+		
 		my $num_rows = $#controlno+1;
 		#For each row in the file
 		for(my $i=0; $i<$num_rows; $i++)
 		{
+			#Check if we are writing the header 
+			if( $i >= 0 && $i <= 8 ) 
+			{
+				if( $i == 0 ) 
+				{
+					#Remove double quotes	
+					$controlno[$i] =~ s/^"(.*)"$/$1/;
+					#Write bold header
+					$worksheet->merge_range($i, $i, 0, 2, $controlno[$i], $fmt_headerb);
+					#Remove leading double quote 
+					#$fielddata[$i] =~ s/^"(.*)/$1/;
+					$worksheet->write_string($i, 3, $fielddata[$i], $format);
+					next;
+				}
+				#	elsif( $i > 0 && $i < 5)
+				#	{
+				#		#Remove double quotes
+				#		$controlno[$i] =~ s/^"(.*)"$/$1/;
+				#		#Write italic header
+				#		$worksheet->merge_range($i, $i, 0, 2, $controlno[$i], $fmt_headeri);
+				#		#Remove leading double quote 
+				#		#$fielddata[$i] =~ 
+				#		$worksheet->write_string($i, 3, $fielddata[$i], $format);
+				#	}
+			}	
+
+
 			#Write SectionSubHeading in Blue Bold
 			if($controlno[$i] =~ m/Subject /) {
 				#$worksheet->write_string($i, 0, $controlno[$i], $fmt_subject);
@@ -725,6 +768,7 @@ sub csv_to_xls {
 				}
 			}
 		}#foreach $row 
+		my $ctl_0 = 
 		$workbook->close();
 	}#foreach file
 }#endsub
