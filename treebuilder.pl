@@ -611,7 +611,9 @@ sub csv_to_xls {
 		{
 			#Write SectionSubHeading in Blue Bold
 			if($controlno[$i] =~ m/Subject /) {
-				$worksheet->write_string($i, 0, $controlno[$i], $fmt_subject);
+				#$worksheet->write_string($i, 0, $controlno[$i], $fmt_subject);
+				##NOTE: Should only use $fmt_subject w/ merge_range() ##
+				$worksheet->merge_range($i, 0, $i, 3, $controlno[$i], $fmt_subject);
 			}
 			else {	
 				$worksheet->write_string($i, 0, $controlno[$i], $format); 
