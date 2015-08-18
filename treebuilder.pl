@@ -624,26 +624,35 @@ sub csv_to_xls {
 			
 			#If there's no <wbr> tag then $fd[0] is the whole string
 			
+			my @columns = ();
+			my @classes = ();
 			#First submark is always bold
 			my $first = shift @fd;
 			#Check for bold tags & remove if found 
 			if(defined $first)
 			{	if($first =~ /<b>/)
 				{
-					$first =~ s{<b>(.*?)</b>}{$1}gi;
+					$columns[0] = $first =~ s{<b>(.*?)</b>}{$1}gi;
+					$classes[0] = "bold";
+
+				}
+				else
+				{
+					$columns[0] = $first;
+					$classes[0] = "none";
 				}
 			}
-			#Set bold for writing first fielddata 
-			#$worksheet->write_string($i, 3, $first, $fmt_bold);
-			my $col=0;
-			foreach my $str (@fd) 
+			my $col=1;
+			#foreach string in split fielddata
+			for my $j (0..$#fd)
 			{
-				$col++;
+				my $class;
+				my $content;
+				my $str = $fd[$j];
+				###################################
 				#If the string has a class attribute
 				if($str =~ /class/) 
 				{
-					my $class;
-					my $content;
 					$str =~ /"(.+?)"/;
 					if(defined $1)
 					{
@@ -654,45 +663,62 @@ sub csv_to_xls {
 					{
 						$content = $1;
 					}
-					if($class eq "valid")
-					{
-						$worksheet->write_string($i, 3+$col, $content, $fmt_green);
-					}
-					elsif($class eq "invalid")
-					{
-						$worksheet->write_string($i, 3+$col, $content, $fmt_red);
-					}
-					elsif($class eq "partly_valid")
-					{
-						$worksheet->write_string($i, 3+$col, $content, $fmt_brown);
-					
-					}
+				}
+				elsif ($str =~ /<b>/)
+				{
+					$class = "bold";
+					#Remove bold tag 
+					$content = $str =~ s{<b>(.*?)</b>}{$1}gi;
 				}
 				else
 				{
-					#Bold tag found
-					if($str =~ /<b>/)
-					{
-						#Remove bold tag 
-						$str =~ s{<b>(.*?)</b>}{$1}gi;
-						#Concatenate First String 
-						$first = join(' ', $first, $str);
-						$col--;
-					}
-					else
-					{
-						$worksheet->write_string($i, 3+$col, $str, $format);
-					}
-					
+					#No bold or class attr
+					$class = "none";
+					$content = $str;
+				}
+				##################################
+				#If previous class eq current class 
+				if($classes[$col-1] eq $class) {
+					#Join current string w/ previous string
+					$columns[$col-1] = join(' ', $columns[$col-1], $content);
+				}
+				else {
+					#Put current string in class into current column
+					$columns[$col] = $content;
+					$classes[$col] = $class; 
+					#Iterate column
+					$col++;
+				}
+			}#endfor $j (each string in fielddata split)
+			####( Strings should be in their proper column, write to XLS: ) ###
+			for my $k (0..$#columns)
+			{
+				my $content = $columns[$k];
+				my $class = $classes[$k];
+				if($class eq "bold") {
+					$worksheet->write_string($i, 3+$k, $content, $fmt_bold);
+				}
+				elsif($class eq "valid") {
+					$worksheet->write_string($i, 3+$k, $content, $fmt_green);
+				}
+				elsif($class eq "invalid") {
+					$worksheet->write_string($i, 3+$k, $content, $fmt_red);
+				}
+				elsif($class eq "partly_valid") {
+					$worksheet->write_string($i, 3+$k, $content, $fmt_brown);
+				}
+				elsif($class eq "none") {
+					$worksheet->write_string($i, 3+$k, $content, $format);
+				}
+				else {
+					print "Warning: no text class attribute identified\n";
+					$worksheet->write_string($i, 3+$k, $content, $format);
 				}
 			}
-			$worksheet->write_string($i, 3, $first, $fmt_bold);
-		}
+		}#foreach $row 
 		$workbook->close();
-		#close $fh;
 	}#foreach file
 }#endsub
-
 
 
 
