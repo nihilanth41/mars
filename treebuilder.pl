@@ -601,6 +601,9 @@ sub csv_to_xls {
 		$worksheet->set_column(1, 1, 8.43);	#Column B width set to 8.43	
 		$worksheet->set_column(2, 2, 8.43);	#Column C wdith set to 8.43	
 		$worksheet->set_column(3, 3, 75);       #Column D width set to 75 
+		$worksheet->set_column(4, 4, 25);	#Column E width set to 25
+		$worksheet->set_column(5, 5, 25);       #Column F width set to 25
+		$worksheet->set_column(6, 6, 25);	#Column G width set to 25
 		$worksheet->freeze_panes(9, 0); 	#Freeze panes 0-9
 		my $num_rows = $#controlno+1;
 		#For each row in the file
