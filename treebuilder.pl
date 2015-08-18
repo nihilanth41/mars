@@ -9,10 +9,10 @@ use HTML::TreeBuilder;
 use Config::Simple;
 use Spreadsheet::WriteExcel;
 use Text::CSV;
-#use HTML::TagFilter;
 use HTML::Restrict;
-use 5.10.1;
 use HTML::Entities;
+use 5.10.1;
+
 #get current date/time for timestamps 
 my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
 my $datestamp = sprintf("%4d_%02d_%02d", $year+1900, $mon+1, $mday);
@@ -605,6 +605,7 @@ sub csv_to_xls {
 		my $num = $#controlno+1;
 		for(my $i=0; $i<$num; $i++)
 		{
+			#Write SectionSubHeading in Blue Bold
 			if($controlno[$i] =~ m/Subject /) {
 				$worksheet->write_string($i, 0, $controlno[$i], $fmt_subject);
 			}
@@ -615,10 +616,11 @@ sub csv_to_xls {
 			$worksheet->write_string($i, 2, $ind[$i], $format);
 			#Insert space after $submark
 			$fielddata[$i] =~ s/(?<=[a-z])(?=[A-Z0-9\$])/ /g;
-			#Split data line on <wbr> tag
+			#Split fielddata string on <wbr> tag
 			my @fd = split('<wbr \/>', $fielddata[$i]);
 			#First submark is always bold
 			my $first = shift @fd;
+			#Check for bold tags & remove if found 
 			if(defined $first)
 			{	if($first =~ /<b>/)
 				{
