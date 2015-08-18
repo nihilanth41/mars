@@ -622,6 +622,8 @@ sub csv_to_xls {
 			$worksheet->write_string($i, 1, $tag[$i], $format);
 			$worksheet->write_string($i, 2, $ind[$i], $format);
 
+			#Remove double quotes from beginning and end:
+			$fielddata[$i] =~ s/^"(.*)"$/$1/;
 			#Insert space after $submark in fielddata column
 			$fielddata[$i] =~ s/(?<=[a-z])(?=[A-Z0-9\$])/ /g;
 			#Split fielddata string on <wbr> tag
