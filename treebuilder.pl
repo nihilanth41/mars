@@ -632,7 +632,8 @@ sub csv_to_xls {
 			if(defined $first)
 			{	if($first =~ /<b>/)
 				{
-					$columns[0] = $first =~ s{<b>(.*?)</b>}{$1}gi;
+					$first =~ s{<b>(.*?)</b>}{$1}gi;
+					$columns[0] = $first;
 					$classes[0] = "bold";
 
 				}
@@ -668,7 +669,8 @@ sub csv_to_xls {
 				{
 					$class = "bold";
 					#Remove bold tag 
-					$content = $str =~ s{<b>(.*?)</b>}{$1}gi;
+					$str =~ s{<b>(.*?)</b>}{$1}gi;
+					$content = $str;
 				}
 				else
 				{
