@@ -602,8 +602,9 @@ sub csv_to_xls {
 		$worksheet->set_column(2, 2, 8.43);	#Column C wdith set to 8.43	
 		$worksheet->set_column(3, 3, 75);       #Column D width set to 75 
 		$worksheet->freeze_panes(9, 0); 	#Freeze panes 0-9
-		my $num = $#controlno+1;
-		for(my $i=0; $i<$num; $i++)
+		my $num_rows = $#controlno+1;
+		#For each row in the file
+		for(my $i=0; $i<$num_rows; $i++)
 		{
 			#Write SectionSubHeading in Blue Bold
 			if($controlno[$i] =~ m/Subject /) {
@@ -612,12 +613,17 @@ sub csv_to_xls {
 			else {	
 				$worksheet->write_string($i, 0, $controlno[$i], $format); 
 			}
+			#Write tag and ind columns
 			$worksheet->write_string($i, 1, $tag[$i], $format);
 			$worksheet->write_string($i, 2, $ind[$i], $format);
-			#Insert space after $submark
+
+			#Insert space after $submark in fielddata column
 			$fielddata[$i] =~ s/(?<=[a-z])(?=[A-Z0-9\$])/ /g;
 			#Split fielddata string on <wbr> tag
 			my @fd = split('<wbr \/>', $fielddata[$i]);
+			
+			#If there's no <wbr> tag then $fd[0] is the whole string
+			
 			#First submark is always bold
 			my $first = shift @fd;
 			#Check for bold tags & remove if found 
