@@ -646,7 +646,9 @@ sub csv_to_xls {
 			italic => 1,
 		);
 		my $fmt_header = $workbook->add_format(
-			align => 'left',
+			align => 'center',
+			valign => 'top',
+			text_wrap => 1,
 			color => 'black',
 			bold => 0,
 		);
