@@ -385,6 +385,12 @@ sub split_line_reports_CSV
 		printf("Opening file %s\n", $file_path);
 		parse_html($file_path);
 		next if($#td < 0);
+		#Records per file (new file) for calculating the number of reocrds (Count) for each split file
+		my %RPF = ();
+		foreach(@ordered_keys)
+		{
+			$RPF{$_} = 0;
+		}
 		for(my $i=0; $i<=$#td; $i++) #For each table in the file 
 		{
 			my $hashref = $td[$i]; #Point the reference at the hash  
@@ -418,6 +424,11 @@ sub split_line_reports_CSV
 				#add any missing records to last key
 				$RPK{$ordered_keys[$#ordered_keys]} += $rec_difference;
 			}
+			#Populate RPF hash
+			foreach my $key (@ordered_keys)
+			{
+				$RPF{$key} += $RPK{$key};
+			}
 			###START WRITING RECORDS###
 			my $rp = 0;		        				#variable to keep track of position in @records	
 			foreach my $key (@ordered_keys)						#for each key in the NTAR hash
@@ -435,7 +446,7 @@ sub split_line_reports_CSV
 				my $csvf = $CSV_FILE[0];
 				#my $new_file_path = "$PATH_TO_FILES/../$key/$key.$filename.csv"; #prepend key to each filename
 				my $new_file_path = "$CSV_DIR/$key.$csvf";
-				my $header = printHeader_CSV(); 
+				my $header = printHeader_CSV($RPF{$key}); 
 				unless(-e $new_file_path)
 				{
 					#Auto encoding on write 
@@ -490,9 +501,11 @@ sub split_line_reports_CSV
 	}#foreach $file 
 }
 
-
+#printHeader_CSV($record_count)
 sub printHeader_CSV
-{	my @tmp = split(':', $HeadingText->as_text);
+{
+	my $record_count = $_[0];
+	my @tmp = split(':', $HeadingText->as_text);
 	$tmp[1] =~ s/^\s+//; #Remove leading white space from left side of string 
 	my $head = join('|||', "\"$tmp[0]\"", "\"$tmp[1]\""); #Join the header with '|||' as the delimiter and each string in double quotes " "
 	
@@ -506,7 +519,10 @@ sub printHeader_CSV
 	my $cot = $CreatedOn->as_text;
 	my $co = "\"Created On:\"|||\"$cot\"";
 
-	my $ct = "Count:|||$Count";
+	#Original file count:
+	#my $ct = "Count:|||$Count";
+	#Count for new file:
+	my $ct = "Count:|||$record_count";
 
 	my $header = join("\n", $head, $type, $cf, $co, $ct);
 	
@@ -686,7 +702,7 @@ sub csv_to_xls {
 		$A7 =~ s/^"(.*)"$/$1/;
 		$B = shift @tag;
 		$C = shift @ind;
-		$worksheet->merge_range(6, 0, 6, 3, $A7, $fmt_header);
+		$worksheet->merge_range(6, 0, 6, 7, $A7, $fmt_header);
 		##Write D7
 		my $D7 = shift @fielddata;
 		##Ignore $D7
@@ -694,7 +710,7 @@ sub csv_to_xls {
 		my $A8 = shift @controlno;
 		$B = shift @tag;
 		$C = shift @ind;
-		$worksheet->merge_range(7, 0, 7, 7, undef, $fmt_headeri);
+		$worksheet->merge_range(7, 0, 7, 3, undef, $fmt_headeri);
 		##Write D8
 		my $D8 = shift @fielddata;
 		#$worksheet->write_string(7, 3, $D8, $format);
