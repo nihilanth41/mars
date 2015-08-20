@@ -4,9 +4,11 @@ use warnings;
 use File::Slurp;
 use File::Basename;
 use Config::Simple;
+use Cwd 'abs_path';
 
 #parse config file
-my $cfg_file = "/home/zrrm74/src/mars/mars.cfg";
+my $ABS_PATH = dirname( abs_path($0) );
+my $cfg_file = "$ABS_PATH/mars.cfg";
 my $cfg = new Config::Simple();			#Config::Simple object 
 $cfg->read($cfg_file) or die $cfg->error();  	#Exception handling 
 
@@ -38,9 +40,6 @@ my @school_folders = $cfg->param("ENV.SCHOOLDIRS");
 my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
 my $datestamp = sprintf("%4d_%02d_%02d", $year+1900, $mon+1, $mday);
 
-#Check remote host for new archives
-#TODO
-
 #attempt to unzip -- mkDirs and handle reports only if dir doesn't already exist 
 my $ret = &unzip($zip_file, $report_dir);
 #Only work with a fresh directory structure. if dir exists -> skip 
@@ -65,16 +64,14 @@ unless ($ret)
 	&split_reports("$report_dir/$datestamp/School/LCSH","LCSH", "HTML.DEL_DELIM");
 
 	#Split Line-format reports 
-	#TODO
-	
+	do "$ABS_PATH/treebuilder.pl";	
 	
 	#Make archives of directories
-	#&archive_folders();
+	&archive_folders();
 	
 }
 
 
-#&split_csv;
 exit(0);
 
 
@@ -94,7 +91,8 @@ sub archive_folders()
 		"$school/MU_LAW",
 		"$school/UMKC",
 		"$school/UMKC_LAW",
-		"$school/UMSL"
+		"$school/UMSL",
+		"$prefix",
 		);
 	foreach (@folder_list)
 	{

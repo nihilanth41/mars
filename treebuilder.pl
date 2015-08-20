@@ -11,6 +11,7 @@ use Spreadsheet::WriteExcel;
 use Text::CSV;
 use HTML::Restrict;
 use HTML::Entities;
+use Cwd 'abs_path';
 use 5.10.1;
 
 #get current date/time for timestamps 
@@ -18,7 +19,8 @@ my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
 my $datestamp = sprintf("%4d_%02d_%02d", $year+1900, $mon+1, $mday);
 
 #parse config file
-my $cfg_file = "/home/zrrm74/src/mars/mars.cfg";
+my $ABS_PATH = dirname( abs_path($0) );
+my $cfg_file = "$ABS_PATH/mars.cfg"; 
 my $cfg = new Config::Simple();			#Config::Simple object 
 $cfg->read($cfg_file) or die $cfg->error();  	#Exception handling 
 
@@ -56,6 +58,8 @@ my @thead;
 #Each hash has 4 keys that point to an array reference, which contains the column data for that table
 my @td = ();
 my $tree;
+
+my $report_dir = $cfg->param('ENV.REPORT_DIR');
 
 split_line_reports("/home/zrrm74/extract/$datestamp/School/LCSH", "LCSH");
 split_line_reports("/home/zrrm74/extract/$datestamp/School/NTAR", "NTAR");
