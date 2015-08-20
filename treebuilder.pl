@@ -391,6 +391,42 @@ sub split_line_reports_CSV
 		{
 			$RPF{$_} = 0;
 		}
+		#loop once to get the number of records to be written for each file	
+		for(my $i=0; $i<=$#td; $i++)
+		{
+
+			my $hashref = $td[$i]; #Point the reference at the hash  
+			my $ar_temp = $hashref->{"CTL_NO"};
+			my $size = @{$ar_temp};
+			my %RPK = ();
+			my $rpk_total=0;
+			foreach my $key (@ordered_keys)
+			{
+				if($HASH_NAME eq "LCSH")
+				{
+					$RPK{$key} = int($size*($LCSH{$key}/100)); 
+				}
+				elsif($HASH_NAME eq "NTAR")
+				{
+					$RPK{$key} = int($size*($NTAR{$key}/100));
+
+				}
+				$rpk_total += $RPK{$key};
+			}
+			my $rec_difference = $size - $rpk_total;
+			if($rec_difference > 0)
+			{
+				printf("Records to be written (%d) does not match records in file (%d) ", $rpk_total, $size);
+				printf("Adding %d records to %s key\n", $rec_difference, $ordered_keys[$#ordered_keys]);
+				#add any missing records to last key
+				$RPK{$ordered_keys[$#ordered_keys]} += $rec_difference;
+			}
+			#Populate RPF hash
+			foreach my $key (@ordered_keys)
+			{
+				$RPF{$key} += $RPK{$key};
+			}
+		}
 		for(my $i=0; $i<=$#td; $i++) #For each table in the file 
 		{
 			my $hashref = $td[$i]; #Point the reference at the hash  
@@ -423,11 +459,6 @@ sub split_line_reports_CSV
 				printf("Adding %d records to %s key\n", $rec_difference, $ordered_keys[$#ordered_keys]);
 				#add any missing records to last key
 				$RPK{$ordered_keys[$#ordered_keys]} += $rec_difference;
-			}
-			#Populate RPF hash
-			foreach my $key (@ordered_keys)
-			{
-				$RPF{$key} += $RPK{$key};
 			}
 			###START WRITING RECORDS###
 			my $rp = 0;		        				#variable to keep track of position in @records	
