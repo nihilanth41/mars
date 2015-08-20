@@ -57,8 +57,8 @@ my @thead;
 my @td = ();
 my $tree;
 
-split_line_reports("/home/zrrm74/extract/$datestamp/School/LCSH", "LCSH");
-split_line_reports("/home/zrrm74/extract/$datestamp/School/NTAR", "NTAR");
+#split_line_reports("/home/zrrm74/extract/$datestamp/School/LCSH", "LCSH");
+#split_line_reports("/home/zrrm74/extract/$datestamp/School/NTAR", "NTAR");
 
 split_line_reports_CSV("/home/zrrm74/extract/$datestamp/School/LCSH", "LCSH");
 split_line_reports_CSV("/home/zrrm74/extract/$datestamp/School/NTAR", "NTAR");
@@ -601,7 +601,7 @@ sub csv_to_xls {
 		my $fmt_header = $workbook->add_format(
 			align => 'left',
 			color => 'black',
-			bold => 1,
+			bold => 0,
 		);
 		my $format = $workbook->add_format(
 			align => 'left',
@@ -662,7 +662,7 @@ sub csv_to_xls {
 		$worksheet->merge_range(3, 0, 3, 2, $A4, $fmt_headeri);
 		##Write D4
 		my $D4 = shift @fielddata;
-		$D4 =~ s/^"(.*)"?/$1/;
+		$D4 =~ s/^"(.*)""?/$1/;
 		$worksheet->write_string(3, 3, $D4, $format);
 		##Write A5
 		my $A5 = shift @controlno;
@@ -674,45 +674,44 @@ sub csv_to_xls {
 		$worksheet->write_string(4, 3, $D5, $format);
 		#Write A6
 		my $A6 = shift @controlno;
-		#my $A6 = undef;
 		$B = shift @tag;
 		$C = shift @ind;
-		$worksheet->merge_range(5, 0, 5, 3, $A6, $fmt_headeri); #Use format that is used with merge_range
+		$worksheet->merge_range(5, 0, 5, 3, undef, $fmt_headeri); #Use format that is used with merge_range
 		##Write D6
 		my $D6 = shift @fielddata;
 		#$worksheet->write_string(5, 3, $D6, $format);
 		#Write A7
-		#my $A7 = shift @controlno;
-		#$A7 =~ s/^"(.*)"$/$1/;
-		#$B = shift @tag;
-		#$C = shift @ind;
-		#$worksheet->merge_range(6, 0, 6, 2, $A7, $fmt_header);
+		my $A7 = shift @controlno;
+		$A7 =~ s/^"(.*)"$/$1/;
+		$B = shift @tag;
+		$C = shift @ind;
+		$worksheet->merge_range(6, 0, 6, 3, $A7, $fmt_header);
 		##Write D7
-		#my $D7 = shift @fielddata;
+		my $D7 = shift @fielddata;
 		##Ignore $D7
 		##Write A8
-		#my $A8 = shift @controlno;
-		#$B = shift @tag;
-		#$C = shift @ind;
-		#$worksheet->merge_range(7, 0, 7, 2, $A8, $fmt_headeri);
+		my $A8 = shift @controlno;
+		$B = shift @tag;
+		$C = shift @ind;
+		$worksheet->merge_range(7, 0, 7, 3, undef, $fmt_headeri);
 		##Write D8
-		#my $D8 = shift @fielddata;
+		my $D8 = shift @fielddata;
 		#$worksheet->write_string(7, 3, $D8, $format);
-		##Write A9-D9
+		#Write A9-D9
 		##A9
-		#my $A9 = shift @controlno;
-		#$A9 =~ s/^"(.*)"$/$1/;
-		#$worksheet->write_string(8, 0, $A9, $fmt_bold);
+		my $A9 = shift @controlno;
+		$A9 =~ s/^"(.*)"$/$1/;
+		$worksheet->write_string(8, 0, $A9, $fmt_bold);
 		##B9
-		#$B = shift @tag;
-		#$worksheet->write_string(8, 1, $B, $fmt_bold);
-		##C9
-		#$C = shift @ind;
-		#$worksheet->write_string(8, 2, $C, $fmt_bold);
-		##D9
-		#my $D9 = shift @fielddata;
-		#$D9 =~ s/^"(.*)"$/$1/;
-		#$worksheet->write_string(8, 3, $D9, $fmt_bold);
+		$B = shift @tag;
+		$worksheet->write_string(8, 1, $B, $fmt_bold);
+		#C9
+		$C = shift @ind;
+		$worksheet->write_string(8, 2, $C, $fmt_bold);
+		#D9
+		my $D9 = shift @fielddata;
+		$D9 =~ s/^"(.*)"$/$1/;
+		$worksheet->write_string(8, 3, $D9, $fmt_bold);
 		### End writing Header ##
 	
 		my $num_rows = $#controlno+1;
@@ -723,14 +722,14 @@ sub csv_to_xls {
 			if($controlno[$i] =~ m/Subject /) {
 				#$worksheet->write_string($i, 0, $controlno[$i], $fmt_subject);
 				##NOTE: Should only use $fmt_subject w/ merge_range() ##
-				$worksheet->merge_range($i+5, 0, $i+5, 3, $controlno[$i], $fmt_subject);
+				$worksheet->merge_range($i+9, 0, $i+9, 3, $controlno[$i], $fmt_subject);
 			}
 			else {	
-				$worksheet->write_string($i+5, 0, $controlno[$i], $format); 
+				$worksheet->write_string($i+9, 0, $controlno[$i], $format); 
 			}
 			#Write tag and ind columns
-			$worksheet->write_string($i+5, 1, $tag[$i], $format);
-			$worksheet->write_string($i+5, 2, $ind[$i], $format);
+			$worksheet->write_string($i+9, 1, $tag[$i], $format);
+			$worksheet->write_string($i+9, 2, $ind[$i], $format);
 
 			#Remove double quotes from beginning and end:
 			$fielddata[$i] =~ s/^"(.*)"$/$1/;
@@ -815,23 +814,23 @@ sub csv_to_xls {
 				my $content = $columns[$k];
 				my $class = $classes[$k];
 				if($class eq "bold") {
-					$worksheet->write_string($i+5, 3+$k, $content, $fmt_bold);
+					$worksheet->write_string($i+9, 3+$k, $content, $fmt_bold);
 				}
 				elsif($class eq "valid") {
-					$worksheet->write_string($i+5, 3+$k, $content, $fmt_green);
+					$worksheet->write_string($i+9, 3+$k, $content, $fmt_green);
 				}
 				elsif($class eq "invalid") {
-					$worksheet->write_string($i+5, 3+$k, $content, $fmt_red);
+					$worksheet->write_string($i+9, 3+$k, $content, $fmt_red);
 				}
 				elsif($class eq "partly_valid") {
-					$worksheet->write_string($i+5, 3+$k, $content, $fmt_brown);
+					$worksheet->write_string($i+9, 3+$k, $content, $fmt_brown);
 				}
 				elsif($class eq "none") {
-					$worksheet->write_string($i+5, 3+$k, $content, $format);
+					$worksheet->write_string($i+9, 3+$k, $content, $format);
 				}
 				else {
 					print "Warning: no text class attribute identified\n";
-					$worksheet->write_string($i+5, 3+$k, $content, $format);
+					$worksheet->write_string($i+9, 3+$k, $content, $format);
 				}
 			}
 		}#foreach $row 
