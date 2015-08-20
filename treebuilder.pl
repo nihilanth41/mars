@@ -619,8 +619,8 @@ sub csv_to_xls {
 		$worksheet->set_column(4, 4, 25);	#Column E width set to 25
 		$worksheet->set_column(5, 5, 25);       #Column F width set to 25
 		$worksheet->set_column(6, 6, 25);	#Column G width set to 25
-		$worksheet->set_row(7, 7, 75);		#Row 8 height set to 75
-		#$worksheet->freeze_panes(9, 0); 	#Freeze panes 0-9
+		$worksheet->set_row(6, 75);		#Row 8 height set to 75
+		$worksheet->freeze_panes(9, 0); 	#Freeze panes 0-9
 		
 		my $B;
 		my $C;
