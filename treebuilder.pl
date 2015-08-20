@@ -619,6 +619,7 @@ sub csv_to_xls {
 		$worksheet->set_column(4, 4, 25);	#Column E width set to 25
 		$worksheet->set_column(5, 5, 25);       #Column F width set to 25
 		$worksheet->set_column(6, 6, 25);	#Column G width set to 25
+		$worksheet->set_row(7, 7, 75);		#Row 8 height set to 75
 		#$worksheet->freeze_panes(9, 0); 	#Freeze panes 0-9
 		
 		my $B;
@@ -693,7 +694,7 @@ sub csv_to_xls {
 		my $A8 = shift @controlno;
 		$B = shift @tag;
 		$C = shift @ind;
-		$worksheet->merge_range(7, 0, 7, 3, undef, $fmt_headeri);
+		$worksheet->merge_range(7, 0, 7, 7, undef, $fmt_headeri);
 		##Write D8
 		my $D8 = shift @fielddata;
 		#$worksheet->write_string(7, 3, $D8, $format);
