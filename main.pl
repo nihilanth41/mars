@@ -4,11 +4,9 @@ use warnings;
 use File::Slurp;
 use File::Basename;
 use Config::Simple;
-use Cwd 'abs_path';
 
 #parse config file
-my $ABS_PATH = dirname( abs_path($0) );
-my $cfg_file = "$ABS_PATH/mars.cfg";
+my $cfg_file = "/home/zrrm74/src/mars/mars.cfg";
 my $cfg = new Config::Simple();			#Config::Simple object 
 $cfg->read($cfg_file) or die $cfg->error();  	#Exception handling 
 
