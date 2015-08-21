@@ -223,13 +223,16 @@ sub sort_reports {
 			{
 				print `mv -v $path_to_files/$_ $path_to_files/$datestamp/XLS/`;
 			}
-			#Delete Original XLS files 
-			print `rm -rf $path_to_files/$datestamp/XLS/`;
 			elsif(/(.+)[.]MRC$/)
 			{
 				print `mv -v $path_to_files/$_ $path_to_files/$datestamp/MRC/`;
 			}
 		}
+
+		#Delete Original XLS files 
+		print `rm -rf $path_to_files/$datestamp/XLS`;
+		#Delete MRC files 
+		print `rm -rf $path_to_files/$datestamp/MRC`;
 	}
 	#%filename_hash is used to look up the destination folder for a given file, using the same string that we matched the file with. 
 	my %filename_hash = ( 
