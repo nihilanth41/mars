@@ -98,6 +98,12 @@ sub archive_folders()
 	{
 		my $ret = &mkArchive($_);
 	}
+	if($ret == 0)
+	{
+		#move $datestamp archive to Archive folder
+		my $zip = "$prefix/$datestamp.zip";
+		print `mv -v $zip $prefix/../Archive/`;
+	}
 }
 
 	
