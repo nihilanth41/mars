@@ -43,7 +43,11 @@ my $datestamp = sprintf("%4d_%02d_%02d", $year+1900, $mon+1, $mday);
 #attempt to unzip -- mkDirs and handle reports only if dir doesn't already exist 
 my $ret = &unzip($zip_file, $report_dir);
 #Only work with a fresh directory structure. if dir exists -> skip 
-unless ($ret) 
+if($ret == 1) {
+	print "Error: extract directory already exists. Exiting\n";
+	die;
+}
+else #($ret == 0)
 {
 	#Remove characters from filenames that need escaped on *nix systems
 	&sanitize_filenames($report_dir); 
@@ -64,15 +68,51 @@ unless ($ret)
 	&split_reports("$report_dir/$datestamp/School/LCSH","LCSH", "HTML.DEL_DELIM");
 
 	#Split Line-format reports 
-	do "$ABS_PATH/treebuilder.pl";	
+	#do "$ABS_PATH/treebuilder.pl";	
 	
 	#Make archives of directories
 	&archive_folders();
+
+	#Move Archive, Log, and Datestamp folders up one directory 
+	#Unless Archive exists and is a directory
+	unless ( -d -e "$report_dir/../Archive")
+	{
+		#Create Archive folder 
+		print `mkdir -v $report_dir/../Archive`;
+	}
+	#Move datestamped archive into Archive/ 
+	print `cp -v $report_dir/Archive/* $report_dir/../Archive/.`;
 	
+	unless ( -d -e "$report_dir/../Log")
+	{
+		#Create Log folder
+		print `mkdir -v $report_dir/../Log`;
+	}
+	#Move log files into Log/ folder
+	unless(is_folder_empty("$report_dir/Log"))
+	{
+			print `cp -v $report_dir/Log/* $report_dir/../Log/.`;
+	}
+	#if datestamp already exists in directory 
+	if( -d -e "$report_dir/../$datestamp")
+	{
+		print "Warning folder: $datestamp already exists. Skipping move.\n";
+	}
+	else
+	{
+		#Move datestamp into public_http
+		print `mv -v $report_dir/$datestamp $report_dir/../$datestamp`;
+	}
+	#Delete extract folder
+	print `rm -rf $report_dir`;
+	exit(0);
 }
 
-
-exit(0);
+sub is_folder_empty {
+	my $dirname = shift;
+	opendir(my $dh, $dirname) or die "$dirname: $!";
+	return scalar(grep { $_ ne "." && $_ ne ".." } readdir($dh)) == 0;
+}
 
 
 sub archive_folders()
