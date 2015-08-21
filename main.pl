@@ -44,8 +44,7 @@ my $datestamp = sprintf("%4d_%02d_%02d", $year+1900, $mon+1, $mday);
 my $ret = &unzip($zip_file, $report_dir);
 #Only work with a fresh directory structure. if dir exists -> skip 
 if($ret == 1) {
-	print "Error: extract directory already exists. Exiting\n";
-	die;
+	die "Error: extract directory already exists. - $!";
 }
 else #($ret == 0)
 {
@@ -68,7 +67,7 @@ else #($ret == 0)
 	&split_reports("$report_dir/$datestamp/School/LCSH","LCSH", "HTML.DEL_DELIM");
 
 	#Split Line-format reports 
-	#do "$ABS_PATH/treebuilder.pl";	
+	do "$ABS_PATH/treebuilder.pl";	
 	
 	#Make archives of directories
 	&archive_folders();
@@ -485,68 +484,4 @@ sub xls_to_csv {
 
 
 
-
-sub split_csv {
-
-	my $HASH_NAME = "LCSH"; #Temporary	
-	#We specify the key order so that we can check if records_written == total_records whenever $key == ordered_keys[$#ordered_keys]; 
-	my @ordered_keys;
-	if($HASH_NAME eq "NTAR") { @ordered_keys = $cfg->param('NTAR.ORDERED_KEYS'); }
-	elsif($HASH_NAME eq "LCSH") { @ordered_keys = $cfg->param('LCSH.ORDERED_KEYS'); }
-	
-	#Get info from config file 
-	my $filename = "/home/zrrm74/src/mars/r160.txt";
-	my $header_str = $cfg->param('LINE.HEADER_STRING');
-	my $subject_str = $cfg->param('LINE.SUBJECT_STRING');
-	$header_str = quotemeta $header_str;
-	$subject_str = quotemeta $subject_str;
-	
-	#Declare variables
-	my @lines = (); #Array to store all the lines in the file as we read through them one by one
-	my $header_index; #Line_no where the header index occurs (Ctrl No, Tag, Ind, Field Data)
-	my @subj_index = (); #Array to store the index(es) in the array where the Subject lines are stored
-	my $no_lines=0; #Keep track of total number of lines in the file
-	
-	#Open file, add lines line-by-line to @line array, and get the index (line no.) of the field header, and subject header(s)
-	open(my $data, '<:encoding(utf8)', $filename) or die "Could not open '$filename' $!\n";
-	while(my $line = <$data>)
-	{	
-		$no_lines++;
-		chomp $line;
-		push @lines, $line;
-		if($line =~ /(\|)\1\1/) #Match '|' character that occurs 3 times in a row 
-		{	
-			#next if($line eq "|||"); #ignore empty line
-			if ($line =~ /$subject_str/) #trailing space 
-			{
-				push @subj_index, $no_lines;	#Store the index of the subject heading	(may occur multiple times)
-			}
-		}
-		if($line =~ /$header_str/)
-		{
-			$header_index = $no_lines; #Store the index of the field header (Ctrl_No|Tag|Etc.)  (should occur only once) 
-		}
-	}
-	close $data;
-	#Last entry in @subj_index is the last valid index in the array - Need this to figure out how many records in the last subject
-	push @subj_index, $#lines+1; 
-
-	
-	my @num_records_this_subject;
-	for(my $i=0; $i<$#subj_index; $i++) #for the number of subjects (Last element is the last lineno) 
-	{
-		#printf("Subject[%d]: Last index: %d, First Index: %d\n", $i, $subj_index[$i+1], $subj_index[$i]);
-		#Take the index of the (next subject heading - current subj heading)-1 to get the number of elements of that subject
-		#Unless we are dealing with the last subject, then do [i+1]-[i] 
-		if($subj_index[$i+1] == $subj_index[$#subj_index])
-		{
-			$num_records_this_subject[$i] = ($subj_index[$i+1] - $subj_index[$i]);
-		}
-		else
-		{
-			$num_records_this_subject[$i] = ($subj_index[$i+1] - $subj_index[$i])-1;
-		}
-		print "num records subj[$i]: $num_records_this_subject[$i]\n", $;
-	}
-}
 
