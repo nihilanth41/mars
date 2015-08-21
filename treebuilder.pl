@@ -61,14 +61,14 @@ my $tree;
 
 my $report_dir = $cfg->param('ENV.REPORT_DIR');
 
-split_line_reports("/home/zrrm74/extract/$datestamp/School/LCSH", "LCSH");
-split_line_reports("/home/zrrm74/extract/$datestamp/School/NTAR", "NTAR");
+split_line_reports("$report_dir/$datestamp/School/LCSH", "LCSH");
+split_line_reports("$report_dir/$datestamp/School/NTAR", "NTAR");
 
-split_line_reports_CSV("/home/zrrm74/extract/$datestamp/School/LCSH", "LCSH");
-split_line_reports_CSV("/home/zrrm74/extract/$datestamp/School/NTAR", "NTAR");
+split_line_reports_CSV("$report_dir/$datestamp/School/LCSH", "LCSH");
+split_line_reports_CSV("$report_dir/$datestamp/School/NTAR", "NTAR");
 
-csv_to_xls("/home/zrrm74/extract/$datestamp/School/LCSH/CSV");
-csv_to_xls("/home/zrrm74/extract/$datestamp/School/NTAR/CSV");
+csv_to_xls("$report_dir/$datestamp/School/LCSH/CSV");
+csv_to_xls("$report_dir/$datestamp/School/NTAR/CSV");
 
 #split_line_reports($REPORT_DIR, $HASH_NAME)
 #param $REPORT_DIR: full path to directory containing reports 
