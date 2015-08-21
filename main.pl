@@ -100,7 +100,7 @@ sub archive_folders()
 	}
 	if($ret == 0)
 	{
-		#move $datestamp archive to Archive folder
+		#move datestamped archive to Archive folder
 		my $zip = "$prefix/$datestamp.zip";
 		print `mv -v $zip $prefix/../Archive/`;
 	}
@@ -221,8 +221,10 @@ sub sort_reports {
 		{
 			if(/(.+)[.]xls$/)
 			{
-				print `mv -v $path_to_files/$_ $path_to_files/$datestamp/XLS/`; 
+				print `mv -v $path_to_files/$_ $path_to_files/$datestamp/XLS/`;
 			}
+			#Delete Original XLS files 
+			print `rm -rf $path_to_files/$datestamp/XLS/`;
 			elsif(/(.+)[.]MRC$/)
 			{
 				print `mv -v $path_to_files/$_ $path_to_files/$datestamp/MRC/`;
