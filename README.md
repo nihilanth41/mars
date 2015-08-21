@@ -54,8 +54,8 @@ cd mars
 
 - Uses mars.cfg as the configuration file 
 - Make sure ZIP_FILE is configured (full path to report archive) 
-- Make sure REPORT_DIR is configured (full path to directory to extract into)
- - The last directory in REPORT_DIR will be created/deleted by the script. 
+- Make sure REPORT_DIR is configured (full path of directory to extract into)
+ - NOTE: The last directory in REPORT_DIR will be created/deleted by the script. 
 
 ## Maintainers/Sponsors 
 
@@ -67,6 +67,7 @@ cd mars
  - [Karla Geerlings, MU](mailto:GeerlingsK@missouri.edu)
  - [Christopher Gould, MCO](mailto:christopher@mobiusconsortium.org) 
 
-
+## Links 
+[MARS Wiki] (https://trac.lib.missouri.edu/lso/wiki/Projects/MerlinRMOs/Mars)
 
 
