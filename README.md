@@ -1,11 +1,11 @@
-# MARS Setup  
+# MARS   
 ## Introduction 
 
-This project is a continuation of the previous MARS RMO project, the purpose is to split MARS reports among the different libraries automatically. 
+This project is a continuation of the previous MARS project, the purpose is to split MARS reports among the different libraries automatically. 
 It consists of two perl scripts, mars_setup.pl and treebuilder.pl, and a config file: mars.cfg  
 
 - mars_setup.pl deals with the zip archives, creating directories, sorting files, and splitting the CHG/DEL reports. It also executes treebuilder.pl.
-- treebuilder.pl deals exclusively with line-format reports. It parses the html, splits it into known percentages, and writes the split data as CSV files (intermediate format).
+- treebuilder.pl deals exclusively with line-format reports. It parses the html, splits it into known percentages, It writes the HTML files directly, but for Excel it  writes the split data as CSV files (intermediate format).
 It then parses the CSV files and rewrites the data as an Excel spreadsheet. 
 - mars.cfg contains data relevant to the splitting and sorting process, and any other values that may need changed by the user.
 
@@ -40,6 +40,30 @@ This tool attempts to automate the process by parsing the source html, splitting
 - Spreadsheet::WriteExcel
 - Text::CSV
 
+## Installation 
 
+```
+cd /usr/local/lso/src
+git clone https://vcs.missouri.edu/umlso/mars.git
+cd mars
+./setup_mars.sh 
+./mars.pl
+```
+
+## Configuration 
+
+- Uses mars.cfg as the configuration file 
+- Make sure ZIP_FILE is configured (full path to report archive) 
+- Make sure REPORT_DIR is configured (full path to directory to extract into)
+ - The last directory in REPORT_DIR will be created/deleted by the script. 
+
+## Maintainers/Contacts 
+
+- Created by Zachary Rump, MU-Student
+- Current Maintainers
+ - [Zachary Rump, MU-Student](mailto:zrrm74@mail.missouri.edu)
+ - [Philip Redmon, LSO](mailto:redmonp@missouri.edu)
+
+ 
 
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FILE1=/usr/local/lso/src/mars/main.pl
+FILE1=/usr/local/lso/src/mars/mars.pl
 FILE2=/usr/local/lso/src/mars/treebuilder.pl
 TARGET=/usr/local/lso/bin
 file1=${FILE1##*/}
