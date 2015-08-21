@@ -19,8 +19,8 @@ This tool attempts to automate the process by parsing the source html, splitting
 
 ### Packages 
 
-- perl (Tested only with 5.10.1)
-- zip/unzip (Info-ZIP 3.0)
+- Perl (Tested only with 5.10.1)
+- Zip/Unzip (Info-ZIP 3.0)
 
 ### Perl Modules 
 
