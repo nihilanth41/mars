@@ -378,8 +378,15 @@ sub split_reports {
 	my ($REPORT_DIR, $HASH_NAME, $DELIM_CFG_STR) = @_; 
 	#We specify the key order so that we can check if records_written == total_records whenever $key == ordered_keys[$#ordered_keys]; 
 	my @ordered_keys;
-	if($HASH_NAME eq "NTAR") { @ordered_keys = $cfg->param('NTAR.ORDERED_KEYS'); }
-	elsif($HASH_NAME eq "LCSH") { @ordered_keys = $cfg->param('LCSH.ORDERED_KEYS'); }
+	my $href;
+	if($HASH_NAME eq "NTAR") { 
+		@ordered_keys = $cfg->param('NTAR.ORDERED_KEYS'); 
+		$href = \%NTAR;
+	}
+	elsif($HASH_NAME eq "LCSH") { 
+		@ordered_keys = $cfg->param('LCSH.ORDERED_KEYS'); 
+		$href = \%LCSH;
+	}
 	
 	my $path_to_files = $REPORT_DIR;						#assign input args
 	my @files = read_dir($path_to_files); 						#get a list of files in the directory 
@@ -388,7 +395,7 @@ sub split_reports {
 	for my $file (@files)								#for each file in the directory
 	{
 		my $file_path = "$path_to_files/$file";					#full path to file
-		my @records = &get_record_array($file_path, $delimiter);	
+		my @records = get_record_array($file_path, $delimiter);	
 		next if($#records <= 0);
 		my $num_records_file = $#records; 					#last index will be eq to #records after we shift off the first element
 		printf("Opening file: %s\n", $file_path); 				#print only if there are records in the file
@@ -398,8 +405,7 @@ sub split_reports {
 		my $rpk_per_file=0;
 		foreach my $key (@ordered_keys)
 		{	
-			if($HASH_NAME eq "NTAR") { $records_per_key{$key} = int($num_records_file*($NTAR{$key}/100)); }
-			elsif($HASH_NAME eq "LCSH") { $records_per_key{$key} = int($num_records_file*($LCSH{$key}/100)); }
+			$records_per_key{$key} = int($num_records_file*($href->{$key}/100)); 
  			$rpk_per_file += $records_per_key{$key};
 		}
 		my $rec_difference = ($num_records_file - $rpk_per_file);
@@ -445,42 +451,6 @@ sub split_reports {
 	}
 }
 
-#xls_to_csv($PATH_TO_FILES, $EXPORT_PATH) 
-#param $PATH_TO_FILES: full path to directory containing XLS files
-#param $EXPORT_PATH: full path to directory where we should put the CSV files (can be the same) 
-#return [0/-1]: SUCCESS/FAILURE 
-sub xls_to_csv {
-	my $PATH_TO_FILES = $_[0];
-	#Delimiter to use w/ ssconvert, used as delimiter in CSV files
-	my $CSV_DELIMITER = $cfg->param('LINE.CSV_DELIMITER');
-	#Actual string that we pass as a cmd line argument to ssconvert 
-	my $option_string = "\'separator=$CSV_DELIMITER\'";
-	#if dir exists
-	if(-d $PATH_TO_FILES)
-	{
-		#Make working directory if it doesn't exist 
-		if(!(-d "$PATH_TO_FILES/CSV")) { print `mkdir -v $PATH_TO_FILES/CSV`; }
-		my @files = read_dir($PATH_TO_FILES);
-		foreach (@files)
-		{
-			if(/(.+)[.]xls$/) #if .xls file
-			{
-				my $xls_file = "$PATH_TO_FILES/$_";
-				#the regex matches the file extension and puts it in $suffix 
-				my ($filename, $dirs, $suffix) = fileparse($xls_file, qr/\.[^.]*/); 
-				my $csv_file = "$PATH_TO_FILES/CSV/$filename.txt";
-				#NOTE: ssconvert has some issue that spews a whole bunch of errors to stdout. 
-				#It works fine, though. 
-				`ssconvert -O $option_string $xls_file $csv_file\n`;
-			}
-		}
-		return 0;
-	}
-	else
-	{
-		return -1;
-	}
-}
 
 		
 
