@@ -133,9 +133,8 @@ sub split_line_reports
 				{
 					#Auto encoding on write 
 					open(my $fh, '>:encoding(UTF-8)', $new_file_path) || die "Couldn't open file for write $new_file_path: $!";
-					#	if($FILETYPE eq 'HTML')
-						print $fh $header;
-						close $fh;
+					print $fh $header;
+					close $fh;
 				}
 				
 
@@ -868,6 +867,8 @@ sub csv_to_xls {
 		}#foreach $row 
 		$workbook->close();
 	}#foreach file
+	#delete LCSH/NTAR directories
+	print `rm -rf $PATH_TO_FILES`;
 }#endsub
 
 

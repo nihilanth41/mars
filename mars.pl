@@ -45,8 +45,9 @@ my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
 my $datestamp = sprintf("%4d_%02d_%02d", $year+1900, $mon+1, $mday);
 
 #Redirect output of Log::Message
-my $log_dir = "$report_dir/../Log";
-unless(-d -f $log_dir) { print `mkdir -pv $log_dir`; } 
+my $log_dir = $report_dir;
+$log_dir =~ s/extract/Log/g;
+unless(-e -d $log_dir) { print `mkdir -v $log_dir`; } 
 my $log_file = "$log_dir/$datestamp.log";
 open(my $log_fh, '>:encoding(UTF-8)', $log_file) || die "Couldn't open file for write $log_file: $!";
 local $Log::Message::Simple::MSG_FH = $log_fh;
