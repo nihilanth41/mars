@@ -1,10 +1,11 @@
 #!/bin/env perl
 use strict;
 use warnings;
-use File::Slurp;
-use File::Basename;
 use Config::Simple;
 use Cwd 'abs_path';
+use File::Slurp;
+use File::Basename;
+
 
 #parse config file
 my $ABS_PATH = dirname( abs_path($0) );
@@ -339,7 +340,7 @@ sub mkDirs
 sub get_record_array {
 	my ($file_path, $delimiter) = @_;
 	my $search_string = quotemeta $delimiter; 
-	my $txt = read_file($file_path);
+	my $txt = read_file( $file_path, binmode => ':encoding(UTF-8)' ) || die "Failed to read_file() in get_record_array() - $!";
 	my @records = split(/$search_string/, $txt);
 	return @records;
 }
@@ -416,7 +417,7 @@ sub split_reports {
 			next if($records_per_key{$key} <= 0);				#don't create the file/write header if there are no records to be written	
 			my $new_file_path = "$path_to_files/../$key/$key.$file";	#prepend key to each filename
 			#printf("Writing header to file: %s\n", $new_file_path); 
-			write_file($new_file_path, $header); 
+			write_file($new_file_path, { binmode => ':encoding(UTF-8)' }, $header); 
 			for(my $i=0; $i<$records_per_key{$key}; $i++)			#starting at the beginning, process records until we reach the limit for this key
 			{	
 				if($records_pos >= $num_records_file)
@@ -428,7 +429,7 @@ sub split_reports {
 				my $n = $i+1; #record number
 				my $new_delimiter = &number_delimiter($delimiter, $n); 
 				$records[$records_pos] = join('', $new_delimiter,$records[$records_pos]);  #Add delimiter (w/ record number) to record array
-				write_file($new_file_path, {append => 1}, $records[$records_pos]);
+				write_file($new_file_path, { append => 1, binmode => ':encoding(UTF-8)' }, $records[$records_pos]);
 				$records_written_file++;
 				$records_pos++;
 			}
