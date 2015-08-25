@@ -1,10 +1,12 @@
 #!/bin/env perl
+
 use strict;
 use warnings;
 use Config::Simple;
 use Cwd 'abs_path';
 use File::Slurp;
 use File::Basename;
+use 5.10.1;
 
 
 #parse config file
@@ -30,6 +32,7 @@ my %NTAR = (
 	MST => $cfg->param('NTAR.MST'),
 	UMSL => $cfg->param('NTAR.UMSL')
 );
+
 
 my $zip_file = $cfg->param('ENV.ZIP_FILE'); 
 my $report_dir = $cfg->param('ENV.REPORT_DIR');
@@ -68,7 +71,7 @@ else #($ret == 0)
 	&split_reports("$report_dir/$datestamp/School/LCSH","LCSH", "HTML.DEL_DELIM");
 
 	#Split Line-format reports 
-	do "$ABS_PATH/treebuilder.pl";	
+	#do "$ABS_PATH/treebuilder.pl";	
 	
 	#Make archives of directories
 	&archive_folders();
@@ -123,8 +126,6 @@ sub archive_folders()
 	my @folder_list = (
 		"$prefix/Genre",
 		"$prefix/Misc",
-		"$prefix/XLS",
-		"$prefix/MRC",
 		"$school/MST",
 		"$school/MU",
 		"$school/MU_HSL",
