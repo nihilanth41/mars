@@ -6,8 +6,8 @@ use Config::Simple;
 use Cwd 'abs_path';
 use File::Slurp;
 use File::Basename;
+use Log::Message::Simple;
 use 5.10.1;
-
 
 #parse config file
 my $ABS_PATH = dirname( abs_path($0) );
@@ -44,11 +44,22 @@ my @school_folders = $cfg->param("ENV.SCHOOLDIRS");
 my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
 my $datestamp = sprintf("%4d_%02d_%02d", $year+1900, $mon+1, $mday);
 
+#Redirect output of Log::Message
+my $log_dir = "$report_dir/../Log";
+unless(-d -f $log_dir) { print `mkdir -pv $log_dir`; } 
+my $log_file = "$log_dir/$datestamp.log";
+open(my $log_fh, '>:encoding(UTF-8)', $log_file) || die "Couldn't open file for write $log_file: $!";
+local $Log::Message::Simple::MSG_FH = $log_fh;
+local $Log::Message::Simple::ERROR_FH = $log_fh;
+local $Log::Message::Simple::DEBUG_FH = $log_fh;
+
 #attempt to unzip -- mkDirs and handle reports only if dir doesn't already exist 
-my $ret = &unzip($zip_file, $report_dir);
+my $ret = unzip($zip_file, $report_dir);
 #Only work with a fresh directory structure. if dir exists -> skip 
 if($ret == 1) {
-	die "Error: extract directory already exists. - $!";
+	error( "Directory already exists: $report_dir", 1 );
+	my $msg = Log::Message::Simple->stack_as_string; 
+	die "$msg";
 }
 else #($ret == 0)
 {
@@ -156,7 +167,7 @@ sub archive_folders()
 #NOTE: It will include the directory in the archive 
 #E.g., CSV.zip will expand to CSV/my_csv_files.txt
 sub mkArchive {
-	print "making archive\n";
+	print "Making archive\n";
 	my $src_dir = $_[0];
 	my ($filename, $dirs, $suffix) = fileparse($src_dir); 
 	#Change to directory containing folder 
@@ -169,11 +180,7 @@ sub mkArchive {
 		print `mv -v $zipfile "$dirs$filename/"`;
 		return 0;
 	}
-	else
-	{
-		print "Error: directory $src_dir does not exist\n";
-		return -1;
-	}
+	else { return -1; }
 }
 
 
@@ -183,13 +190,14 @@ sub mkArchive {
 #Takes src_file and dest_dir, unzips src_file into dest_dir 
 sub unzip { 
 	my ($src_file, $dest_dir) = @_;
-	if(!(-f $src_file)) { die "File '$src_file' doesn't exist! Check ZIP_FILE entry in mars.cfg:$!"; } #Check that .zip file exists
+	if(!(-f $src_file)) { die "File $src_file doesn't exist! Check ZIP_FILE entry in mars.cfg: $!"; } #Check that .zip file exists
 	if(!(-d $dest_dir)) 
 	{ 
 		print `mkdir -v $dest_dir`; 	 	#create dir if doesn't exist 
 		print `unzip -d $dest_dir $src_file`;   #unzip into new directory
 		return 0; 				#EXIT_SUCCESS 
 	}
+	#warn "Directory $dest_dir already exists";
 	return 1; 					#Directory already exists -> skip unzipping
 }
 
@@ -204,17 +212,14 @@ sub mkZip {
 	print $dir;
 	print $file;
 	chdir($dir);
-	if(-d $src_file)
-	{
+	if(-d $src_file) {
 		print `zip -r $dest_file $file`;
 	}
-	elsif(-f $src_file)
-	{
+	elsif(-f $src_file) {
 		print `zip $dest_file $file`;
 	}
-	else
-	{
-		die "'$file' doesn't exist (or is not a file or folder): $!"; 
+	else {
+		die "$file doesn't exist (or is not a file or folder): $!"; 
 	}
 }	
 
