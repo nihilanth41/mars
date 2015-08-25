@@ -77,13 +77,14 @@ sub split_line_reports
 {
 	my ($REPORT_DIR, $HASH_NAME) = @_;
 	my @ordered_keys;
-	if($HASH_NAME eq "LCSH")
-	{
+	my $href;
+	if($HASH_NAME eq "LCSH") {
 		@ordered_keys = $cfg->param("LCSH.ORDERED_KEYS");
+		$href = \%LCSH;
 	}
-	elsif($HASH_NAME eq "NTAR")
-	{
+	elsif($HASH_NAME eq "NTAR") {
 		@ordered_keys = $cfg->param("NTAR.ORDERED_KEYS");
+		$href = \%NTAR;
 	}
 	my $PATH_TO_FILES = $REPORT_DIR;
 	my @files = read_dir($PATH_TO_FILES);
@@ -109,15 +110,7 @@ sub split_line_reports
 			my $rpk_total=0;
 			foreach my $key (@ordered_keys)
 			{
-				if($HASH_NAME eq "LCSH")
-				{
-					$RPK{$key} = int($size*($LCSH{$key}/100)); 
-				}
-				elsif($HASH_NAME eq "NTAR")
-				{
-					$RPK{$key} = int($size*($NTAR{$key}/100));
-
-				}
+				$RPK{$key} = int($size*($href->{$key}/100));
 				$rpk_total += $RPK{$key};
 			}
 			my $rec_difference = $size - $rpk_total;
@@ -371,13 +364,14 @@ sub split_line_reports_CSV
 {
 	my ($REPORT_DIR, $HASH_NAME) = @_;
 	my @ordered_keys;
-	if($HASH_NAME eq "LCSH")
-	{
+	my $href;
+	if($HASH_NAME eq "LCSH") {
 		@ordered_keys = $cfg->param("LCSH.ORDERED_KEYS");
+		$href = \%LCSH;
 	}
-	elsif($HASH_NAME eq "NTAR")
-	{
+	elsif($HASH_NAME eq "NTAR") {
 		@ordered_keys = $cfg->param("NTAR.ORDERED_KEYS");
+		$href = \%NTAR;
 	}
 	my $PATH_TO_FILES = $REPORT_DIR;
 	my @files = read_dir($PATH_TO_FILES);
@@ -406,15 +400,7 @@ sub split_line_reports_CSV
 			my $rpk_total=0;
 			foreach my $key (@ordered_keys)
 			{
-				if($HASH_NAME eq "LCSH")
-				{
-					$RPK{$key} = int($size*($LCSH{$key}/100)); 
-				}
-				elsif($HASH_NAME eq "NTAR")
-				{
-					$RPK{$key} = int($size*($NTAR{$key}/100));
-
-				}
+				$RPK{$key} = int($size*($href->{$key}/100)); 
 				$rpk_total += $RPK{$key};
 			}
 			my $rec_difference = $size - $rpk_total;
@@ -445,15 +431,7 @@ sub split_line_reports_CSV
 			my $rpk_total=0;
 			foreach my $key (@ordered_keys)
 			{
-				if($HASH_NAME eq "LCSH")
-				{
-					$RPK{$key} = int($size*($LCSH{$key}/100)); 
-				}
-				elsif($HASH_NAME eq "NTAR")
-				{
-					$RPK{$key} = int($size*($NTAR{$key}/100));
-
-				}
+				$RPK{$key} = int($size*($href->{$key}/100));
 				$rpk_total += $RPK{$key};
 			}
 			my $rec_difference = $size - $rpk_total;

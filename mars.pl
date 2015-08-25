@@ -71,7 +71,7 @@ else #($ret == 0)
 	&split_reports("$report_dir/$datestamp/School/LCSH","LCSH", "HTML.DEL_DELIM");
 
 	#Split Line-format reports 
-	#do "$ABS_PATH/treebuilder.pl";	
+	do "$ABS_PATH/treebuilder.pl";	
 	
 	#Make archives of directories
 	&archive_folders();
