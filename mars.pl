@@ -107,33 +107,35 @@ else {
 	print "DONE\n";
 
 	#Split Line-format reports 
-	print "Calling treebuilder.pl...";
-	do "$ABS_PATH/treebuilder.pl";	
+	print "Calling treebuilder.pl... (This may take a while)\n";
+	do "$ABS_PATH/treebuilder.pl";
 	print "DONE\n";
 	
 	#Make archives of directories
+	print "Creating archives...";
 	&archive_folders();
+	print "DONE\n";
 
 	#Move Archive, Log, and Datestamp folders up one directory 
 	#Unless Archive exists and is a directory
 	unless ( -d -e "$report_dir/../Archive")
 	{
 		#Create Archive folder 
-		print `mkdir -v $report_dir/../Archive`;
+		`mkdir -v $report_dir/../Archive`;
 	}
 	#Move datestamped archive into Archive/ 
-	print `cp -v $report_dir/Archive/* $report_dir/../Archive/.`;
+		`cp -v $report_dir/Archive/* $report_dir/../Archive/.`;
 	
 	unless ( -d -e "$report_dir/../Log")
 	{
 		#Create Log folder
-		print `mkdir -v $report_dir/../Log`;
+		`mkdir -v $report_dir/../Log`;
 	}
 	#Move log files into Log/ folder
-	unless(is_folder_empty("$report_dir/Log"))
-	{
-			print `cp -v $report_dir/Log/* $report_dir/../Log/.`;
-	}
+	#unless(is_folder_empty("$report_dir/Log"))
+	#{
+	#		`cp -v $report_dir/Log/* $report_dir/../Log/.`;
+	#}
 	#if datestamp already exists in directory 
 	if( -d -e "$report_dir/../$datestamp")
 	{
@@ -142,10 +144,12 @@ else {
 	else
 	{
 		#Move datestamp into public_http
-		print `mv -v $report_dir/$datestamp $report_dir/../$datestamp`;
+		`mv -v $report_dir/$datestamp $report_dir/../$datestamp`;
 	}
 	#Delete extract folder
-	print `rm -rf $report_dir`;
+	print "Cleaning up..."
+	`rm -rf $report_dir`;
+	print "DONE\n";
 	exit(0);
 }
 
@@ -175,13 +179,13 @@ sub archive_folders()
 		);
 	foreach (@folder_list)
 	{
-		my $ret = &mkArchive($_);
+		my $ret = mkArchive($_);
 	}
 	if($ret == 0)
 	{
 		#move datestamped archive to Archive folder
 		my $zip = "$prefix/$datestamp.zip";
-		print `mv -v $zip $prefix/../Archive/`;
+		`mv -v $zip $prefix/../Archive/`;
 	}
 }
 
@@ -194,17 +198,17 @@ sub archive_folders()
 #NOTE: It will include the directory in the archive 
 #E.g., CSV.zip will expand to CSV/my_csv_files.txt
 sub mkArchive {
-	print "Making archive\n";
+	#print "Making archive\n";
 	my $src_dir = $_[0];
 	my ($filename, $dirs, $suffix) = fileparse($src_dir); 
 	#Change to directory containing folder 
 	chdir($dirs);
 	if(-d $dirs)
 	{
-		printf("Directory $src_dir exists! Creating archive...\n");
+		#printf("Directory $src_dir exists! Creating archive...\n");
 		my $zipfile = "$filename.zip";
-		print `zip -rv $zipfile $filename`; 
-		print `mv -v $zipfile "$dirs$filename/"`;
+		`zip -rv $zipfile $filename`; 
+		`mv -v $zipfile "$dirs$filename/"`;
 		return 0;
 	}
 	else { return -1; }

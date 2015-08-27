@@ -61,14 +61,29 @@ my $tree;
 
 my $report_dir = $cfg->param('ENV.REPORT_DIR');
 
+print "\tSplitting LCSH line reports [HTML]...";
 split_line_reports("$report_dir/$datestamp/School/LCSH", "LCSH");
+print "DONE\n";
+
+print "\tSplitting NTAR line reports [HTML]...";
 split_line_reports("$report_dir/$datestamp/School/NTAR", "NTAR");
+print "DONE\n";
 
+print "\tSplitting LCSH line reports [CSV]...";
 split_line_reports_CSV("$report_dir/$datestamp/School/LCSH", "LCSH");
-split_line_reports_CSV("$report_dir/$datestamp/School/NTAR", "NTAR");
+print "DONE\n";
 
+print "\tSplitting NTAR line reports [CSV]...";
+split_line_reports_CSV("$report_dir/$datestamp/School/NTAR", "NTAR");
+print "DONE\n";
+
+print "\tConvert LCSH CSV to XLS...";
 csv_to_xls("$report_dir/$datestamp/School/LCSH/CSV");
+print "DONE\n";
+
+print "\tConvert NTAR CSV to XLS...";
 csv_to_xls("$report_dir/$datestamp/School/NTAR/CSV");
+print "DONE\n";
 
 #split_line_reports($REPORT_DIR, $HASH_NAME)
 #param $REPORT_DIR: full path to directory containing reports 
@@ -93,7 +108,7 @@ sub split_line_reports
 		@tables = ();
 		@td = ();
 		my $file_path = "$PATH_TO_FILES/$file";
-		printf("Opening file %s\n", $file_path);
+		#printf("Opening file %s\n", $file_path);
 		parse_html($file_path);
 		next if($#td < 0);
 		for(my $i=0; $i<=$#td; $i++) #For each table in the file 
@@ -101,10 +116,10 @@ sub split_line_reports
 			my $hashref = $td[$i]; #Point the reference at the hash  
 			my $ar_temp = $hashref->{"CTL_NO"};
 			my $size = @{$ar_temp};
-			print "Number of records in td[$i] = $size\n";
+			#print "Number of records in td[$i] = $size\n";
 			if(defined $SectionSubHeading[$i])
 			{
-					print $SectionSubHeading[$i]->as_text, "\n";
+				#print $SectionSubHeading[$i]->as_text, "\n";
 			}
 			my %RPK = ();
 			my $rpk_total=0;
@@ -116,8 +131,8 @@ sub split_line_reports
 			my $rec_difference = $size - $rpk_total;
 			if($rec_difference > 0)
 			{
-				printf("Records to be written (%d) does not match records in file (%d) ", $rpk_total, $size);
-				printf("Adding %d records to %s key\n", $rec_difference, $ordered_keys[$#ordered_keys]);
+				#printf("Records to be written (%d) does not match records in file (%d) ", $rpk_total, $size);
+				#printf("Adding %d records to %s key\n", $rec_difference, $ordered_keys[$#ordered_keys]);
 				#add any missing records to last key
 				$RPK{$ordered_keys[$#ordered_keys]} += $rec_difference;
 			}
@@ -125,7 +140,7 @@ sub split_line_reports
 			my $rp = 0;		        				#variable to keep track of position in @records	
 			foreach my $key (@ordered_keys)						#for each key in the NTAR hash
 			{
-				printf("Number of records required for $key is %d (%.2f%%) \n", $RPK{$key}, (($RPK{$key}/$size)*100));
+				#printf("Number of records required for $key is %d (%.2f%%) \n", $RPK{$key}, (($RPK{$key}/$size)*100));
 				next if($RPK{$key} <= 0);				#don't create the file/write header if there are no records to be written	
 				my $new_file_path = "$PATH_TO_FILES/../$key/$key.$file";	#prepend key to each filename
 				my $header = printHeader_HTML(); 
@@ -151,7 +166,7 @@ sub split_line_reports
 				{
 					if($rp >= $size)
 					{
-						print "Exceeded records array (Inner)\n";
+						#print "Exceeded records array (Inner)\n";
 						last;
 					}
 					#Write HTML
@@ -379,7 +394,7 @@ sub split_line_reports_CSV
 		@tables = ();
 		@td = ();
 		my $file_path = "$PATH_TO_FILES/$file";
-		printf("Opening file %s\n", $file_path);
+		#printf("Opening file %s\n", $file_path);
 		parse_html($file_path);
 		next if($#td < 0);
 		#Records per file (new file) for calculating the number of reocrds (Count) for each split file
@@ -405,8 +420,8 @@ sub split_line_reports_CSV
 			my $rec_difference = $size - $rpk_total;
 			if($rec_difference > 0)
 			{
-				printf("Records to be written (%d) does not match records in file (%d) ", $rpk_total, $size);
-				printf("Adding %d records to %s key\n", $rec_difference, $ordered_keys[$#ordered_keys]);
+				#printf("Records to be written (%d) does not match records in file (%d) ", $rpk_total, $size);
+				#printf("Adding %d records to %s key\n", $rec_difference, $ordered_keys[$#ordered_keys]);
 				#add any missing records to last key
 				$RPK{$ordered_keys[$#ordered_keys]} += $rec_difference;
 			}
@@ -421,10 +436,10 @@ sub split_line_reports_CSV
 			my $hashref = $td[$i]; #Point the reference at the hash  
 			my $ar_temp = $hashref->{"CTL_NO"};
 			my $size = @{$ar_temp};
-			print "Number of records in td[$i] = $size\n";
+			#print "Number of records in td[$i] = $size\n";
 			if(defined $SectionSubHeading[$i])
 			{
-					print $SectionSubHeading[$i]->as_text, "\n";
+				#print $SectionSubHeading[$i]->as_text, "\n";
 			}
 			my %RPK = ();
 			my $rpk_total=0;
@@ -436,8 +451,8 @@ sub split_line_reports_CSV
 			my $rec_difference = $size - $rpk_total;
 			if($rec_difference > 0)
 			{
-				printf("Records to be written (%d) does not match records in file (%d) ", $rpk_total, $size);
-				printf("Adding %d records to %s key\n", $rec_difference, $ordered_keys[$#ordered_keys]);
+				#printf("Records to be written (%d) does not match records in file (%d) ", $rpk_total, $size);
+				#printf("Adding %d records to %s key\n", $rec_difference, $ordered_keys[$#ordered_keys]);
 				#add any missing records to last key
 				$RPK{$ordered_keys[$#ordered_keys]} += $rec_difference;
 			}
@@ -445,13 +460,13 @@ sub split_line_reports_CSV
 			my $rp = 0;		        				#variable to keep track of position in @records	
 			foreach my $key (@ordered_keys)						#for each key in the NTAR hash
 			{
-				printf("Number of records required for $key is %d (%.2f%%) \n", $RPK{$key}, (($RPK{$key}/$size)*100));
+				#printf("Number of records required for $key is %d (%.2f%%) \n", $RPK{$key}, (($RPK{$key}/$size)*100));
 				next if($RPK{$key} <= 0);				#don't create the file/write header if there are no records to be written	
 				my ($filename, $dirs, $suffix) = fileparse($file_path); 
 				my $CSV_DIR = "$dirs"."CSV";
 				unless(-d $CSV_DIR)
 				{
-					print `mkdir -v $CSV_DIR`;
+					`mkdir -v $CSV_DIR`;
 				}
 				my @CSV_FILE = split("htm", $filename); 
 				$CSV_FILE[0] = join('', $CSV_FILE[0], "csv");
@@ -480,7 +495,7 @@ sub split_line_reports_CSV
 				{
 					if($rp >= $size)
 					{
-						print "Exceeded records array (Inner)\n";
+						#print "Exceeded records array (Inner)\n";
 						last;
 					}
 					#Write CSV
@@ -509,7 +524,7 @@ sub split_line_reports_CSV
 				close $fh;
 			}#foreach key 
 		}#foreach td()	
-		print `rm -v $file_path`;
+		`rm -v $file_path`;
 	}#foreach $file 
 }
 
