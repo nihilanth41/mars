@@ -52,10 +52,10 @@ $log_dir =~ s/extract/Log/g;
 unless(-e -d $log_dir) { print `mkdir -v $log_dir`; } 
 my $log_file = "$log_dir/$datestamp.log";
 open(my $log_fh, '>:encoding(UTF-8)', $log_file) ||  die "Couldn't open log file for write $log_file: $!";
-#Redirect all log output to log file
-local $Log::Message::Simple::MSG_FH = $log_fh;
-local $Log::Message::Simple::ERROR_FH = $log_fh;
-local $Log::Message::Simple::DEBUG_FH = $log_fh;
+#Direct log output (w/ verbose option)
+local $Log::Message::Simple::MSG_FH = \*STDOUT;
+local $Log::Message::Simple::ERROR_FH = \*STDERR;
+local $Log::Message::Simple::DEBUG_FH = \*STDOUT;
 print "DONE\n";
 
 #attempt to unzip 
@@ -107,9 +107,9 @@ else {
 	print "DONE\n";
 
 	#Split Line-format reports 
-	print "Calling treebuilder.pl... (This may take a while)\n";
-	do "$ABS_PATH/treebuilder.pl";
-	print "DONE\n";
+#	print "Calling treebuilder.pl... (This may take a while)\n";
+#	do "$ABS_PATH/treebuilder.pl";
+#	print "DONE\n";
 	
 	#Make archives of directories
 	print "Creating archives...";
@@ -147,9 +147,16 @@ else {
 		`mv -v $report_dir/$datestamp $report_dir/../$datestamp`;
 	}
 	#Delete extract folder
-	print "Cleaning up..."
-	`rm -rf $report_dir`;
+	print "Cleaning up...";
+	debug( `rm -rfv $report_dir` );
 	print "DONE\n";
+
+	print "Writing log file...";
+	my $log = Log::Message::Simple->stack_as_string();
+	print $log_fh $log;
+	close $log_fh;
+	print "DONE\n";
+
 	exit(0);
 }
 
@@ -198,7 +205,6 @@ sub archive_folders()
 #NOTE: It will include the directory in the archive 
 #E.g., CSV.zip will expand to CSV/my_csv_files.txt
 sub mkArchive {
-	#print "Making archive\n";
 	my $src_dir = $_[0];
 	my ($filename, $dirs, $suffix) = fileparse($src_dir); 
 	#Change to directory containing folder 
@@ -227,8 +233,11 @@ sub unzip {
 		die "$msg";
 	}
 	if(!(-d $dest_dir)) { 
-		`mkdir $dest_dir`; 	 		#create dir if doesn't exist 
-		print `unzip -q -d $dest_dir $src_file`;   	#unzip into new directory
+		my $dbg_str;
+		chomp ( $dbg_str = `mkdir -v $dest_dir` ); 	#create dir if doesn't exist 
+		debug ( $dbg_str );
+		debug( "Extracting archive $src_file into $dest_dir" );
+		`unzip -q -d $dest_dir $src_file`;   		#unzip into new directory
 		return 0; 					#EXIT_SUCCESS 
 	}
 	return 1; 						#Directory already exists -> skip unzipping
@@ -290,7 +299,7 @@ sub sanitize_filenames {
 		my ($old_path, $new_path);
 		$old_path = "$path_to_files/$old_file";
 		$new_path = "$path_to_files/$file";
-		msg( sprintf("Renaming %s to %s\n", $old_path, $new_path) ); 
+		debug( sprintf("Renaming %s to %s", $old_path, $new_path) ); 
 		rename("$old_path","$new_path") || die;
 
 	}
@@ -302,6 +311,7 @@ sub sanitize_filenames {
 #param $path_to_files: full path to the diretory containing report files 
 sub sort_reports {
 	my $path_to_files = $_[0]; 
+	my $dbg_str;
 
 	#Move excel files to their own folder to get them out of the way 
 	if(-d $path_to_files) 
@@ -311,18 +321,22 @@ sub sort_reports {
 		{
 			if(/(.+)[.]xls$/)
 			{
-				`mv -v $path_to_files/$_ $path_to_files/$datestamp/XLS/`;
+				chomp($dbg_str = `mv -v $path_to_files/$_ $path_to_files/$datestamp/XLS/`);
+				debug( $dbg_str );
 			}
 			elsif(/(.+)[.]MRC$/)
 			{
-				`mv -v $path_to_files/$_ $path_to_files/$datestamp/MRC/`;
+				chomp($dbg_str = `mv -v $path_to_files/$_ $path_to_files/$datestamp/MRC/`); 
+				debug( $dbg_str );
 			}
 		}
 
 		#Delete Original XLS files 
-		`rm -rf $path_to_files/$datestamp/XLS`;
+		chomp( $dbg_str = `rm -rfv $path_to_files/$datestamp/XLS` );
+		debug( $dbg_str );
 		#Delete MRC files 
-		`rm -rf $path_to_files/$datestamp/MRC`;
+		chomp( $dbg_str =  `rm -rfv $path_to_files/$datestamp/MRC` );
+		debug( $dbg_str );
 	}
 	#%filename_hash is used to look up the destination folder for a given file, using the same string that we matched the file with. 
 	my %filename_hash = ( 
@@ -353,14 +367,18 @@ sub sort_reports {
 		{
 			if( $file =~ m/$key/i )
 			{
-				`mv -v $path_to_files/$file "$path_to_files/$datestamp/$filename_hash{$key}"`;
+				chomp( $dbg_str = `mv -v $path_to_files/$file "$path_to_files/$datestamp/$filename_hash{$key}"` );
+				debug( $dbg_str );
 				last; 		#break inner loop when we find the first matching key 
 			}
 		} 
 	}
 	closedir $dh;
 	#When we get to this point, everything that is left in $path_to_files should go in MISC 
-	if(-d $path_to_files) { `mv -v $path_to_files/*.htm $path_to_files/$datestamp/Misc/`; }
+	if(-d $path_to_files) { 
+		chomp( $dbg_str = `mv -v $path_to_files/*.htm $path_to_files/$datestamp/Misc/` ); 
+		debug( $dbg_str );
+	}
 }
 
 
@@ -370,6 +388,7 @@ sub sort_reports {
 #checks if directories already exist in path -> creates if not 
 sub mkDirs
 {
+	my $dbg_str;
 	my ($path, @folders) = @_;		#assign input args
 	for my $folder (@folders) 
 	{
@@ -377,7 +396,8 @@ sub mkDirs
 		my $newdir = "$path/$folder"; 
 		if(!(-d "$path/$folder")) 	#if directory doesn't exist
 		{
-			`mkdir -p $path/$folder`;
+			chomp( $dbg_str = `mkdir -pv $path/$folder` );
+			debug( $dbg_str );
 		}
 	}
 }
