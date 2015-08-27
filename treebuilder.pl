@@ -2,15 +2,18 @@
 
 use strict;
 use warnings;
+use Config::Simple;
 use File::Slurp;
 use File::Basename;
 use Encode qw(encode decode);
+use HTML::Entities;
+use HTML::Restrict;
 use HTML::TreeBuilder;
-use Config::Simple;
+use Log::Message::Simple;
 use Spreadsheet::WriteExcel;
 use Text::CSV;
-use HTML::Restrict;
-use HTML::Entities;
+
+
 use Cwd 'abs_path';
 use 5.10.1;
 
@@ -61,6 +64,17 @@ my $tree;
 
 my $report_dir = $cfg->param('ENV.REPORT_DIR');
 
+my $log_dir = $report_dir;
+$log_dir =~ s/extract/Log/g;
+#Create log dir if doesn't exist 
+unless(-e -d $log_dir) { die "Error: log dir doesn't exist in treebuilder(): $!"; } #print `mkdir -v $log_dir`; } 
+my $log_file = "$log_dir/$datestamp-treebuilder.log";
+open(my $log_fh, '>:encoding(UTF-8)', $log_file) ||  die "Couldn't open log file for write $log_file: $!";
+#Direct log output (w/ verbose option)
+local $Log::Message::Simple::MSG_FH = \*STDOUT;
+local $Log::Message::Simple::ERROR_FH = \*STDERR;
+local $Log::Message::Simple::DEBUG_FH = \*STDOUT;
+
 print "\tSplitting LCSH line reports [HTML]...";
 split_line_reports("$report_dir/$datestamp/School/LCSH", "LCSH");
 print "DONE\n";
@@ -85,6 +99,11 @@ print "\tConvert NTAR CSV to XLS...";
 csv_to_xls("$report_dir/$datestamp/School/NTAR/CSV");
 print "DONE\n";
 
+my $log = Log::Message::Simple->stack_as_string();
+print $log_fh $log;
+close $log_fh;
+exit(0);
+
 #split_line_reports($REPORT_DIR, $HASH_NAME)
 #param $REPORT_DIR: full path to directory containing reports 
 #param $HASH_NAME: One of [LCSH/NTAR]. Used to specify the percentage split and the @ordered_keys list from the cfg file
@@ -108,7 +127,7 @@ sub split_line_reports
 		@tables = ();
 		@td = ();
 		my $file_path = "$PATH_TO_FILES/$file";
-		#printf("Opening file %s\n", $file_path);
+		debug( sprintf("Opening file %s", $file_path) );
 		parse_html($file_path);
 		next if($#td < 0);
 		for(my $i=0; $i<=$#td; $i++) #For each table in the file 
@@ -116,10 +135,10 @@ sub split_line_reports
 			my $hashref = $td[$i]; #Point the reference at the hash  
 			my $ar_temp = $hashref->{"CTL_NO"};
 			my $size = @{$ar_temp};
-			#print "Number of records in td[$i] = $size\n";
+			debug( sprintf("Number of records in td[%d] = %d", $i, $size) );
 			if(defined $SectionSubHeading[$i])
 			{
-				#print $SectionSubHeading[$i]->as_text, "\n";
+				debug( sprintf("%s", $SectionSubHeading[$i]->as_text) );
 			}
 			my %RPK = ();
 			my $rpk_total=0;

@@ -50,7 +50,7 @@ my $log_dir = $report_dir;
 $log_dir =~ s/extract/Log/g;
 #Create log dir if doesn't exist 
 unless(-e -d $log_dir) { print `mkdir -v $log_dir`; } 
-my $log_file = "$log_dir/$datestamp.log";
+my $log_file = "$log_dir/$datestamp-mars.log";
 open(my $log_fh, '>:encoding(UTF-8)', $log_file) ||  die "Couldn't open log file for write $log_file: $!";
 #Direct log output (w/ verbose option)
 local $Log::Message::Simple::MSG_FH = \*STDOUT;
@@ -107,9 +107,9 @@ else {
 	print "DONE\n";
 
 	#Split Line-format reports 
-#	print "Calling treebuilder.pl... (This may take a while)\n";
-#	do "$ABS_PATH/treebuilder.pl";
-#	print "DONE\n";
+	print "Calling treebuilder.pl... (This may take a while)\n";
+	do "$ABS_PATH/treebuilder.pl";
+	print "DONE\n";
 	
 	#Make archives of directories
 	print "Creating archives...";
@@ -139,7 +139,7 @@ else {
 	#if datestamp already exists in directory 
 	if( -d -e "$report_dir/../$datestamp")
 	{
-		print "Warning folder: $datestamp already exists. Skipping move.\n";
+		print "Warning: folder $datestamp already exists. Skipping move.\n";
 	}
 	else
 	{
