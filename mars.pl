@@ -45,6 +45,7 @@ my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
 my $datestamp = sprintf("%4d_%02d_%02d", $year+1900, $mon+1, $mday);
 
 #Setup logging interface
+print "Initializing log file..."; 
 my $log_dir = $report_dir;
 $log_dir =~ s/extract/Log/g;
 #Create log dir if doesn't exist 
@@ -55,8 +56,10 @@ open(my $log_fh, '>:encoding(UTF-8)', $log_file) ||  die "Couldn't open log file
 local $Log::Message::Simple::MSG_FH = $log_fh;
 local $Log::Message::Simple::ERROR_FH = $log_fh;
 local $Log::Message::Simple::DEBUG_FH = $log_fh;
+print "DONE\n";
 
 #attempt to unzip 
+print "Extracting archive...";
 my $ret = unzip($zip_file, $report_dir);
 #Only work with a fresh directory structure. if dir exists -> error & die 
 if($ret == 1) {
@@ -65,14 +68,19 @@ if($ret == 1) {
 	die "$msg";
 }
 else {
-	#Remove characters from filenames that need escaped on *nix systems
-	#sanitize_filenames($report_dir); 
-	sanitize_filenames("mydirectory");
+	print "DONE\n";
 	
+	#Remove characters from filenames that need escaped on *nix systems
+	print "Renaming files...";
+	sanitize_filenames($report_dir); 
+	print "DONE\n";
+
 	#Make (most of) the directory structure 
+	print "Creating directory structure...";
 	&mkDirs($report_dir, @main_folders);
 	&mkDirs("$report_dir/$datestamp", @sub_folders);
 	&mkDirs("$report_dir/$datestamp/School", @school_folders);
+	print "DONE\n";
 	
 	#Move files into the proper directories 
 	&sort_reports($report_dir);
@@ -199,12 +207,11 @@ sub unzip {
 		die "$msg";
 	}
 	if(!(-d $dest_dir)) { 
-		print `mkdir -v $dest_dir`; 	 	#create dir if doesn't exist 
-		print `unzip -d $dest_dir $src_file`;   #unzip into new directory
-		return 0; 				#EXIT_SUCCESS 
+		`mkdir $dest_dir`; 	 		#create dir if doesn't exist 
+		print `unzip -q -d $dest_dir $src_file`;   	#unzip into new directory
+		return 0; 					#EXIT_SUCCESS 
 	}
-	#warn "Directory $dest_dir already exists";
-	return 1; 					#Directory already exists -> skip unzipping
+	return 1; 						#Directory already exists -> skip unzipping
 }
 
 #mkZip($src_file, $dest_file)
@@ -240,28 +247,34 @@ sub sanitize_filenames {
 		my $msg = Log::Message::Simple->stack_as_string();
 		die "$msg"; 
 	};
-
 	#look at each file in the folder 
 	while(my $file = readdir(DIR)) 
-	{ 
+	{
+		unless( -r -w "$path_to_files/$file" ) 	#file is r/w by effective uid/gid
+		{
+			error( "Couldn't rename file $file in sanitize_filenames() $!" );
+			my $msg = Log::Message::Simple->stack_as_string();
+			die ("$msg");
+		}
 		next if ($file =~ m/^\./); 	#ignore hidden files 
-		my $old_file = $file;	#copy filename for rename at the end
-		$file =~ s/new-//g; 	#delete any instance of 'new-' in filename
-		$file =~ s/ /-/g;	#replace spaces with dashes 
-		$file =~ s/\[/-/g; 	#replace open bracket w/ dash
-		$file =~ s/\]/-/g;	#replace close bracket w/ dash
-		$file =~ s/\(/-/g;	#replace open paren. w/ dash
-		$file =~ s/\)/-/g; 	#replace close paren. w/ dash 
-		$file =~ s/\$/-/g;	#replace $ w/ dash
-		$file =~ s/-\./\./g;	#remove any dashes immediately before the .ext(ension) 
-		$file =~ s/--/-/g;	#replace any double-dash with single-dash.
+		my $old_file = $file;		#copy filename for rename at the end
+		$file =~ s/new-//g;		#delete any instance of 'new-' in filename
+		$file =~ s/ /-/g;		#replace spaces with dashes 
+		$file =~ s/\[/-/g;		#replace open bracket w/ dash
+		$file =~ s/\]/-/g;		#replace close bracket w/ dash
+		$file =~ s/\(/-/g;		#replace open paren. w/ dash
+		$file =~ s/\)/-/g;		#replace close paren. w/ dash 
+		$file =~ s/\$/-/g;		#replace $ w/ dash
+		$file =~ s/-\./\./g;		#remove any dashes immediately before the .ext(ension) 
+		$file =~ s/--/-/g;		#replace any double-dash with single-dash.
 		my ($old_path, $new_path);
 		$old_path = "$path_to_files/$old_file";
 		$new_path = "$path_to_files/$file";
-		printf("Renaming %s to %s\n", $old_path, $new_path); 
-		rename("$old_path","$new_path") || die ("Couldn't rename $old_path:$!");
+		msg( sprintf("Renaming %s to %s\n", $old_path, $new_path) ); 
+		rename("$old_path","$new_path") || die;
+
 	}
-	closedir(DIR); 
+	closedir(DIR);
 }
 
 
@@ -344,7 +357,7 @@ sub mkDirs
 		my $newdir = "$path/$folder"; 
 		if(!(-d "$path/$folder")) 	#if directory doesn't exist
 		{
-			print `mkdir -pv $path/$folder`; 
+			`mkdir -p $path/$folder`;
 		}
 	}
 }
