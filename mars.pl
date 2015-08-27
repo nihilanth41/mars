@@ -77,23 +77,39 @@ else {
 
 	#Make (most of) the directory structure 
 	print "Creating directory structure...";
-	&mkDirs($report_dir, @main_folders);
-	&mkDirs("$report_dir/$datestamp", @sub_folders);
-	&mkDirs("$report_dir/$datestamp/School", @school_folders);
+	mkDirs($report_dir, @main_folders);
+	mkDirs("$report_dir/$datestamp", @sub_folders);
+	mkDirs("$report_dir/$datestamp/School", @school_folders);
 	print "DONE\n";
 	
 	#Move files into the proper directories 
-	&sort_reports($report_dir);
+	print "Sorting report files...";
+	sort_reports($report_dir);
+	print "DONE\n";
 	
 	#Split Side-by-side reports (CHG and DEL)
-	&split_reports("$report_dir/$datestamp/School/NTAR","NTAR", "HTML.CHG_DELIM");
-	&split_reports("$report_dir/$datestamp/School/NTAR","NTAR", "HTML.DEL_DELIM");
-	#So far none of the chg/delete reports have been in LCSH but we should check anyway: 
-	&split_reports("$report_dir/$datestamp/School/LCSH","LCSH", "HTML.CHG_DELIM");
-	&split_reports("$report_dir/$datestamp/School/LCSH","LCSH", "HTML.DEL_DELIM");
+	print "Splitting NTAR CHG reports...";
+	split_reports("$report_dir/$datestamp/School/NTAR","NTAR", "HTML.CHG_DELIM");
+	print "DONE\n";
+	
+	print "Splitting NTAR DEL reports...";
+	split_reports("$report_dir/$datestamp/School/NTAR","NTAR", "HTML.DEL_DELIM");
+	print "DONE\n";
+
+	#So far none of the chg/delete reports have been in LCSH but we should check anyway:
+	
+	print "Splitting LCSH CHG reports...";
+	split_reports("$report_dir/$datestamp/School/LCSH","LCSH", "HTML.CHG_DELIM");
+	print "DONE\n";
+
+	print "Splitting LCSH DEL reports...";
+	split_reports("$report_dir/$datestamp/School/LCSH","LCSH", "HTML.DEL_DELIM");
+	print "DONE\n";
 
 	#Split Line-format reports 
+	print "Calling treebuilder.pl...";
 	do "$ABS_PATH/treebuilder.pl";	
+	print "DONE\n";
 	
 	#Make archives of directories
 	&archive_folders();
@@ -291,18 +307,18 @@ sub sort_reports {
 		{
 			if(/(.+)[.]xls$/)
 			{
-				print `mv -v $path_to_files/$_ $path_to_files/$datestamp/XLS/`;
+				`mv -v $path_to_files/$_ $path_to_files/$datestamp/XLS/`;
 			}
 			elsif(/(.+)[.]MRC$/)
 			{
-				print `mv -v $path_to_files/$_ $path_to_files/$datestamp/MRC/`;
+				`mv -v $path_to_files/$_ $path_to_files/$datestamp/MRC/`;
 			}
 		}
 
 		#Delete Original XLS files 
-		print `rm -rf $path_to_files/$datestamp/XLS`;
+		`rm -rf $path_to_files/$datestamp/XLS`;
 		#Delete MRC files 
-		print `rm -rf $path_to_files/$datestamp/MRC`;
+		`rm -rf $path_to_files/$datestamp/MRC`;
 	}
 	#%filename_hash is used to look up the destination folder for a given file, using the same string that we matched the file with. 
 	my %filename_hash = ( 
@@ -333,14 +349,14 @@ sub sort_reports {
 		{
 			if( $file =~ m/$key/i )
 			{
-				print `mv -v $path_to_files/$file "$path_to_files/$datestamp/$filename_hash{$key}"`;
+				`mv -v $path_to_files/$file "$path_to_files/$datestamp/$filename_hash{$key}"`;
 				last; 		#break inner loop when we find the first matching key 
 			}
 		} 
 	}
 	closedir $dh;
 	#When we get to this point, everything that is left in $path_to_files should go in MISC 
-	if(-d $path_to_files) { print `mv -v $path_to_files/*.htm $path_to_files/$datestamp/Misc/`; }
+	if(-d $path_to_files) { `mv -v $path_to_files/*.htm $path_to_files/$datestamp/Misc/`; }
 }
 
 
@@ -427,8 +443,8 @@ sub split_reports {
 		my @records = get_record_array($file_path, $delimiter);	
 		next if($#records <= 0);
 		my $num_records_file = $#records; 					#last index will be eq to #records after we shift off the first element
-		printf("Opening file: %s\n", $file_path); 				#print only if there are records in the file
-		printf("Number of records in file %s: %d\n", $file, $num_records_file);
+		#printf("Opening file: %s\n", $file_path); 				#print only if there are records in the file
+		#printf("Number of records in file %s: %d\n", $file, $num_records_file);
 		my $header = shift @records; 						#assign the first element of the array to $header, remove it from the array and shift all entries down
 		my %records_per_key = ();
 		my $rpk_per_file=0;
@@ -440,8 +456,8 @@ sub split_reports {
 		my $rec_difference = ($num_records_file - $rpk_per_file);
 		if($rec_difference > 0)
 		{
-			printf("Records to be written (%d) does not match records in file (%d) ", $rpk_per_file, $num_records_file);
-			printf("Adding %d records to %s key\n", $rec_difference, $ordered_keys[$#ordered_keys]);
+			#printf("Records to be written (%d) does not match records in file (%d) ", $rpk_per_file, $num_records_file);
+			#printf("Adding %d records to %s key\n", $rec_difference, $ordered_keys[$#ordered_keys]);
 			#add any missing records to last key
 			$records_per_key{$ordered_keys[$#ordered_keys]} += $rec_difference;
 		}
@@ -449,7 +465,7 @@ sub split_reports {
 		my $records_pos = 0;		        				#variable to keep track of position in @records	
 		foreach my $key (@ordered_keys)						#for each key in the NTAR hash
 		{
-			printf("Number of records required for $key is %d (%.2f%%) \n", $records_per_key{$key}, (($records_per_key{$key}/$num_records_file)*100));
+			#printf("Number of records required for $key is %d (%.2f%%) \n", $records_per_key{$key}, (($records_per_key{$key}/$num_records_file)*100));
 			next if($records_per_key{$key} <= 0);				#don't create the file/write header if there are no records to be written	
 			my $new_file_path = "$path_to_files/../$key/$key.$file";	#prepend key to each filename
 			#printf("Writing header to file: %s\n", $new_file_path); 
@@ -458,7 +474,7 @@ sub split_reports {
 			{	
 				if($records_pos >= $num_records_file)
 				{
-					print "Exceeded records array(inner)\n";
+					#print "Exceeded records array(inner)\n";
 					last;
 				}
 
@@ -472,11 +488,11 @@ sub split_reports {
 			if($records_pos >= $num_records_file)
 			{
 				last;
-				print "Exceeded records array (outer)\n"
+				#print "Exceeded records array (outer)\n"
 			}
 		}
-		printf("Total Records written/Total Records in file: %d/%d\n", $records_written_file, $num_records_file);
-		print `rm -v $file_path`; 						#delete the original file (so we can verify all the side-by-side have been processed)
+		#printf("Total Records written/Total Records in file: %d/%d\n", $records_written_file, $num_records_file);
+		`rm -v $file_path`; 						#delete the original file (so we can verify all the side-by-side have been processed)
 	}
 }
 
