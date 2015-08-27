@@ -148,7 +148,9 @@ else {
 	}
 	#Delete extract folder
 	print "Cleaning up...";
-	debug( `rm -rfv $report_dir` );
+	my $dbg_str;
+	chomp( $dbg_str = `rm -rfv $report_dir` );
+	debug( $dbg_str );
 	print "DONE\n";
 
 	print "Writing log file...";
@@ -467,8 +469,8 @@ sub split_reports {
 		my @records = get_record_array($file_path, $delimiter);	
 		next if($#records <= 0);
 		my $num_records_file = $#records; 					#last index will be eq to #records after we shift off the first element
-		#printf("Opening file: %s\n", $file_path); 				#print only if there are records in the file
-		#printf("Number of records in file %s: %d\n", $file, $num_records_file);
+		debug( sprintf("Opening file: %s", $file_path) ); 				#print only if there are records in the file
+		debug( sprintf("Number of records in file %s: %d", $file, $num_records_file) );
 		my $header = shift @records; 						#assign the first element of the array to $header, remove it from the array and shift all entries down
 		my %records_per_key = ();
 		my $rpk_per_file=0;
@@ -480,8 +482,8 @@ sub split_reports {
 		my $rec_difference = ($num_records_file - $rpk_per_file);
 		if($rec_difference > 0)
 		{
-			#printf("Records to be written (%d) does not match records in file (%d) ", $rpk_per_file, $num_records_file);
-			#printf("Adding %d records to %s key\n", $rec_difference, $ordered_keys[$#ordered_keys]);
+			debug( sprintf("Records to be written (%d) does not match records in file (%d)", $rpk_per_file, $num_records_file) );
+			debug( sprintf("Adding %d records to %s key", $rec_difference, $ordered_keys[$#ordered_keys]) );
 			#add any missing records to last key
 			$records_per_key{$ordered_keys[$#ordered_keys]} += $rec_difference;
 		}
@@ -489,16 +491,16 @@ sub split_reports {
 		my $records_pos = 0;		        				#variable to keep track of position in @records	
 		foreach my $key (@ordered_keys)						#for each key in the NTAR hash
 		{
-			#printf("Number of records required for $key is %d (%.2f%%) \n", $records_per_key{$key}, (($records_per_key{$key}/$num_records_file)*100));
+			debug( sprintf("Number of records required for $key is %d (%.2f%%)", $records_per_key{$key}, (($records_per_key{$key}/$num_records_file)*100)) );
 			next if($records_per_key{$key} <= 0);				#don't create the file/write header if there are no records to be written	
 			my $new_file_path = "$path_to_files/../$key/$key.$file";	#prepend key to each filename
-			#printf("Writing header to file: %s\n", $new_file_path); 
+			#debug( sprintf("Writing header to file: %s", $new_file_path) ); 
 			write_file($new_file_path, { binmode => ':encoding(UTF-8)' }, $header); 
 			for(my $i=0; $i<$records_per_key{$key}; $i++)			#starting at the beginning, process records until we reach the limit for this key
 			{	
 				if($records_pos >= $num_records_file)
 				{
-					#print "Exceeded records array(inner)\n";
+					#error( "Exceeded records array(inner)" );
 					last;
 				}
 
@@ -511,12 +513,14 @@ sub split_reports {
 			}
 			if($records_pos >= $num_records_file)
 			{
+				#error( "Exceeded records array (outer)" );
 				last;
-				#print "Exceeded records array (outer)\n"
 			}
 		}
 		#printf("Total Records written/Total Records in file: %d/%d\n", $records_written_file, $num_records_file);
-		`rm -v $file_path`; 						#delete the original file (so we can verify all the side-by-side have been processed)
+		my $dbg_str; 
+		chomp( $dbg_str = `rm -v $file_path` ); #delete the original file (so we can verify all the side-by-side have been processed)
+		debug( $dbg_str );
 	}
 }
 
