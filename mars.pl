@@ -44,28 +44,30 @@ my @school_folders = $cfg->param("ENV.SCHOOLDIRS");
 my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
 my $datestamp = sprintf("%4d_%02d_%02d", $year+1900, $mon+1, $mday);
 
-#Redirect output of Log::Message
+#Setup logging interface
 my $log_dir = $report_dir;
 $log_dir =~ s/extract/Log/g;
+#Create log dir if doesn't exist 
 unless(-e -d $log_dir) { print `mkdir -v $log_dir`; } 
 my $log_file = "$log_dir/$datestamp.log";
-open(my $log_fh, '>:encoding(UTF-8)', $log_file) || die "Couldn't open file for write $log_file: $!";
+open(my $log_fh, '>:encoding(UTF-8)', $log_file) ||  die "Couldn't open log file for write $log_file: $!";
+#Redirect all log output to log file
 local $Log::Message::Simple::MSG_FH = $log_fh;
 local $Log::Message::Simple::ERROR_FH = $log_fh;
 local $Log::Message::Simple::DEBUG_FH = $log_fh;
 
-#attempt to unzip -- mkDirs and handle reports only if dir doesn't already exist 
+#attempt to unzip 
 my $ret = unzip($zip_file, $report_dir);
-#Only work with a fresh directory structure. if dir exists -> skip 
+#Only work with a fresh directory structure. if dir exists -> error & die 
 if($ret == 1) {
 	error( "Directory already exists: $report_dir", 1 );
 	my $msg = Log::Message::Simple->stack_as_string; 
 	die "$msg";
 }
-else #($ret == 0)
-{
+else {
 	#Remove characters from filenames that need escaped on *nix systems
-	&sanitize_filenames($report_dir); 
+	#sanitize_filenames($report_dir); 
+	sanitize_filenames("mydirectory");
 	
 	#Make (most of) the directory structure 
 	&mkDirs($report_dir, @main_folders);
@@ -191,9 +193,12 @@ sub mkArchive {
 #Takes src_file and dest_dir, unzips src_file into dest_dir 
 sub unzip { 
 	my ($src_file, $dest_dir) = @_;
-	if(!(-f $src_file)) { die "File $src_file doesn't exist! Check ZIP_FILE entry in mars.cfg: $!"; } #Check that .zip file exists
-	if(!(-d $dest_dir)) 
-	{ 
+	if(!(-f $src_file)) { 
+		error( "File $src_file doesn't exist! Check ZIP_FILE entry in mars.cfg." , 1 );
+		my $msg = Log::Message::Simple->stack_as_string; 
+		die "$msg";
+	}
+	if(!(-d $dest_dir)) { 
 		print `mkdir -v $dest_dir`; 	 	#create dir if doesn't exist 
 		print `unzip -d $dest_dir $src_file`;   #unzip into new directory
 		return 0; 				#EXIT_SUCCESS 
@@ -230,7 +235,12 @@ sub mkZip {
 #Removes problematic characters from filenames so that we don't have to escape them on *nix systems
 sub sanitize_filenames {
 	my $path_to_files = $_[0]; 	#directory w/ files is passed as argument 
-	opendir(DIR, $path_to_files) || die ("Couldn't open $path_to_files: $!"); 
+	opendir(DIR, $path_to_files) || do { 
+		error( "Couldn't open directory $path_to_files in sanitize_filenames()" );
+		my $msg = Log::Message::Simple->stack_as_string();
+		die "$msg"; 
+	};
+
 	#look at each file in the folder 
 	while(my $file = readdir(DIR)) 
 	{ 

@@ -860,18 +860,13 @@ sub csv_to_xls {
 					$worksheet->write_string($i+9, 3+$k, $content, $format);
 				}
 				else {
-					print "Warning: no text class attribute identified\n";
+					warn "Warning: no text class attribute identified\n";
 					$worksheet->write_string($i+9, 3+$k, $content, $format);
 				}
 			}
 		}#foreach $row 
 		$workbook->close();
 	}#foreach file
-	#delete LCSH/NTAR directories
+	#delete CSV directory
 	print `rm -rf $PATH_TO_FILES`;
 }#endsub
-
-
-
-
-
