@@ -109,9 +109,10 @@ else {
 
 	#Split Line-format reports 
 	print "Calling treebuilder.pl... (This may take a while)\n";
-	do "$ABS_PATH/treebuilder.pl";
+	do "$ABS_PATH/treebuilder.pl"; 
+	die $@ if $@;
 	print "DONE\n";
-	
+
 	#Make archives of directories
 	print "Creating archives...";
 	&archive_folders();

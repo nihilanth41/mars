@@ -23,7 +23,7 @@ my $datestamp = sprintf("%4d_%02d_%02d", $year+1900, $mon+1, $mday);
 
 #parse config file
 my $ABS_PATH = dirname( abs_path($0) );
-my $cfg_file = "$ABS_PATH/mars.cfg"; 
+my $cfg_file = "$ABS_PATH/mars1.cfg"; 
 my $cfg = new Config::Simple();			#Config::Simple object 
 $cfg->read($cfg_file) or die $cfg->error();  	#Exception handling 
 
@@ -87,6 +87,8 @@ print "DONE\n";
 print "\tConvert NTAR CSV to XLS...";
 csv_to_xls("$report_dir/$datestamp/School/NTAR/CSV");
 print "DONE\n";
+
+return 0;
 
 
 #split_line_reports($REPORT_DIR, $HASH_NAME)
