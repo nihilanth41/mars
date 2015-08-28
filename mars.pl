@@ -111,7 +111,7 @@ else {
 	print "Calling treebuilder.pl... (This may take a while)\n";
 	do "$ABS_PATH/treebuilder.pl"; 
 	if($@) {
-		close_log();
+		#close_log();
 		die $@;
 	}
 	print "DONE\n";
