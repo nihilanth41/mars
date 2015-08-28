@@ -453,7 +453,7 @@ sub split_line_reports_CSV
 			if($rec_difference > 0)
 			{
 				debug( sprintf("Records to be written (%d) does not match records in file (%d)", $rpk_total, $size) );
-				debug( sprintf("Adding %d records to %s key\n", $rec_difference, $ordered_keys[$#ordered_keys]) );
+				debug( sprintf("Adding %d records to %s key", $rec_difference, $ordered_keys[$#ordered_keys]) );
 				#add any missing records to last key
 				$RPK{$ordered_keys[$#ordered_keys]} += $rec_difference;
 			}
