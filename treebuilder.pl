@@ -12,8 +12,6 @@ use HTML::TreeBuilder;
 use Log::Message::Simple;
 use Spreadsheet::WriteExcel;
 use Text::CSV;
-
-
 use Cwd 'abs_path';
 use 5.10.1;
 
@@ -23,7 +21,7 @@ my $datestamp = sprintf("%4d_%02d_%02d", $year+1900, $mon+1, $mday);
 
 #parse config file
 my $ABS_PATH = dirname( abs_path($0) );
-my $cfg_file = "$ABS_PATH/mars1.cfg"; 
+my $cfg_file = "$ABS_PATH/mars.cfg"; 
 my $cfg = new Config::Simple();			#Config::Simple object 
 $cfg->read($cfg_file) or die $cfg->error();  	#Exception handling 
 

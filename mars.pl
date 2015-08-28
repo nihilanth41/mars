@@ -110,7 +110,10 @@ else {
 	#Split Line-format reports 
 	print "Calling treebuilder.pl... (This may take a while)\n";
 	do "$ABS_PATH/treebuilder.pl"; 
-	die $@ if $@;
+	if($@) {
+		close_log();
+		die $@;
+	}
 	print "DONE\n";
 
 	#Make archives of directories
@@ -235,7 +238,7 @@ sub mkArchive {
 sub unzip { 
 	my ($src_file, $dest_dir) = @_;
 	if(!(-f $src_file)) { 
-		error( "File $src_file doesn't exist! Check ZIP_FILE entry in mars.cfg." , 1 );
+		error( "File $src_file doesn't exist! Check ZIP_FILE entry in mars.cfg.", 0 );
 		my $msg = Log::Message::Simple->stack_as_string; 
 		die "$msg";
 	}
@@ -268,6 +271,7 @@ sub mkZip {
 		print `zip $dest_file $file`;
 	}
 	else {
+		close_log();
 		die "$file doesn't exist (or is not a file or folder): $!"; 
 	}
 }	
@@ -279,7 +283,7 @@ sub mkZip {
 sub sanitize_filenames {
 	my $path_to_files = $_[0]; 	#directory w/ files is passed as argument 
 	opendir(DIR, $path_to_files) || do { 
-		error( "Couldn't open directory $path_to_files in sanitize_filenames()" );
+		error( "Couldn't open directory $path_to_files in sanitize_filenames()", 0 );
 		my $msg = Log::Message::Simple->stack_as_string();
 		die "$msg"; 
 	};
@@ -288,9 +292,9 @@ sub sanitize_filenames {
 	{
 		unless( -r -w "$path_to_files/$file" ) 	#file is r/w by effective uid/gid
 		{
-			error( "Couldn't rename file $file in sanitize_filenames() $!" );
+			error( "Couldn't rename file $file in sanitize_filenames() $!", 0 );
 			my $msg = Log::Message::Simple->stack_as_string();
-			die ("$msg");
+			die "$msg";
 		}
 		next if ($file =~ m/^\./); 	#ignore hidden files 
 		my $old_file = $file;		#copy filename for rename at the end
@@ -351,7 +355,7 @@ sub sort_reports {
 		GENRE => $cfg->param('FOLDER.GENRE'),   		#Any filename containing m/genre/i goes in Genre folder 
 		CHILDRENS => $cfg->param('FOLDER.CHILDRENS'), 		#Any filename containing m/childrens/i goes in Misc 
 		LOCAL => $cfg->param('FOLDER.LOCAL'),			#Any filename containing m/local/i goes in Misc
-		SUBJECTS => $cfg->param('FOLDER.SUBJECTS'),	#Any filename containing LC-Subjects goes into School/LCSH  
+		SUBJECTS => $cfg->param('FOLDER.SUBJECTS'),		#Any filename containing LC-Subjects goes into School/LCSH  
 		R03 => $cfg->param('FOLDER.R03'),			#Any other school reports go into School/NTAR 		
 		R04 => $cfg->param('FOLDER.R04'), 
 		R06 => $cfg->param('FOLDER.R06'),
@@ -417,7 +421,7 @@ sub mkDirs
 sub get_record_array {
 	my ($file_path, $delimiter) = @_;
 	my $search_string = quotemeta $delimiter; 
-	my $txt = read_file( $file_path, binmode => ':encoding(UTF-8)' ) || die "Failed to read_file() in get_record_array() - $!";
+	my $txt = read_file( $file_path, binmode => ':encoding(UTF-8)' ) || die "Failed to read_file() in get_record_array() - $!"; 
 	my @records = split(/$search_string/, $txt);
 	return @records;
 }
