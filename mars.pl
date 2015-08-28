@@ -50,7 +50,7 @@ my $log_dir = $report_dir;
 $log_dir =~ s/extract/Log/g;
 #Create log dir if doesn't exist 
 unless(-e -d $log_dir) { print `mkdir -v $log_dir`; } 
-my $log_file = "$log_dir/$datestamp-mars.log";
+my $log_file = "$log_dir/$datestamp.log";
 open(my $log_fh, '>:encoding(UTF-8)', $log_file) ||  die "Couldn't open log file for write $log_file: $!";
 #Direct log output (w/ verbose option)
 local $Log::Message::Simple::MSG_FH = \*STDOUT;
@@ -64,8 +64,9 @@ my $ret = unzip($zip_file, $report_dir);
 #Only work with a fresh directory structure. if dir exists -> error & die 
 if($ret == 1) {
 	error( "Directory already exists: $report_dir", 1 );
-	my $msg = Log::Message::Simple->stack_as_string; 
-	die "$msg";
+	die "$!"; #NOTE: this will print an error about inappropriate IOCTL, this is b/c of the behavior of open() and can be ignored
+		  #Just use the line number info
+	close_log();
 }
 else {
 	print "DONE\n";
@@ -153,11 +154,7 @@ else {
 	debug( $dbg_str );
 	print "DONE\n";
 
-	print "Writing log file...";
-	my $log = Log::Message::Simple->stack_as_string();
-	print $log_fh $log;
-	close $log_fh;
-	print "DONE\n";
+	close_log();
 
 	exit(0);
 }
@@ -168,6 +165,13 @@ sub is_folder_empty {
 	return scalar(grep { $_ ne "." && $_ ne ".." } readdir($dh)) == 0;
 }
 
+sub close_log {
+	print "Writing log file...";
+	my $log = Log::Message::Simple->stack_as_string();
+	print $log_fh $log;
+	close $log_fh;
+	print "DONE\n";
+}
 
 sub archive_folders()
 {

@@ -64,17 +64,6 @@ my $tree;
 
 my $report_dir = $cfg->param('ENV.REPORT_DIR');
 
-my $log_dir = $report_dir;
-$log_dir =~ s/extract/Log/g;
-#Create log dir if doesn't exist 
-unless(-e -d $log_dir) { die "Error: log dir doesn't exist in treebuilder(): $!"; } #print `mkdir -v $log_dir`; } 
-my $log_file = "$log_dir/$datestamp-treebuilder.log";
-open(my $log_fh, '>:encoding(UTF-8)', $log_file) ||  die "Couldn't open log file for write $log_file: $!";
-#Direct log output (w/ verbose option)
-local $Log::Message::Simple::MSG_FH = \*STDOUT;
-local $Log::Message::Simple::ERROR_FH = \*STDERR;
-local $Log::Message::Simple::DEBUG_FH = \*STDOUT;
-
 print "\tSplitting LCSH line reports [HTML]...";
 split_line_reports("$report_dir/$datestamp/School/LCSH", "LCSH");
 print "DONE\n";
@@ -99,10 +88,6 @@ print "\tConvert NTAR CSV to XLS...";
 csv_to_xls("$report_dir/$datestamp/School/NTAR/CSV");
 print "DONE\n";
 
-my $log = Log::Message::Simple->stack_as_string();
-print $log_fh $log;
-close $log_fh;
-exit(0);
 
 #split_line_reports($REPORT_DIR, $HASH_NAME)
 #param $REPORT_DIR: full path to directory containing reports 
@@ -150,8 +135,8 @@ sub split_line_reports
 			my $rec_difference = $size - $rpk_total;
 			if($rec_difference > 0)
 			{
-				#printf("Records to be written (%d) does not match records in file (%d) ", $rpk_total, $size);
-				#printf("Adding %d records to %s key\n", $rec_difference, $ordered_keys[$#ordered_keys]);
+				debug ( sprintf("Records to be written (%d) does not match records in file (%d)", $rpk_total, $size) );
+				debug ( sprintf("Adding %d records to %s key", $rec_difference, $ordered_keys[$#ordered_keys]) );
 				#add any missing records to last key
 				$RPK{$ordered_keys[$#ordered_keys]} += $rec_difference;
 			}
@@ -159,7 +144,7 @@ sub split_line_reports
 			my $rp = 0;		        				#variable to keep track of position in @records	
 			foreach my $key (@ordered_keys)						#for each key in the NTAR hash
 			{
-				#printf("Number of records required for $key is %d (%.2f%%) \n", $RPK{$key}, (($RPK{$key}/$size)*100));
+				debug( sprintf("Number of records required for $key is %d (%.2f%%)", $RPK{$key}, (($RPK{$key}/$size)*100)) );
 				next if($RPK{$key} <= 0);				#don't create the file/write header if there are no records to be written	
 				my $new_file_path = "$PATH_TO_FILES/../$key/$key.$file";	#prepend key to each filename
 				my $header = printHeader_HTML(); 
@@ -194,11 +179,7 @@ sub split_line_reports
 					my $ind = $td[$i]->{"IND"}->[$rp]->as_HTML;
 					my $fd =  $td[$i]->{"FIELDDATA"}->[$rp]->as_HTML;  
 					my $row = join("\n", "\n\<tr\>", $ctl, $tag, $ind, $fd, '</tr>' );
-					#append_file($new_file_path, {binmode=> ':utf8'}, $row);
 					print $fh $row;
-					
-					#Write XLS
-
 					$rp++;
 				}
 				print $fh '</table></div></div>';
@@ -206,6 +187,7 @@ sub split_line_reports
 				close $fh;
 			}#foreach key 
 		}#foreach td()	
+		#DON'T delete files yet b/c we still have to run split_csv on the same files
 		#print `rm -v $file_path`;
 	}#foreach $file 
 }
@@ -413,7 +395,7 @@ sub split_line_reports_CSV
 		@tables = ();
 		@td = ();
 		my $file_path = "$PATH_TO_FILES/$file";
-		#printf("Opening file %s\n", $file_path);
+		debug( sprintf("Opening file %s", $file_path) );
 		parse_html($file_path);
 		next if($#td < 0);
 		#Records per file (new file) for calculating the number of reocrds (Count) for each split file
@@ -439,8 +421,8 @@ sub split_line_reports_CSV
 			my $rec_difference = $size - $rpk_total;
 			if($rec_difference > 0)
 			{
-				#printf("Records to be written (%d) does not match records in file (%d) ", $rpk_total, $size);
-				#printf("Adding %d records to %s key\n", $rec_difference, $ordered_keys[$#ordered_keys]);
+				debug( sprintf("Records to be written (%d) does not match records in file (%d) ", $rpk_total, $size) );
+				debug( sprintf("Adding %d records to %s key\n", $rec_difference, $ordered_keys[$#ordered_keys]) );
 				#add any missing records to last key
 				$RPK{$ordered_keys[$#ordered_keys]} += $rec_difference;
 			}
@@ -455,10 +437,10 @@ sub split_line_reports_CSV
 			my $hashref = $td[$i]; #Point the reference at the hash  
 			my $ar_temp = $hashref->{"CTL_NO"};
 			my $size = @{$ar_temp};
-			#print "Number of records in td[$i] = $size\n";
+			debug( sprintf("Number of records in td[%d] = %s", $i, $size) );
 			if(defined $SectionSubHeading[$i])
 			{
-				#print $SectionSubHeading[$i]->as_text, "\n";
+				debug( sprintf("%s", $SectionSubHeading[$i]->as_text) ); 
 			}
 			my %RPK = ();
 			my $rpk_total=0;
@@ -470,8 +452,8 @@ sub split_line_reports_CSV
 			my $rec_difference = $size - $rpk_total;
 			if($rec_difference > 0)
 			{
-				#printf("Records to be written (%d) does not match records in file (%d) ", $rpk_total, $size);
-				#printf("Adding %d records to %s key\n", $rec_difference, $ordered_keys[$#ordered_keys]);
+				debug( sprintf("Records to be written (%d) does not match records in file (%d)", $rpk_total, $size) );
+				debug( sprintf("Adding %d records to %s key\n", $rec_difference, $ordered_keys[$#ordered_keys]) );
 				#add any missing records to last key
 				$RPK{$ordered_keys[$#ordered_keys]} += $rec_difference;
 			}
@@ -479,7 +461,7 @@ sub split_line_reports_CSV
 			my $rp = 0;		        				#variable to keep track of position in @records	
 			foreach my $key (@ordered_keys)						#for each key in the NTAR hash
 			{
-				#printf("Number of records required for $key is %d (%.2f%%) \n", $RPK{$key}, (($RPK{$key}/$size)*100));
+				debug( sprintf("Number of records required for $key is %d (%.2f%%)", $RPK{$key}, (($RPK{$key}/$size)*100)) );
 				next if($RPK{$key} <= 0);				#don't create the file/write header if there are no records to be written	
 				my ($filename, $dirs, $suffix) = fileparse($file_path); 
 				my $CSV_DIR = "$dirs"."CSV";
@@ -490,14 +472,12 @@ sub split_line_reports_CSV
 				my @CSV_FILE = split("htm", $filename); 
 				$CSV_FILE[0] = join('', $CSV_FILE[0], "csv");
 				my $csvf = $CSV_FILE[0];
-				#my $new_file_path = "$PATH_TO_FILES/../$key/$key.$filename.csv"; #prepend key to each filename
 				my $new_file_path = "$CSV_DIR/$key.$csvf";
 				my $header = printHeader_CSV($RPF{$key}); 
 				unless(-e $new_file_path)
 				{
 					#Auto encoding on write 
 					open(my $fh, '>:encoding(UTF-8)', $new_file_path) || die "Couldn't open file for write $new_file_path: $!";
-					#	if($FILETYPE eq 'HTML')
 						print $fh $header;
 						close $fh;
 				}
@@ -567,6 +547,7 @@ sub printHeader_CSV
 
 	#Original file count:
 	#my $ct = "Count:|||$Count";
+	
 	#Count for new file:
 	my $ct = "Count:|||$record_count";
 
@@ -624,8 +605,6 @@ sub csv_to_xls {
 		my $key = $fname[0];
 		my $name = $fname[1].".xls"; 
 		my $output_file = "$PATH_TO_FILES/../../$key/$key.$name";
-		#open($fh, '>:encoding(UTF-8)', $output_file) or die "Could not open '$file' $!\n";
-		#print "XLS Output file $output_file\n";
 		my $workbook = Spreadsheet::WriteExcel->new($output_file);
 		#Configure cell format
 		my $fmt_red = $workbook->add_format(
@@ -831,7 +810,6 @@ sub csv_to_xls {
 				my $class;
 				my $content;
 				my $str = $fd[$j];
-				###################################
 				#If the string has a class attribute
 				if($str =~ /class/) 
 				{
@@ -859,7 +837,6 @@ sub csv_to_xls {
 					$class = "none";
 					$content = $str;
 				}
-				##################################
 				#If previous class eq current class 
 				if($classes[$col-1] eq $class) {
 					#Join current string w/ previous string
@@ -873,7 +850,7 @@ sub csv_to_xls {
 					$col++;
 				}
 			}#endfor $j (each string in fielddata split)
-			####( Strings should be in their proper column, write to XLS: ) ###
+			#### ( Strings should be in their proper column, write to XLS: ) ###
 			for my $k (0..$#columns)
 			{
 				my $content = $columns[$k];
@@ -902,5 +879,5 @@ sub csv_to_xls {
 		$workbook->close();
 	}#foreach file
 	#delete CSV directory
-	print `rm -rf $PATH_TO_FILES`;
+	#print `rm -rf $PATH_TO_FILES`;
 }#endsub
