@@ -811,6 +811,7 @@ sub csv_to_xls {
 				my $content;
 				my $str = $fd[$j];
 				#If the string has a class attribute
+				## TOOD: MATCH <span class=""> instead of /clsas/ 
 				if($str =~ /class/) 
 				{
 					$str =~ /"(.+?)"/;
