@@ -837,6 +837,12 @@ sub csv_to_xls {
 					$class = "none";
 					$content = $str;
 				}
+				if( (!(defined $class)) || ($class eq "") )
+				{
+					print "Warning: class undefined or empty\n";
+					print "Filename is: $file \n";
+				}
+					
 				#If previous class eq current class 
 				if($classes[$col-1] eq $class) {
 					#Join current string w/ previous string
