@@ -841,6 +841,7 @@ sub csv_to_xls {
 				{
 					print "Warning: class undefined or empty\n";
 					print "Filename is: $file \n";
+					printf("fd: %s\n", $fd[$j]); 
 				}
 					
 				#If previous class eq current class 
