@@ -810,9 +810,9 @@ sub csv_to_xls {
 				my $class;
 				my $content;
 				my $str = $fd[$j];
+				
 				#If the string has a class attribute
-				## TOOD: MATCH <span class=""> instead of /clsas/ 
-				if($str =~ /class/) 
+				if($str =~ /<span class=/) 
 				{
 					$str =~ /"(.+?)"/;
 					if(defined $1)
@@ -838,6 +838,8 @@ sub csv_to_xls {
 					$class = "none";
 					$content = $str;
 				}
+				
+				# Print to stdout if we end up in a situation where the class is empty. (i.e., /<span class=/ gets incorrectly matched somehow 
 				if( (!(defined $class)) || ($class eq "") )
 				{
 					print "Warning: class undefined or empty\n";
