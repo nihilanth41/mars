@@ -810,8 +810,9 @@ sub csv_to_xls {
 				my $class;
 				my $content;
 				my $str = $fd[$j];
+				
 				#If the string has a class attribute
-				if($str =~ /class/) 
+				if($str =~ /<span class=/) 
 				{
 					$str =~ /"(.+?)"/;
 					if(defined $1)
@@ -837,6 +838,15 @@ sub csv_to_xls {
 					$class = "none";
 					$content = $str;
 				}
+				
+				# Print to stdout if we end up in a situation where the class is empty. (i.e., /<span class=/ gets incorrectly matched somehow 
+				if( (!(defined $class)) || ($class eq "") )
+				{
+					print "Warning: class undefined or empty\n";
+					print "Filename is: $file \n";
+					printf("fd: %s\n", $fd[$j]); 
+				}
+					
 				#If previous class eq current class 
 				if($classes[$col-1] eq $class) {
 					#Join current string w/ previous string
